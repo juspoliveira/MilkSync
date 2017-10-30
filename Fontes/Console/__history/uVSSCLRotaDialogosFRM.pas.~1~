@@ -1,0 +1,195 @@
+unit uVSSCLRotaDialogosFRM;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, Menus, cxLookAndFeelPainters, StdCtrls, cxButtons, ExtCtrls,
+  cxLabel, cxContainer, cxEdit, cxTextEdit, JvExControls,
+  JvGradientHeaderPanel, cxPC, cxControls, cxMemo, dxSkinsCore,
+  dxSkinBlack, dxSkinBlue, dxSkinCaramel, dxSkinCoffee, dxSkinGlassOceans,
+  dxSkiniMaginary, dxSkinLilian, dxSkinLiquidSky, dxSkinLondonLiquidSky,
+  dxSkinMcSkin, dxSkinMoneyTwins, dxSkinOffice2007Black,
+  dxSkinOffice2007Blue, dxSkinOffice2007Green, dxSkinOffice2007Pink,
+  dxSkinOffice2007Silver, dxSkinSilver, dxSkinStardust,
+  dxSkinsDefaultPainters, dxSkinValentine, dxSkinXmas2008Blue,
+  dxSkinscxPCPainter, cxCheckBox, cxMaskEdit, cxSpinEdit, cxGroupBox,
+  cxDropDownEdit, cxCalendar;
+
+type
+  TVSDialogosFRM = class(TForm)
+    Panel1: TPanel;
+    btnOk: TcxButton;
+    btnCancelar: TcxButton;
+    pgcDialogos: TcxPageControl;
+    tbsAut: TcxTabSheet;
+    pnlTitulo: TJvGradientHeaderPanel;
+    edtSenha: TcxTextEdit;
+    cxLabel1: TcxLabel;
+    edtUsu: TcxTextEdit;
+    cxLabel2: TcxLabel;
+    tbsSobre: TcxTabSheet;
+    JvGradientHeaderPanel2: TJvGradientHeaderPanel;
+    cxLabel13: TcxLabel;
+    edtVersaoAp: TcxTextEdit;
+    tbsConfig: TcxTabSheet;
+    cxLabel5: TcxLabel;
+    cxLabel10: TcxLabel;
+    edtServidor: TcxTextEdit;
+    JvGradientHeaderPanel1: TJvGradientHeaderPanel;
+    chxLog: TcxCheckBox;
+    edtTempo: TcxSpinEdit;
+    chxUsarProxy: TcxCheckBox;
+    edtConta: TcxTextEdit;
+    cxLabel9: TcxLabel;
+    cxgrpbx1: TcxGroupBox;
+    cxLabel4: TcxLabel;
+    edtProxyPorta: TcxTextEdit;
+    cxLabel6: TcxLabel;
+    edtProxyUsu: TcxTextEdit;
+    cxLabel7: TcxLabel;
+    edtProxySenha: TcxTextEdit;
+    cxLabel8: TcxLabel;
+    edtProxyUrl: TcxTextEdit;
+    edtPathExp: TcxTextEdit;
+    cxLabel12: TcxLabel;
+    cxGroupBox1: TcxGroupBox;
+    edtIniLeitura: TcxDateEdit;
+    cxLabel3: TcxLabel;
+    cxLabel14: TcxLabel;
+    edtUltLeitura: TcxDateEdit;
+    cxGroupBox2: TcxGroupBox;
+    edtDifAtesto: TcxTextEdit;
+    cxLabel11: TcxLabel;
+    chxEnviarNota: TcxCheckBox;
+    procedure FormCreate(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    function Autenticado(SubTitulo: string = ''): Boolean;
+    procedure Sobre;
+    function EditarConfiguracoes: Boolean;
+    function InfoDadosUsuario(var Usuario: string; var Senha: string): Boolean;
+  end;
+
+implementation
+
+{$R *.dfm}
+
+uses uRotinasComuns, uRotinasComunsUI, uVSSCLRotaComum;
+
+{ TVSDialogosFRM }
+
+function TVSDialogosFRM.EditarConfiguracoes: Boolean;
+begin
+  Result := False;
+  pgcDialogos.ActivePage := tbsConfig;
+  Self.ActiveControl := edtServidor;  
+  
+  edtServidor.Text := DadosConta.HostURL;
+  edtConta.Text := DadosConta.IdConta;
+  edtTempo.Text := IntToStr(DadosConta.TimerProcInterno);
+  chxUsarProxy.Checked := DadosConta.UsarProxy;
+  chxLog.Checked := DadosConta.Log;
+  edtProxyUrl.Text := DadosConta.DadosProxy.Host;
+  edtProxyPorta.Text := DadosConta.DadosProxy.Porta;
+  edtProxyUsu.Text := DadosConta.DadosProxy.Usuario;
+  edtProxySenha.Text := DadosConta.DadosProxy.Senha;
+  chxEnviarNota.Checked := DadosConta.EnviarNotifiAtesto;
+  edtPathExp.EditValue := DadosConta.PathArqDescarga;
+  edtDifAtesto.EditValue := DadosConta.PercAtesto;
+  edtIniLeitura.EditValue := DadosConta.DatIniLeituraDescargaWS;
+  edtUltLeitura.EditValue := DadosConta.DatUltLeituraDescargaWS;
+
+  Self.Visible := False;
+  Self.Height := 530;
+  if (Self.ShowModal = mrOk) then
+  begin
+    DadosConta.HostURL := edtServidor.Text;
+    DadosConta.IdConta := edtConta.Text;
+    DadosConta.PathArqDescarga := edtPathExp.Text;
+    DadosConta.PercAtesto := StrToFloat(edtDifAtesto.Text);
+    DadosConta.UsarProxy := chxUsarProxy.Checked;
+    DadosConta.PathBase := edtPathExp.EditValue;
+    DadosConta.TimerProcInterno := edtTempo.EditValue;
+    DadosConta.Log := chxLog.Checked;
+    DadosConta.EnviarNotifiAtesto := chxEnviarNota.Checked;
+
+    if VarIsNull(edtIniLeitura.EditValue) then
+      DadosConta.DatIniLeituraDescargaWS := 0
+    else
+      DadosConta.DatIniLeituraDescargaWS := edtIniLeitura.EditValue;
+    // Dados Proxy
+    DadosConta.DadosProxy.Host := edtProxyUrl.Text;
+    DadosConta.DadosProxy.Porta := edtProxyPorta.Text;
+    DadosConta.DadosProxy.Usuario := edtProxyUsu.Text;
+    DadosConta.DadosProxy.Senha := edtProxySenha.Text;
+
+    Result := True;
+  end;
+end;
+
+function TVSDialogosFRM.Autenticado(SubTitulo: string): Boolean;
+begin
+  Result := False;
+  pgcDialogos.ActivePage := tbsAut;
+
+  Self.ActiveControl := edtUsu;
+
+  Self.pnlTitulo.LabelCaption := 'Autenticação';
+
+  if (SubTitulo <> EmptyStr) then
+    Self.pnlTitulo.LabelCaption := Self.pnlTitulo.LabelCaption + ' :: ' + SubTitulo;
+
+  edtSenha.Text := EmptyStr;
+
+  Self.Visible := False;
+  Self.Height := 300;
+  if (Self.ShowModal = mrOk) then
+  begin
+    if not ((LowerCase(edtUsu.Text) = DadosConta.NomeUsuario) and
+      (LowerCase(edtSenha.Text) = DadosConta.SenhaUsuario)) then
+      RotinasComunsUI.Mensagem('Usuário/Senha incorretos.', 'Autenticação', BotaoOK, MensagemAviso, True);
+    Result := True;
+  end;
+end;
+
+procedure TVSDialogosFRM.FormCreate(Sender: TObject);
+begin
+  tbsAut.TabVisible := False;
+  tbsSobre.TabVisible := False;
+  tbsConfig.TabVisible := False;
+end;
+
+procedure TVSDialogosFRM.Sobre;
+begin
+  pgcDialogos.ActivePage := tbsSobre;
+
+  // Dados Conta
+  edtVersaoAp.Text := VersaoAplicativo(Application.ExeName);
+
+  Self.Visible := False;
+  Self.Height := 300;  
+  Self.ShowModal;
+end;
+
+function TVSDialogosFRM.InfoDadosUsuario(var Usuario: string; var Senha: string): Boolean;
+begin
+  pgcDialogos.ActivePage := tbsAut;
+
+  Self.ActiveControl := edtUsu;
+
+  Self.pnlTitulo.LabelCaption := 'Autenticação';
+
+  Self.Visible := False;
+
+  Result := (Self.ShowModal = mrOk);
+
+  Usuario := edtUsu.Text;
+  Senha := edtSenha.Text;
+end;
+
+end.
+
+
+
