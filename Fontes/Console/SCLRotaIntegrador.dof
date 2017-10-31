@@ -90,7 +90,7 @@ MaxStackSize=1048576
 ImageBase=4194304
 ExeDescription=
 [Directories]
-OutputDir=..\..\Deploy
+OutputDir=C:\Desenvolvimento\tools\MilkSync\Deploy
 UnitOutputDir=c:\windows\temp
 PackageDLLOutputDir=.
 PackageDCPOutputDir=
@@ -147,8 +147,9 @@ Item1=C:\Desenvolvimento\FWDelphiS2\Comum
 Count=1
 Item0=c:\windows\temp
 [HistoryLists\hlOutputDirectorry]
-Count=1
-Item0=..\..\Deploy
+Count=2
+Item0=C:\Desenvolvimento\tools\MilkSync\Deploy
+Item1=..\..\Deploy
 [HistoryLists\hlBPLOutput]
 Count=1
 Item0=.
