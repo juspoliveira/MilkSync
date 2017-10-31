@@ -404,7 +404,7 @@ Type
   _String = class (TZAbstractObject)
    constructor create (s : string);
    function equalsIgnoreCase (s: string) : boolean;
-   function Equals(const Value: TZAbstractObject): Boolean; override; 
+   function Equals(const Value: TZAbstractObject): Boolean; override;
    function toString() : string; override;
    function clone :TZAbstractObject; override;
   private
@@ -430,6 +430,7 @@ const
 
 procedure newNotImplmentedFeature () ;
 begin
+
   raise NotImplmentedFeature.create (CROTINA_NAO_IMPLEMENTADA);
 end;
 

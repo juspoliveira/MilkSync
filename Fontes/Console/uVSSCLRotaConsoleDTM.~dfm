@@ -2,8 +2,8 @@ object VSSCLRotaConsoleDTM: TVSSCLRotaConsoleDTM
   OldCreateOrder = False
   OnCreate = DataModuleCreate
   Left = 711
-  Top = 68
-  Height = 551
+  Top = 24
+  Height = 592
   Width = 455
   object zcnnRota: TZConnection
     ControlsCodePage = cGET_ACP
@@ -64,6 +64,9 @@ object VSSCLRotaConsoleDTM: TVSSCLRotaConsoleDTM
     object qryParametrosParIntervalo: TFloatField
       FieldName = 'ParIntervalo'
     end
+    object qryParametrosParIntervaloCarga: TFloatField
+      FieldName = 'ParIntervaloCarga'
+    end
     object qryParametrosParProxyUsar: TStringField
       FieldName = 'ParProxyUsar'
       Size = 4
@@ -123,6 +126,10 @@ object VSSCLRotaConsoleDTM: TVSSCLRotaConsoleDTM
       FieldName = 'ParVerScl'
       Size = 4
     end
+    object cdsParametrosParPathArqCarga: TStringField
+      FieldName = 'ParPathArqCarga'
+      Size = 1020
+    end
     object cdsParametrosParPathArqDatasul: TStringField
       FieldName = 'ParPathArqDatasul'
       Size = 1020
@@ -165,11 +172,46 @@ object VSSCLRotaConsoleDTM: TVSSCLRotaConsoleDTM
     object cdsParametrosParContaId6: TIntegerField
       FieldName = 'ParContaId6'
     end
-  end
-  object ucRota: TUCZEOSConn
-    Connection = zcnnRota
-    Left = 96
-    Top = 16
+    object cdsParametrosParKeyId1: TStringField
+      FieldName = 'ParKeyId1'
+      Size = 60
+    end
+    object cdsParametrosParKeyId2: TStringField
+      FieldName = 'ParKeyId2'
+      Size = 60
+    end
+    object cdsParametrosParKeyId3: TStringField
+      FieldName = 'ParKeyId3'
+      Size = 60
+    end
+    object cdsParametrosParKeyId4: TStringField
+      FieldName = 'ParKeyId4'
+      Size = 60
+    end
+    object cdsParametrosParKeyId5: TStringField
+      FieldName = 'ParKeyId5'
+      Size = 60
+    end
+    object cdsParametrosParKeyId6: TStringField
+      FieldName = 'ParKeyId6'
+      Size = 60
+    end
+    object cdsParametrosParCargaMultiEmpresa: TStringField
+      FieldName = 'ParCargaMultiEmpresa'
+      Size = 4
+    end
+    object cdsParametrosParPathCargaApi: TStringField
+      FieldName = 'ParPathCargaApi'
+      Size = 1020
+    end
+    object cdsParametrosParDropTable: TStringField
+      FieldName = 'ParDropTable'
+      Size = 4
+    end
+    object cdsParametrosParColetasHoje: TStringField
+      FieldName = 'ParColetasHoje'
+      Size = 4
+    end
   end
   object qryDescarga: TZQuery
     Connection = zcnnRota
@@ -195,8 +237,8 @@ object VSSCLRotaConsoleDTM: TVSSCLRotaConsoleDTM
     Enabled = False
     Interval = 60000
     OnTimer = tmrConsoleTimer
-    Left = 94
-    Top = 138
+    Left = 115
+    Top = 136
   end
   object sheConsole: TJvScheduledEvents
     AutoSave = False
@@ -204,7 +246,7 @@ object VSSCLRotaConsoleDTM: TVSSCLRotaConsoleDTM
       item
         Name = 'evtDescarga'
         OnExecute = sheConsoleEvents0Execute
-        StartDate = '2016/07/14 22:27:10.000'
+        StartDate = '2016/07/15 17:33:10.000'
         RecurringType = srkDaily
         EndType = sekNone
         Freq_StartTime = 0
@@ -212,8 +254,8 @@ object VSSCLRotaConsoleDTM: TVSSCLRotaConsoleDTM
         Freq_Interval = 10800000
         Daily_EveryWeekDay = True
       end>
-    Left = 152
-    Top = 138
+    Left = 177
+    Top = 135
   end
   object qryAux: TZQuery
     Connection = zcnnRota
@@ -318,6 +360,10 @@ object VSSCLRotaConsoleDTM: TVSSCLRotaConsoleDTM
     object cdsColetastemperatura: TFloatField
       DisplayLabel = 'Temperatura'
       FieldName = 'temperatura'
+    end
+    object cdsColetasBoca: TStringField
+      FieldName = 'boca'
+      Size = 5
     end
     object cdsColetascoletada: TWideStringField
       DisplayLabel = 'Status'
@@ -502,8 +548,8 @@ object VSSCLRotaConsoleDTM: TVSSCLRotaConsoleDTM
   object cdsVeiculos: TClientDataSet
     Aggregates = <>
     Params = <>
-    Left = 248
-    Top = 344
+    Left = 109
+    Top = 351
     object cdsVeiculosid: TIntegerField
       FieldKind = fkCalculated
       FieldName = 'id'
@@ -542,8 +588,8 @@ object VSSCLRotaConsoleDTM: TVSSCLRotaConsoleDTM
   object cdsFazendas: TClientDataSet
     Aggregates = <>
     Params = <>
-    Left = 332
-    Top = 344
+    Left = 193
+    Top = 351
     object cdsFazendascodigo: TStringField
       FieldName = 'codigo'
       Size = 15
@@ -597,7 +643,6 @@ object VSSCLRotaConsoleDTM: TVSSCLRotaConsoleDTM
     Top = 352
     object cdsViagensid: TIntegerField
       FieldName = 'id'
-      Visible = False
     end
     object cdsViagensveiculo_id: TIntegerField
       DisplayLabel = 'Ve'#237'culo'
@@ -702,11 +747,38 @@ object VSSCLRotaConsoleDTM: TVSSCLRotaConsoleDTM
     object cdsViagenscomunitario_pendente: TStringField
       FieldName = 'comunitario_pendente'
     end
+    object cdsViagensbocas: TStringField
+      FieldName = 'bocas'
+    end
   end
   object qryApoio: TZQuery
     Connection = zcnnRota
     Params = <>
     Left = 106
     Top = 216
+  end
+  object csvDataSet: TJvCsvDataSet
+    Separator = '|'
+    SavesChanges = False
+    AutoBackupCount = 0
+    Left = 296
+    Top = 418
+  end
+  object csvFileBase: TJvCSVBase
+    CSVFieldNames.Strings = (
+      '0001|ROBSON'
+      'LAZARO'
+      'NASC.'
+      'ALVES'
+      '|00001|')
+    Left = 373
+    Top = 418
+  end
+  object tmrSync: TTimer
+    Enabled = False
+    Interval = 60000
+    OnTimer = tmrSyncTimer
+    Left = 235
+    Top = 135
   end
 end

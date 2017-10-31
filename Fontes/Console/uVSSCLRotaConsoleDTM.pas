@@ -7,7 +7,8 @@ uses
   Windows, SysUtils, Classes, DB, ZAbstractRODataset,
   ZAbstractDataset, ZDataset, ZAbstractConnection, ZConnection, uJSON, JvTimer,
   JvAppInst, ExtCtrls, JvScheduledEvents, UCBase, UCZEOSConn, DBClient, WebAdapt,
-  uVSSCLRotaComum, uRotinasComuns;
+  uVSSCLRotaComum, uRotinasComuns, JvComponentBase, JvCSVBaseControls,
+  JvCsvData, sSkinProvider, sSkinManager, Forms;
 
 type
   TViagem = class
@@ -86,6 +87,7 @@ type
     CodigoMotorista: string[15];
     NomeMotorista: string[100];
     dt_edicao: TDateTime;
+    boca: string[5];
     public
       function toString(separator: Char; colNames: Boolean = True): string;
   end;
@@ -121,6 +123,7 @@ type
   id: Integer;
   Codigo: string[15];
   Nome: string[100];
+  Doc: String[15];
  end;
  TListaProdutor = class(TObjectList)
    public
@@ -131,6 +134,7 @@ type
   id: Integer;
   Codigo: string[15];
   Nome: string[100];
+  produtor: string[15];
  end;
  TListaFazenda = class(TObjectList)
    public
@@ -184,6 +188,7 @@ type
      Linha: string[15];
      Veiculo: string[15];
      ComunitarioPendente: string;
+     bocas: string;
    end;
    TListaRegViagem = class(TObjectList)
      public
@@ -258,7 +263,6 @@ type
   TVSSCLRotaConsoleDTM = class(TDataModule)
     zcnnRota: TZConnection;
     qryParametros: TZQuery;
-    ucRota: TUCZEOSConn;
     qryDescarga: TZQuery;
     qryParametrosParContaId: TIntegerField;
     qryParametrosParDatUltLeituraDescargaWS: TDateField;
@@ -411,10 +415,28 @@ type
     cdsParametrosParContaId6: TIntegerField;
     cdsColetasquantidade: TIntegerField;
     cdsViagenscomunitario_pendente: TStringField;
+    cdsParametrosParPathArqCarga: TStringField;
+    csvDataSet: TJvCsvDataSet;
+    csvFileBase: TJvCSVBase;
+    tmrSync: TTimer;
+    qryParametrosParIntervaloCarga: TFloatField;
+    cdsParametrosParKeyId1: TStringField;
+    cdsParametrosParKeyId2: TStringField;
+    cdsParametrosParKeyId3: TStringField;
+    cdsParametrosParKeyId4: TStringField;
+    cdsParametrosParKeyId5: TStringField;
+    cdsParametrosParKeyId6: TStringField;
+    cdsParametrosParCargaMultiEmpresa: TStringField;
+    cdsColetasBoca: TStringField;
+    cdsParametrosParPathCargaApi: TStringField;
+    cdsViagensbocas: TStringField;
+    cdsParametrosParDropTable: TStringField;
+    cdsParametrosParColetasHoje: TStringField;
     procedure DataModuleCreate(Sender: TObject);
     procedure tmrConsoleTimer(Sender: TObject);
     procedure sheConsoleEvents0Execute(Sender: TJvEventCollectionItem;
       const IsSnoozeEvent: Boolean);
+    procedure tmrSyncTimer(Sender: TObject);
   private
     FAplicacaoAtiva: Boolean;
     procedure PersistirLogViagem(Viagem: TViagem);
@@ -425,18 +447,18 @@ type
     function ValidaInt(Numero: string): Integer;
   public
     procedure PopulaAtoresColeta(DataInicio, DataTermino: TDateTime; Sync:string; Comunitario: string = '9');
-    procedure ExportarDescargas;
-    procedure ExportarColetas;
+    procedure ExportarDescargas(PersistirLog: Boolean = True);
+    procedure ExportarColetas(Layout: string);
     procedure ExportaScl;
     procedure ExportaSiga;
     procedure AtualizarDatLeituraParam(Data: TDateTime);
-    function GetDescargas(DataInicio, DataTermino: TDateTime; FlgAtualizaUltDataLeitura: Boolean = False): string;
+    function GetDescargas(DataInicio, DataTermino: TDateTime; FlgAtualizaUltDataLeitura: Boolean = False; PersistirLog: Boolean = True): string;
     function GerarLinhaArquivo(ObjViagem: TViagem; TipoLinhaColeta: byte): string;
     procedure SalvarDadosParametros;
     function columnExistsSqlite(aTableName,aColumn, aDataType, aSize: string; create:Boolean = False):Boolean;
 
     // Coletas
-    function GetColetas(DataInicio, DataTermino: TDateTime; Sync:string; Comunitario: string = '9'; FlgAtualizaUltDataLeitura: Boolean = False): String;
+    function GetColetas(DataInicio, DataTermino: TDateTime; Sync:string; Comunitario: string = '9'; FlgAtualizaUltDataLeitura: Boolean = False; Layout: string = 'Magis'): String;
     function OrdenaCrescente(Par01, Par02: Pointer): Integer;
     function coletasToString(cds: TClientDataSet; separator: Char;colNames: Boolean): string;
     function coletasToStringInt(cds, Viagem: TClientDataSet; separator: Char;colNames: Boolean; Registro: Byte): string ; // Integrado com dados da viagem
@@ -456,6 +478,8 @@ var
   IdDescarga: Integer;
   arqTexto, ArqRename, ArqSigaColetor, ArqSigaProdutor: string;
   _VerMagis : string;
+  _MapasCarga : TMapasCarga;
+  _FileMapName: string;
 
   i, j: Integer;
   _ArqSaida, _ArqCadSiga : TStringList;
@@ -490,13 +514,14 @@ var
   ListaVisita: TListaVisita;
   ListaRegViagem: TListaRegViagem;
   DatAultColeta: TDateTime;
+  NomePasta: string;
 
 
 implementation
 
 uses
    uGlobal, DateUtils, Math, StrUtils,
-  Contnrs;
+  Contnrs, uVSSCLRCnExport, Variants;
 
   {$R *.dfm}
 
@@ -530,12 +555,22 @@ begin
       columnExistsSqlite('parametros','ParVerMeta', 'Varchar(01)', EmptyStr, True);
       columnExistsSqlite('parametros','ParVerSiga', 'Varchar(01)', EmptyStr, True);
       columnExistsSqlite('parametros','ParVerScl', 'Varchar(01)', EmptyStr, True);
+
+      // identificadores de conta no GetMilk
       columnExistsSqlite('parametros','ParContaId1', 'integer', EmptyStr, True);
       columnExistsSqlite('parametros','ParContaId2', 'integer', EmptyStr, True);
       columnExistsSqlite('parametros','ParContaId3', 'integer', EmptyStr, True);
       columnExistsSqlite('parametros','ParContaId4', 'integer', EmptyStr, True);
       columnExistsSqlite('parametros','ParContaId5', 'integer', EmptyStr, True);
       columnExistsSqlite('parametros','ParContaId6', 'integer', EmptyStr, True);
+
+      // Associação dos identificadores de conta no ERP Cliente
+      columnExistsSqlite('parametros','ParKeyId1', 'Varchar(15)', EmptyStr, True);
+      columnExistsSqlite('parametros','ParKeyId2', 'Varchar(15)', EmptyStr, True);
+      columnExistsSqlite('parametros','ParKeyId3', 'Varchar(15)', EmptyStr, True);
+      columnExistsSqlite('parametros','ParKeyId4', 'Varchar(15)', EmptyStr, True);
+      columnExistsSqlite('parametros','ParKeyId5', 'Varchar(15)', EmptyStr, True);
+      columnExistsSqlite('parametros','ParKeyId6', 'Varchar(15)', EmptyStr, True);
 
       // Parametros - Local de saida dos arquivos gerados
       columnExistsSqlite('parametros','ParPathArqDatasul', 'Varchar(255)', EmptyStr, True);
@@ -545,6 +580,25 @@ begin
       columnExistsSqlite('parametros','ParPathArqSiga', 'Varchar(255)', EmptyStr, True);
       columnExistsSqlite('parametros','ParPathArqScl', 'Varchar(255)', EmptyStr, True);
 
+      // Parametros - Identifica se os arquivos de carga trazem dados de mais de uma empresa ou filial
+      columnExistsSqlite('parametros','ParCargaMultiEmpresa', 'Varchar(1)', EmptyStr, True);
+
+      // Paametros - Comanda limpeza em tabelas antes de sincronizar dados com o WS
+      columnExistsSqlite('parametros','ParDropTable', 'Varchar(1)', EmptyStr, True);
+
+      // Paametros - controla geração de arquivos do dia (hoje) - geração de unico arquivo dia anterior
+      columnExistsSqlite('parametros','ParColetasHoje', 'Varchar(1)', EmptyStr, True);
+
+      // Parametros - Localização de arquivos de carga
+      columnExistsSqlite('parametros','ParPathArqCarga', 'Varchar(255)', EmptyStr, True);
+      columnExistsSqlite('parametros','ParPathCargaApi', 'Varchar(255)', EmptyStr, True);
+      // Parametros - Tempo para atualização dos cadastros no servidor web
+      columnExistsSqlite('parametros','ParIntervaloCarga', 'Float', EmptyStr, True);
+
+      // Valores Default
+      qryAux.SQL.Clear;
+      qryAux.SQL.Text := 'Update Parametros Set ParColetasHoje = ''S'' Where IfNull(ParColetasHoje, ''X'') = ''X''';
+      qryAux.ExecSQL;
 
       // LogViagem - Controle de Geração de arquivos
       columnExistsSqlite('LogViagem','LovGerDatasul', 'Varchar(01)', EmptyStr, True);
@@ -557,8 +611,6 @@ begin
       columnExistsSqlite('LogViagem','LovVeiculo', 'Varchar(15)', EmptyStr, True);
       columnExistsSqlite('LogViagem','LovDataViagem', 'Date', EmptyStr, True);
       columnExistsSqlite('LogViagem','LovIndex', 'integer', EmptyStr, True);
-
-
     except
       MostraMsgErro('Falha ao abrir banco de dados');
     end;
@@ -573,6 +625,9 @@ begin
   PopularDadosConta(qryParametros);
   tmrConsole.Enabled := True;
   tmrConsole.Interval := Trunc(DadosConta.TimerProcInterno * 60000); // Minutos
+  // Ativa timer de envio de cadastro
+  tmrSync.Enabled := True;
+  tmrSync.Interval := Trunc(DadosConta.TimerProcCadastro * 60000); // Minutos
 end;
 
 procedure TVSSCLRotaConsoleDTM.AtualizarDatLeituraParam(Data: TDateTime);
@@ -584,7 +639,7 @@ begin
   qrySQL.ExecSQL;
 end;
 
-function TVSSCLRotaConsoleDTM.GetDescargas(DataInicio, DataTermino: TDateTime; FlgAtualizaUltDataLeitura: Boolean = False): string;
+function TVSSCLRotaConsoleDTM.GetDescargas(DataInicio, DataTermino: TDateTime; FlgAtualizaUltDataLeitura: Boolean = False; PersistirLog: Boolean = True): string;
 var
   DadosRetornoDescarga: TDadosRetorno;
   DadosRetornoViagem: TDadosRetorno;
@@ -729,7 +784,8 @@ begin
               // Persistir
               ObjViagem.GerouDatasul := FlagSim;
               ObjViagem.Registrada := True;
-              PersistirLogViagem(ObjViagem);
+              if PersistirLog then
+                PersistirLogViagem(ObjViagem);
               // Arquivo
               GerarArquivoViagem(ObjViagem);
               // Empilha Viagem
@@ -832,7 +888,7 @@ begin
   Result := Linha;
 end;
 
-procedure TVSSCLRotaConsoleDTM.ExportarDescargas;
+procedure TVSSCLRotaConsoleDTM.ExportarDescargas(PersistirLog: Boolean );
 var
   DataProcIni, DataProcFim : TDateTime;
 begin
@@ -842,7 +898,7 @@ begin
     qryParametros.Open;
     DataProcIni := qryParametrosParDatIniLeituraDescargaWS.AsDateTime;
     DataProcFim := Date;
-    GetDescargas(DataProcIni, DataProcFim, False);
+    GetDescargas(DataProcIni, DataProcFim, False, PersistirLog);
     InserirMsgLog('Término Get Descargas');
   except on E:Exception do
     InserirMsgLog('ERRO : ' + E.Message);
@@ -883,7 +939,10 @@ begin
   '  ParPathArqDatasul = :ParPathArqDatasul, ParPathArqRm = :ParPathArqRm, ParPathArqMagis = :ParPathArqMagis, ' +
   '  ParPathArqMeta = :ParPathArqMeta, ParPathArqSiga = :ParPathArqSiga, ParPathArqScl = :ParPathArqScl, ' +
   '  ParContaId1 =  :ParContaId1, ParContaId2 =  :ParContaId2, ParContaId3 =  :ParContaId3, ParContaId4 =  :ParContaId4, ' +
-  '  ParContaId5 =  :ParContaId5, ParContaId6 =  :ParContaId6  ';
+  '  ParContaId5 =  :ParContaId5, ParContaId6 =  :ParContaId6, ParPathArqCarga = :ParPathArqCarga, ParIntervaloCarga = :ParIntervaloCarga, ' +
+  '  ParKeyId1 = :ParkeyId1, ParKeyId2 = :ParkeyId2, ParKeyId3 = :ParkeyId3, ParKeyId4 = :ParkeyId4, ParKeyId5 = :ParkeyId5, ParKeyId6 = :ParkeyId6, ' +
+  '  ParCargaMultiEmpresa = :ParCargaMultiEmpresa, ParPathCargaApi = :ParPathCargaApi, ParDropTable = :ParDropTable, ' +
+  '  ParColetasHoje = :ParColetasHoje' ;
 
   qrySQL.ParamByName('ParContaId').Value := DadosConta.IdConta;
   qrySQL.ParamByName('ParPathArqDescarga').Value := DadosConta.PathArqDescarga;
@@ -922,6 +981,18 @@ begin
   qrySQL.ParamByName('ParContaId4').Value := DadosConta.IdConta4;
   qrySQL.ParamByName('ParContaId5').Value := DadosConta.IdConta5;
   qrySQL.ParamByName('ParContaId6').Value := DadosConta.IdConta6;
+  qrySQL.ParamByName('ParPathArqCarga').Value := DadosConta.PathArqCarga;
+  qrySQL.ParamByName('ParIntervaloCarga').Value := DadosConta.TimerProcCadastro;
+  qrySQL.ParamByName('ParkeyId1').Value := DadosConta.KeyId1;
+  qrySQL.ParamByName('ParkeyId2').Value := DadosConta.KeyId2;
+  qrySQL.ParamByName('ParkeyId3').Value := DadosConta.KeyId3;
+  qrySQL.ParamByName('ParkeyId4').Value := DadosConta.KeyId4;
+  qrySQL.ParamByName('ParkeyId5').Value := DadosConta.KeyId5;
+  qrySQL.ParamByName('ParkeyId6').Value := DadosConta.KeyId6;
+  qrySQL.ParamByName('ParCargaMultiEmpresa').Value := DadosConta.CargaMultiEmpresa;
+  qrySQL.ParamByName('ParPathCargaApi').Value := DadosConta.PathArqCargaApi;
+  qrySQL.ParamByName('ParDropTable').Value := DadosConta.DropTable;
+  qrySQL.ParamByName('ParColetasHoje').Value := DadosConta.ColetasHoje;
 
   qrySQL.ExecSQL;
 
@@ -1027,10 +1098,10 @@ begin
   begin
     qrySQL.SQL.Text := 'INSERT INTO LogViagem (LovRotaCod, LovRotaId, LovEnviaNotif, LovDataProc, LovDifColeta, ' +
       'LovQtdeDescarga, LovViagemId, LovGerDatasul, LovGerRm, LovGerMagis, LovGerMeta, LovGerSiga, '+
-      'LovGerScl,  LovColetor, LovVeiculo, LovDataViagem) ' +
+      'LovGerScl,  LovColetor, LovVeiculo, LovDataViagem, LovIndex) ' +
       'VALUES (:LovRotaCod, :LovRotaId, :LovEnviaNotif, :LovDataProc, :LovDifColeta, :LovQtdeDescarga,' +
       ' :LovViagemId, :LovGerDatasul, :LovGerRm, :LovGerMagis, :LovGerMeta, :LovGerSiga, :LovGerScl, :LovColetor, ' +
-      ' :LovVeiculo, :LovDataViagem)';
+      ' :LovVeiculo, :LovDataViagem, :LovIndex)';
     qrySQL.ParamByName('LovRotaCod').Value := Viagem.RotaCodigo;
     qrySQL.ParamByName('LovRotaId').Value := Viagem.RotaId;
     qrySQL.ParamByName('LovDataProc').Value := Now;
@@ -1047,6 +1118,9 @@ begin
     qrySQL.ParamByName('LovColetor').Value := Viagem.Coletor;
     qrySQL.ParamByName('LovVeiculo').Value := Viagem.Veiculo;
     qrySQL.ParamByName('LovDataViagem').Value :=  GetData( FormatDateTime('yyyy-MM-dd',Viagem.DatAbertura));
+    qrySQL.ParamByName('LovIndex').Value := Viagem.Index;
+
+
 
     qrySQL.ExecSQL;
   end;
@@ -1084,6 +1158,7 @@ procedure TVSSCLRotaConsoleDTM.tmrConsoleTimer(Sender: TObject);
 var
   x: Integer;
 begin
+
   for x := 1 to 6 do
   begin
     DadosConta.IdConta := DadosConta.ChaveContas[x];
@@ -1093,16 +1168,20 @@ begin
 
     if (DadosConta.GeraTotvsDatasul = FlagSim) then
     begin
-      ExportarDescargas; // Arquivo de atesto do datasul
-
+      // ExportarDescargas; // Arquivo de atesto do datasul
+      ExportarColetas('Datasul');
     end;
     if (DadosConta.GeraMagis = FlagSim) then
     begin
-      ExportarColetas; // Arquuivo de coletas
+      ExportarColetas('Magis'); // Arquuivo de coletas
     end;
     if (DadosConta.GeraScl = FlagSim) then
     begin
-      ;
+      ExportarColetas('SCL'); // Arquuivo de coletas
+    end;
+     if (DadosConta.GeraTotvsRm = FlagSim) then
+    begin
+      ExportarColetas('RM');
     end;
     if (DadosConta.GeraSiga = FlagSim) then
     begin
@@ -1111,22 +1190,48 @@ begin
   end;
   // Atualizaq parametros
   AtualizarDatLeituraParam(Date);
+
 end;
 
 procedure TVSSCLRotaConsoleDTM.sheConsoleEvents0Execute(Sender: TJvEventCollectionItem;
   const IsSnoozeEvent: Boolean);
+  var
+    x: Integer;
 begin
   // Faz Exportação Extra 3 Últimos Dias ::  De 3 em 3 horas
   InserirMsgLog('Início Get Registros :: EXTRA');
   try
-    if (DadosConta.GeraTotvsDatasul = FlagSim) then
-      GetDescargas(Date - 3, Date, False);
-    if (DadosConta.GeraMagis = FlagSim) then
-      GetColetas(Date - 3, Date,'0',EmptyStr,False);
-    if (DadosConta.GeraSiga = FlagSim) then
-      GetDadosSiga(Date - 3, Date,'0',EmptyStr,False);
+    try
+      for x := 1 to 6 do
+      begin
+        DadosConta.IdConta := DadosConta.ChaveContas[x];
+        // Se não houver numero de conta, pula para proxima posição
+        if DadosConta.IdConta = EmptyStr then
+        Continue;
+
+        if (DadosConta.GeraTotvsDatasul = FlagSim) then
+        begin
+          GetDescargas(Date - 3, Date, False, False);
+          GetColetas(Date - 3, Date,'0',EmptyStr,False,'Datasul');
+        end;
+
+        if (DadosConta.GeraMagis = FlagSim) then
+          GetColetas(Date - 3, Date,'0',EmptyStr,False);
+
+        if (DadosConta.GeraTotvsRm = FlagSim) then
+          GetColetas(Date - 3, Date,'0',EmptyStr,False,'RM');
+
+        if (DadosConta.GeraSiga = FlagSim) then
+          GetDadosSiga(Date - 3, Date,'0',EmptyStr,False);
+      end;
+    except
+      on E: Exception do
+      InserirMsgLog('Erro: ' + E.message);
+    end;
   finally
     InserirMsgLog('Término Get Registros :: EXTRA');
+    // Limpa Memória e Reinicia a aplicação
+     TrimAppMemorySize(True,Application.ExeName);
   end;
 end;
 // Veririca se existe coluna na tabela do banco de dados, caso contrario, cria
@@ -1161,7 +1266,7 @@ begin
   end;
 end;
 // Exportar coletas
-procedure TVSSCLRotaConsoleDTM.ExportarColetas;
+procedure TVSSCLRotaConsoleDTM.ExportarColetas(Layout: string);
 var
   DataProcIni, DataProcFim : TDateTime;
 begin
@@ -1171,7 +1276,7 @@ begin
     qryParametros.Open;
     DataProcIni := qryParametrosParDatIniLeituraDescargaWS.AsDateTime;
     DataProcFim := Date;
-    GetColetas(DataProcIni, DataProcFim, '0',EmptyStr, False);
+    GetColetas(DataProcIni, DataProcFim, '0',EmptyStr, False, Layout);
     InserirMsgLog('Término Get Coletas');
   except on E:Exception do
     InserirMsgLog('ERRO : ' + E.Message);
@@ -1180,9 +1285,20 @@ end;
 // Recebe Dados das coletas
 function TVSSCLRotaConsoleDTM.GetColetas(DataInicio,
   DataTermino: TDateTime; Sync, Comunitario: string;
-  FlgAtualizaUltDataLeitura: Boolean): string;
+  FlgAtualizaUltDataLeitura: Boolean; Layout: string): string;
 var
-  count : Integer;
+  DataTerminoAux: TDateTime;
+  count, regPos : Integer;
+  FolderSaida : string;
+  FCargaRural : TCargaRural;
+  FProdutorCarga : TProdutorCarga;
+  FArqLog : TStringList;
+  FArqSaveLog: string;
+  _RegistroMovimento : TMovimentoRM;
+  _ItemRegistro : TItensMovimentoRM;
+  _DocProdutor, _LinhaDados, _Separador : string;
+  CplNome : string;  // Complemento do nome do arquivo de saida (Gerado com Random)
+
 
   function GetViagem(Id: Integer): TJSONObject;
   var
@@ -1211,12 +1327,34 @@ var
     Result := not qrySQL.IsEmpty;
   end;
 
-  function ViagemJahProcessada(IdViagem: Integer): Boolean;
+  function ViagemJahProcessada(IdViagem: Integer; Layout: string ): Boolean;
   begin
     qrySQL.Close;
-    qrySQL.SQL.Text := 'SELECT 1 FROM LogViagem WHERE LovViagemId = :Id and LovGerMagis = :LovGerMagis';
-    qrySQL.ParamByName('Id').Value := IdViagem;
-    qrySQL.ParamByName('LovGerMagis').Value := FlagSim;
+    if Layout = 'Magis' then
+    begin
+      qrySQL.SQL.Text := 'SELECT 1 FROM LogViagem WHERE LovViagemId = :Id and LovGerMagis = :LovGerMagis';
+      qrySQL.ParamByName('Id').Value := IdViagem;
+      qrySQL.ParamByName('LovGerMagis').Value := FlagSim;
+    end
+    else if Layout = 'Datasul' then
+    begin
+      qrySQL.SQL.Text := 'SELECT 1 FROM LogViagem WHERE LovViagemId = :Id and LovGerDatasul = :LovGerDatasul';
+      qrySQL.ParamByName('Id').Value := IdViagem;
+      qrySQL.ParamByName('LovGerDatasul').Value := FlagSim;
+    end
+    else if Layout = 'RM' then
+    begin
+      qrySQL.SQL.Text := 'SELECT 1 FROM LogViagem WHERE LovViagemId = :Id and LovGerRM = :LovGerRM';
+      qrySQL.ParamByName('Id').Value := IdViagem;
+      qrySQL.ParamByName('LovGerRM').Value := FlagSim;
+    end
+    else if Layout = 'SCL' then
+    begin
+      qrySQL.SQL.Text := 'SELECT 1 FROM LogViagem WHERE LovViagemId = :Id and LovGerScl = :LovGerScl';
+      qrySQL.ParamByName('Id').Value := IdViagem;
+      qrySQL.ParamByName('LovGerScl').Value := FlagSim;
+    end;
+
     qrySQL.Open;
 
     Result := not qrySQL.IsEmpty;
@@ -1258,522 +1396,72 @@ var
       Result.Registrada := False;
     end;
   end;
-
-  function getRotas(): TListaRota;
-  var
-    i: Integer;
+  procedure clearTables;
   begin
-    Result := TListaRota.Create;
 
-    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
-    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
-    DadosRetornoRota :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readRota');
-    if DadosRetornoRota.Sucesso then
-    begin
-      ColecaoRota := TJSONArray.create(DadosRetornoRota.Dados);
-      if cdsRota.Active then
-        cdsRota.Close;
-      cdsRota.CreateDataSet;
-      for i := 0 to ColecaoRota.length -1 do
-      begin
-        Rota := ColecaoRota.getJSONObject(i);
-        objRota := TRota.Create;
-        try
-           objRota.id := Rota.getInt('id');
-           objRota.Codigo :=  Rota.getString('codigo');
-           objRota.Nome := Rota.getString('nome');
-           // Empilha rota
-           //Result.Add(objRota);
-
-           // popula dataset rota
-           cdsRota.Insert;
-
-           cdsRotaCodigo.Value := objRota.Codigo;
-           cdsRotaNome.Value := objRota.Nome;
-
-           cdsRota.Post;
-        finally
-          ;
-        end;
-      end;
-    end;
-  end;
-
-  function getLinhas(): TListaLinha;
-  var
-    i: Integer;
-  begin
-    Result := TListaLinha.Create;
-
-    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
-    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
-    DadosRetornoLinha :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readLinha');
-    if DadosRetornoLinha.Sucesso then
-    begin
-      ColecaoLinha := TJSONArray.create(DadosRetornoLinha.Dados);
-      if cdsLinha.Active then
-        cdsLinha.Close;
-      cdsLinha.CreateDataSet;
-      for i := 0 to ColecaoLinha.length -1 do
-      begin
-        Linha := ColecaoLinha.getJSONObject(i);
-        objLinha := TLinha.Create;
-
-        try
-           objLinha.id := Linha.getInt('id');
-           objLinha.Codigo :=  Linha.getString('codigo');
-           objLinha.Nome := Linha.getString('nome');
-           // objLinha.Distancia :=  StrToInt(Linha.getString('distancia'));
-           TryStrToInt(Linha.getString('distancia'),objLinha.Distancia);
-           // Empilha Linha
-           //Result.Add(objLinha);
-
-           // popula dataset linhas
-           cdsLinha.Insert;
-
-           cdsLinhaCodigo.Value := objLinha.Codigo;
-           cdsLinhaNome.Value := objLinha.Nome;
-           cdsLinhadistancia.Value := objLinha.Distancia;
-
-           cdsLinha.Post;
-
-        finally
-         ;
-        end;
-      end;
-    end;
-  end;
-
-  function getProdutores(): TListaProdutor;
-  var
-    i: Integer;
-  begin
-    Result := TListaProdutor.Create;
-
-    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
-    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
-    DadosRetornoProdutor :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readProdutor');
-    if DadosRetornoProdutor.Sucesso then
-    begin
-      ColecaoProdutor := TJSONArray.create(DadosRetornoProdutor.Dados);
-      if cdsProdutor.Active then
-        cdsProdutor.Close;
-      cdsProdutor.CreateDataSet;
-      for i := 0 to ColecaoProdutor.length -1 do
-      begin
-        Produtor := ColecaoProdutor.getJSONObject(i);
-        objProdutor := TProdutor.Create;
-        try
-           objProdutor.id := Produtor.getInt('id');
-           objProdutor.Codigo :=  Produtor.getString('codigo');
-           objProdutor.Nome := Produtor.getString('nome');
-           // Empilha produtor
-          // Result.Add(objProdutor);
-
-          // popula cds produtor
-           cdsProdutor.Insert;
-
-           cdsProdutorCodigo.Value := objProdutor.Codigo;
-           cdsProdutorNome.Value := objProdutor.Nome;
-
-           cdsProdutor.Post;
-
-        finally
-         ;
-        end;
-      end;
-    end;
-  end;
-
-  function getFazendas(): TListaFazenda;
-  var
-    i: Integer;
-  begin
-    Result := TListaFazenda.Create;
-
-    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
-    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
-    DadosRetornoFazenda :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readFazenda');
-    if DadosRetornoFazenda.Sucesso then
-    begin
-      ColecaoFazenda := TJSONArray.create(DadosRetornoFazenda.Dados);
-      if cdsFazendas.Active then
-        cdsFazendas.Close;
-      cdsFazendas.CreateDataSet;
-      for i := 0 to ColecaoFazenda.length -1 do
-      begin
-        Fazenda := ColecaoFazenda.getJSONObject(i);
-        objFazenda := TFazenda.Create;
-
-        try
-           objFazenda.id := Fazenda.getInt('id');
-           objFazenda.Codigo :=  Fazenda.getString('codigo');
-           objFazenda.Nome := Fazenda.getString('nome');
-           // Empilha Fazenda
-           //Result.Add(objFazenda);
-
-           // popula dataset fazendas
-           cdsFazendas.Insert;
-
-           cdsFazendascodigo.Value := objFazenda.Codigo;
-           cdsFazendasnome.Value := objFazenda.Nome;
-
-           cdsFazendas.Post;
-
-        finally
-         ;
-        end;
-      end;
-    end;
-  end;
-
-  function getColetores(): TListaColetor;
-  var
-    i: Integer;
-  begin
-    Result := TListaColetor.Create;
-
-    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
-    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
-    DadosRetornoColetor :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readColetor');
-    if DadosRetornoColetor.Sucesso then
-    begin
-      ColecaoColetor := TJSONArray.create(DadosRetornoColetor.Dados);
-      if cdsColetor.Active then
-        cdsColetor.Close;
-      cdsColetor.CreateDataSet;
-      for i := 0 to ColecaoColetor.length -1 do
-      begin
-        Coletor := ColecaoColetor.getJSONObject(i);
-        objColetor := TColetor.Create;
-        try
-           objColetor.id := Coletor.getInt('id');
-           objColetor.Codigo :=  Coletor.getString('codigo');
-           objColetor.Nome := Coletor.getString('nome');
-           // Empilha Coletor
-          //  Result.Add(objColetor);
-
-          // popula dataset de coletores
-           cdsColetor.Insert;
-
-           cdsColetorCodigo.Value := objColetor.Codigo;
-           cdsColetorNome.Value := objColetor.Nome;
-
-           cdsColetor.Post;
-
-
-        finally
-         ;
-        end;
-      end;
-    end;
-  end;
-
-  function getVeiculos(): TListaVeiculo;
-  var
-    i: Integer;
-  begin
-    Result := TListaVeiculo.Create;
-
-    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
-    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
-    DadosRetornoVeiculo :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readVeiculo');
-    if DadosRetornoVeiculo.Sucesso then
-    begin
-      ColecaoVeiculo := TJSONArray.create(DadosRetornoVeiculo.Dados);
-      if cdsVeiculos.Active then
-        cdsVeiculos.Close;
-      cdsVeiculos.CreateDataSet;
-      for i := 0 to ColecaoVeiculo.length -1 do
-      begin
-        Veiculo := ColecaoVeiculo.getJSONObject(i);
-        objVeiculo := TVeiculo.Create;
-        try
-           objVeiculo.id := Veiculo.getInt('id');
-           objVeiculo.Codigo :=  Veiculo.getString('codigo');
-           objVeiculo.Placa := Veiculo.getString('placa');
-           // Empilha Veiculo
-           //  Result.Add(objVeiculo);
-
-           // popula dataset de veiculo
-           cdsVeiculos.Insert;
-
-           cdsVeiculoscodigo.Value := objVeiculo.Codigo;
-           cdsVeiculosid.Value := objVeiculo.id;
-           cdsVeiculosplaca.Value := objVeiculo.Placa;
-
-           cdsVeiculos.Post;
-        finally
-         ;
-        end;
-      end;
-    end;
-  end;
-  {Carrega viagens}
-
-  function getViagens(): TListaRegViagem;
-  var
-    i: Integer;
-  begin
-    Result := TListaRegViagem.Create;
-
-    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
-    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
-    DadosRetornoViagem :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readViagem');
-    if DadosRetornoViagem.Sucesso then
-    begin
-      ColecaoViagem := TJSONArray.create(DadosRetornoViagem.Dados);
-      if cdsViagens.Active then
-        cdsViagens.Close;
-      cdsViagens.CreateDataSet;
-      for i := 0 to ColecaoViagem.length -1 do
-      begin
-        Viagem := ColecaoViagem.getJSONObject(i);
-        objRegViagem := TRegViagem.Create;
-        try
-           objRegViagem.id := ValidaInt(Viagem.getString('id'));
-           objRegViagem.veiculo_id := ValidaInt(Viagem.getString('veiculo_id'));
-           objRegViagem.coletor_id := ValidaInt(Viagem.getString('coletor_id'));
-           objRegViagem.linha_id := ValidaInt(Viagem.getString('linha_id'));
-           objRegViagem.rota_id := ValidaInt(Viagem.getString('rota_id'));
-           objRegViagem.conta_id := ValidaInt(Viagem.getString('conta_id'));
-           objRegViagem.tecnico_id := ValidaInt(Viagem.getString('tecnico_id'));
-           objRegViagem.dt_fechamento := GetDataHora(Viagem.getString('dt_fechamento'));
-           objRegViagem.dt_push := GetDataHora(Viagem.getString('dt_push'));
-           objRegViagem.dt_abertura := GetDataHora(Viagem.getString('dt_abertura'));
-           objRegViagem.dt_descarga := GetDataHora(Viagem.getString('dt_descarga'));
-           objRegViagem.dt_liberacao := GetDataHora(Viagem.getString('dt_liberacao'));
-           objRegViagem.km_inicial := Viagem.getInt('km_inicial');
-           objRegViagem.km_final := Viagem.getInt('km_final');
-           objRegViagem.km_distancia := Viagem.getInt('km_distancia');
-           objRegViagem.km_justificativa := Viagem.getString('km_justificativa');
-           objRegViagem.descarrega := Viagem.getString('descarregada');
-           objRegViagem.liberada := Viagem.getString('liberada');
-           objRegViagem.Rota := Viagem.getString('rota');
-           objRegViagem.Linha := Viagem.getString('linha');
-           objRegViagem.Coletor := Viagem.getString('coletor');
-           objRegViagem.Veiculo := Viagem.getString('veiculo');
-
-           // Empilha Viagem
-          // Result.Add(objRegViagem);
-
-           // popula dataset de viagens
-
-           cdsViagens.Insert;
-
-           cdsViagensid.Value            :=  objRegViagem.id ;
-           cdsViagensveiculo_id.Value    :=  objRegViagem.veiculo_id;
-           cdsViagenscoletor_id.Value    :=  objRegViagem.coletor_id;
-           cdsViagenslinha_id.Value      :=  objRegViagem.linha_id;
-           cdsViagensrota_id.Value       :=  objRegViagem.rota_id;
-           cdsViagensdt_push.Value       :=  objRegViagem.dt_push;
-           cdsViagensdt_abertura.Value   :=  objRegViagem.dt_abertura;
-           cdsViagensdt_fechamento.Value :=  objRegViagem.dt_fechamento;
-           cdsViagenskm_inicial.Value    :=  objRegViagem.km_inicial;
-           cdsViagenskm_final.Value      :=  objRegViagem.km_final;
-           cdsViagensdt_liberacao.Value  :=  objRegViagem. dt_liberacao;
-           cdsViagensrota.Value          :=  objRegViagem.Rota;
-           cdsViagenslinha.Value         :=  objRegViagem.Linha;
-           cdsViagenscoletor.Value       :=  objRegViagem.Coletor;
-           cdsViagensveiculo.Value       :=  objRegViagem.Veiculo;
-           cdsViagenskm_distancia.Value  :=  objRegViagem.km_distancia;
-           cdsViagenskm_real.Value       :=  objRegViagem.km_distancia;
-
-           cdsViagens.Post;
-        finally
-         ;
-        end;
-      end;
-    end;
-  end;
-  {Carrega coletas }
-  function getColetas(): TListaColeta;
-  var
-    i: Integer;
-  begin
-    Result := TListaColeta.Create;
-
-    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
-    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
-
-    // Coletas tanques individuais
-    DadosRetornoColeta :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readColeta', NaoRetornaComunitario);
-    if DadosRetornoColeta.Sucesso then
-    begin
-      ColecaoColeta := TJSONArray.create(DadosRetornoColeta.Dados);
-      // Ativa dataset
-      if cdsColetas.Active then
-        cdsColetas.Close;
-      cdsColetas.CreateDataSet;
-
-      for i := 0 to ColecaoColeta.length -1 do
-      begin
-        Coleta := ColecaoColeta.getJSONObject(i);
-        objColeta := TColeta.Create;
-        try
-           objColeta.id := Coleta.getInt('id');
-           objColeta.dt_push :=  GetDataHora(Coleta.getString('dt_push'));
-           objColeta.viagem_id := ValidaInt(Coleta.getString('viagem_id'));
-           objColeta.parada_id := ValidaInt(Coleta.getString('parada_id'));
-           objColeta.coletor_id := ValidaInt(Coleta.getString('coletor_id'));
-           objColeta.tanque_id := ValidaInt(Coleta.getString('tanque_id'));
-           objColeta.dt_coleta := GetDataHora(Coleta.getString('dt_coleta'));
-           objColeta.CodigoFazenda := Coleta.getString('fazenda');
-           objColeta.CodigoProdutor := Coleta.getString('produtor');
-           objColeta.tanque := Coleta.getString('tanque');
-           objColeta.quantidade := Coleta.getInt('quantidade');
-           objColeta.regua := Coleta.getDouble('regua');
-           objColeta.alizarol := Coleta.getString('alizarol');
-           objColeta.amostra := Coleta.getString('amostra');
-           objColeta.contraprova := Coleta.getString('contraprova');
-           objColeta.temperatura := Coleta.getDouble('temperatura');
-           objColeta.coletada := Coleta.getString('coletada');
-           objColeta.dt_edicao := GetDataHora(Coleta.getString('dt_edicao'));
-           objColeta.CodigoMotorista := Coleta.getString('coletor');
-           // Empilha Coleta
-         //  Result.Add(objColeta);
-
-           // Popula dataset de coleta
-           cdsColetas.Append;
-
-           cdsColetasid.Value := objColeta.Id;
-           cdsColetasdt_push.Value := objColeta.dt_push;
-           cdsColetascoletor_id.Value := objColeta.coletor_id;
-           cdsColetasparada_id.Value := objColeta.parada_id;
-           cdsColetastanque_id.Value := objColeta.tanque_id;
-           cdsColetasdt_coleta.Value := objColeta.dt_coleta ;
-           cdsColetasCodigoProdutor.Value := objColeta.CodigoProdutor;
-           cdsColetasquantidade.Value := objColeta.quantidade;
-           cdsColetasregua.Value := objColeta.regua;
-           cdsColetasalizarol.Value := objColeta.alizarol;
-           cdsColetasamostra.Value := objColeta.amostra;
-           cdsColetascontraprova.Value := objColeta.contraprova;
-           cdsColetastemperatura.Value := objColeta.temperatura;
-           cdsColetascoletada.Value := objColeta.coletada;
-           cdsColetasdt_edicao.Value := objColeta.dt_edicao;
-           cdsColetasviagem_id.Value := objColeta.viagem_id;
-           cdsColetasCodigoFazenda.Value := objColeta.CodigoFazenda;
-           cdsColetastanque.Value := objColeta.tanque;
-
-           cdsColetas.Post;
-        finally
-         ;
-        end;
-      end;
-    end;
-
-    // Coletas Distribuicao dos tanques coletivos
-    DadosRetornoColeta :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readColetaComunitaria',RetornaComunitario );
-    if DadosRetornoColeta.Sucesso then
-    begin
-      ColecaoColeta := TJSONArray.create(DadosRetornoColeta.Dados);
-      // Ativa dataset
-     // cdsColetas.CreateDataSet;
-      for i := 0 to ColecaoColeta.length -1 do
-      begin
-        Coleta := ColecaoColeta.getJSONObject(i);
-        objColeta := TColeta.Create;
-        try
-           objColeta.id := Coleta.getInt('id');
-           objColeta.dt_push :=  GetDataHora(Coleta.getString('dt_push'));
-           objColeta.viagem_id := ValidaInt(Coleta.getString('viagem_id'));
-           objColeta.parada_id := ValidaInt(Coleta.getString('parada_id'));
-           objColeta.coletor_id := ValidaInt(Coleta.getString('coletor_id'));
-           objColeta.tanque_id := ValidaInt(Coleta.getString('tanque_id'));
-           objColeta.dt_coleta := GetDataHora(Coleta.getString('dt_coleta'));
-           objColeta.CodigoFazenda := Coleta.getString('fazenda');
-           objColeta.CodigoProdutor := Coleta.getString('produtor');
-           objColeta.tanque := Coleta.getString('tanque');
-           objColeta.quantidade := Coleta.getInt('quantidade');
-           objColeta.regua := Coleta.getDouble('regua');
-           objColeta.alizarol := Coleta.getString('alizarol');
-           objColeta.amostra := Coleta.getString('amostra');
-           objColeta.contraprova := Coleta.getString('contraprova');
-           objColeta.temperatura := Coleta.getDouble('temperatura');
-           objColeta.coletada := Coleta.getString('coletada');
-           objColeta.dt_edicao := GetDataHora(Coleta.getString('dt_edicao'));
-           objColeta.CodigoMotorista := Coleta.getString('coletor');
-           // Empilha Coleta
-         //  Result.Add(objColeta);
-
-           // Popula dataset de coleta
-           cdsColetas.Append;
-
-           cdsColetasid.Value := objColeta.Id;
-           cdsColetasdt_push.Value := objColeta.dt_push;
-           cdsColetascoletor_id.Value := objColeta.coletor_id;
-           cdsColetasparada_id.Value := objColeta.parada_id;
-           cdsColetastanque_id.Value := objColeta.tanque_id;
-           cdsColetasdt_coleta.Value := objColeta.dt_coleta ;
-           cdsColetasCodigoProdutor.Value := objColeta.CodigoProdutor;
-           cdsColetasquantidade.Value := objColeta.quantidade;
-           cdsColetasregua.Value := objColeta.regua;
-           cdsColetasalizarol.Value := objColeta.alizarol;
-           cdsColetasamostra.Value := objColeta.amostra;
-           cdsColetascontraprova.Value := objColeta.contraprova;
-           cdsColetastemperatura.Value := objColeta.temperatura;
-           cdsColetascoletada.Value := objColeta.coletada;
-           cdsColetasdt_edicao.Value := objColeta.dt_edicao;
-           cdsColetasviagem_id.Value := objColeta.viagem_id;
-           cdsColetasCodigoFazenda.Value := objColeta.CodigoFazenda;
-           cdsColetastanque.Value := objColeta.tanque;
-
-           cdsColetas.Post;
-        finally
-         ;
-        end;
-      end;
-    end;
-  end;
-
-  {Visitas em uma periodo}
-
-  function getVisitas(): TListaVisita;
-  var
-    i: Integer;
-  begin
-    Result := TListaVisita.Create;
-
-    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
-    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
-    DadosRetornoVisita :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readVisita');
-    if DadosRetornoVisita.Sucesso then
-    begin
-      ColecaoVisita := TJSONArray.create(DadosRetornoVisita.Dados);
-      for i := 0 to ColecaoVisita.length -1 do
-      begin
-        Visita := ColecaoVisita.getJSONObject(i);
-        objVisita := TVisita.Create;
-        try
-           objVisita.id := Visita.getInt('id');
-           objVisita.viagem_id := ValidaInt(Visita.getString('viagem_id'));
-           objVisita.conta_id := ValidaInt(Visita.getString('conta_id'));
-           objVisita.rota_id := ValidaInt(Visita.getString('rota_id'));
-           objVisita.linha_id := ValidaInt(Visita.getString('linha_id'));
-           objVisita.fazenda_id := ValidaInt(Visita.getString('fazenda_id'));
-           objVisita.dt_push := GetData(Visita.getString('dt_push'));
-           objVisita.dt_inicio := GetData(Visita.getString('dt_inicio'));
-           objVisita.dt_fim := GetData(Visita.getString('dt_fim'));
-           objVisita.motivo := Visita.getString('motivo');
-           objVisita.cancelado := Visita.getString('cancelado');
-           objVisita.total_coleta := Visita.getInt('total_coleta');
-           // Empilha Visita
-           Result.Add(objVisita);
-        finally
-         ;
-        end;
-      end;
-    end;
+    if cdsColetas.Active then cdsColetas.EmptyDataSet;
+    if cdsViagens.Active then cdsViagens.EmptyDataSet;
+    if cdsRota.Active then cdsRota.EmptyDataSet;
+    if cdsLinha.Active then cdsLinha.EmptyDataSet;
+    if cdsColetor.Active then cdsColetor.EmptyDataSet;
+    if cdsProdutor.Active then cdsProdutor.EmptyDataSet;
+    if cdsFazendas.Active then cdsFazendas.EmptyDataSet;
+    if cdsVeiculos.Active then cdsVeiculos.EmptyDataSet;
   end;
 begin
   try
+    // Cria a estrutura de registro de ocorrências - Log de operação
+    FArqLog := TStringList.Create;
+    // Inicia o log de atividades
+    FArqLog.Append('Milk´s Rota :: Log Geração de Arquivos - ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
+    FArqLog.Append('Conta: ' + DadosConta.IdConta );
+    FArqLog.Append('Período : ' +  FormatDateTime('dd/MM/yyyy', DataInicio) +  ' Até ' + FormatDateTime('dd/MM/yyyy', DataTermino)  );
+    FArqLog.Append('Layout Solicitado: ' + Layout);
+    FArqLog.Append('*******************************************');
+
     // Versao da saída do arquivo Magistech
     _VerMagis :=  DadosConta.VerMagis;
+
     // Polula datasets
-    PopulaAtoresColeta(DataInicio,DataTermino,Sync,Comunitario);
+    clearTables; // Limpa estrutura dos datasets
+
+    // Trata Coletas Hj
+    if (DadosConta.ColetasHoje = FlagNao) then
+    begin
+      DataTerminoAux := DataTermino - 1;
+
+      if (DataTerminoAux > DataInicio) then
+        DataInicio := DataTermino;
+    end
+    else
+      DataTerminoAux := DataTermino;
+
+
+
+    PopulaAtoresColeta(DataInicio,DataTerminoAux, Sync, Comunitario);
+
 
     // Arquivo com dados coleta formatado
     _ArqSaida := TStringList.Create;
+
+    // Pasta para gravação dos arquivos
+    if Layout = 'Datasul' then
+    begin
+      FolderSaida := DadosConta.PathArqDatasul + '\Datasul\' + DadosConta.IdConta;
+    end
+    else if Layout = 'Magis' then
+    begin
+      FolderSaida := DadosConta.PathArqMagis + '\MagisErp\' + DadosConta.IdConta;
+    end
+    else if Layout = 'RM' then
+    begin
+      FolderSaida := DadosConta.PathArqRm + '\TotvsRM\' + DadosConta.IdConta;
+    end
+    else if Layout = 'SCL' then
+    begin
+      _Separador := '|';
+      FolderSaida := DadosConta.PathArqScl + '\SCL\' + DadosConta.IdConta;
+    end ;
 
     // ordena as viagem por id
     cdsViagens.IndexFieldNames := 'id';
@@ -1781,28 +1469,65 @@ begin
     // Ordena as coletas por viagem
     cdsColetas.IndexFieldNames := 'viagem_id';
 
+    // Insere no log os ids detectados das viagens
+    FArqLog.Append('|<><> --- Viagens Localizadas  no perídodo <><> ---|');
+
+    cdsViagens.First;
+    while not cdsViagens.Eof do
+    begin
+      FArqLog.Append('|<><>| Viagem ' + IntToStr(cdsViagensid.Value) + ' |<><>| ');
+      cdsViagens.Next;
+    end;
+    // Fim Lista de viagens detectadas
+    FArqLog.Append('*******************************************');
+
+    // FArqLog.SaveToFile('viagens.txt');
+
+    // Processa viagens
     cdsViagens.First;
     i := 0;
     try
-
       for i := 0 to (cdsViagens.RecordCount -1) do
       begin
-        try
+        if (Layout <> 'RM') then
+           _ArqSaida.Clear
+        else if (DadosConta.VerRm <> 'U') then
           _ArqSaida.Clear;
 
-          // Verifica se a viagem já foi processada
-          if ViagemJahProcessada(cdsViagensid.Value) then
+        // Verifica se a viagem já foi processada
+        if ViagemJahProcessada(cdsViagensid.Value, Layout) then
+        begin
+          FArqLog.Append('Viagem já processada: ' + IntToStr(cdsViagensid.Value));
+          cdsViagens.Next;
+          Continue;
+        end;
+        // Verifica se viagem tem distribuição de tanque comunitario pendente e não gera o arquivo
+        if (cdsViagenscomunitario_pendente.Value = 'true') then
+        begin
+          FArqLog.Append('(*)VIAGEM COM TANQUE COMUNITARIO PENDENTE:  ' + IntToStr(cdsViagensid.Value));
+          cdsViagens.Next;
+          Continue;
+        end;
+        if (cdsViagenscoletor.Value = EmptyStr) or (VarIsNull(cdsViagenscoletor.AsVariant)) then
+        begin
+          FArqLog.Append('(*)VIAGEM COM CÓDIGO DO MOTORISTA INVÁLIDO PARA O ERP:  ' + IntToStr(cdsViagensid.Value));
+          cdsViagens.Next;
+          Continue;
+        end;
+
+        try
+          // Layout de saida:
+          if Layout = 'Datasul' then
           begin
-            cdsViagens.Next;
-            Continue;
+            FCargaRural := TCargaRural.Create;
+            FProdutorCarga := TProdutorCarga.Create;
+          end;
+          if Layout = 'RM' then
+          begin
+            _RegistroMovimento := TMovimentoRM.Create;
+            _ItemRegistro := TItensMovimentoRM.Create;
           end;
 
-          // Verifica se viagem tem distribuição de tanque comunitario pendente e não gera o arquivo
-          if (cdsViagenscomunitario_pendente.Value = 'true') then
-          begin
-            cdsViagens.Next;
-            Continue;
-          end;
 
           // Cria objeto viagem para persistencia no log
           ObjViagem := ViagemJahRegistrada(cdsViagensid.Value);
@@ -1810,9 +1535,17 @@ begin
           ObjViagem.RotaId := cdsViagensrota_id.Value;
           ObjViagem.RotaCodigo := cdsViagensrota.Value;
           ObjViagem.DatAbertura := cdsViagensdt_abertura.Value;
-          ObjViagem.GerouMagis := FlagSim;
+          if Layout = 'Magis' then
+            ObjViagem.GerouMagis := FlagSim;
+          if Layout = 'Datasul' then
+            ObjViagem.GerouDatasul := FlagSim;
+          if Layout = 'RM' then
+            ObjViagem.GerouRm := FlagSim;
+          if Layout = 'SCL' then
+            ObjViagem.GerouScl := FlagSim;
 
           // Completa dados da viagem
+          regPos := cdsViagens.RecNo;
           cdsViagens.Edit;
           if cdsLinha.Locate('codigo', cdsViagenslinha.Value,[loPartialKey]) then
           begin
@@ -1875,22 +1608,57 @@ begin
             qryApoio.Open;
 
             ObjViagem.Index := qryApoio.FieldByName('LovIndex').Value;
-
           end;
           cdsViagensNumeroViagem.Value := ObjViagem.Index;
 
+          // Verifica se o codigo do coletor está configurado corretamente com (/) na composição
+          if Layout = 'Datasul' then
+          begin
+            if (Pos('/',cdsViagenscoletor.AsString)) <= 0 then
+            begin
+              cdsViagenscoletor.Value := cdsViagenscoletor.Value + '/01';
+            end;
+          end;
+
           cdsViagens.Post;
 
-          // Gera dados da viagem no arquivo de saída
-          if _VerMagis = '2' then
+          // Retorna a posição que o cds viagem estava
+          cdsViagens.RecNo := regPos;
+
+          if Layout = 'Magis' then
           begin
-            _ArqSaida.Add(coletasToStringInt(cdsColetas, cdsViagens,';',True,0)); // Registro 0 = cabeçalho de viagem
-            // Dados da viagem
-            _ArqSaida.Add(coletasToStringInt(cdsColetas,cdsViagens,';',False,1)); // Registro 1 = dados da viagem atual
+            // Gera dados da viagem no arquivo de saída
+            if _VerMagis = '2' then
+            begin
+              _ArqSaida.Add(coletasToStringInt(cdsColetas, cdsViagens,';',True,0)); // Registro 0 = cabeçalho de viagem
+              // Dados da viagem
+              _ArqSaida.Add(coletasToStringInt(cdsColetas,cdsViagens,';',False,1)); // Registro 1 = dados da viagem atual
+            end;
+          end;
+          if Layout = 'Datasul' then
+          begin
+            // popula dados da viagem
+            FCargaRural.setValoresDefaul;
+            FCargaRural.Carga := IntToStr(cdsViagensid.Value);
+            FCargaRural.Estabelecimento := cdsViagensrota.AsString;
+            FCargaRural.Rota := cdsViagenslinha.Value;
+            FCargaRural.NomeMotorista := cdsViagensNomeColetor.Value;
+            FCargaRural.CodigoTransportador := StrToInt(Copy(cdsViagenscoletor.AsString,0,(Pos('/',cdsViagenscoletor.AsString)-1)) ); // cdsViagenscoletor.AsInteger;
+            FCargaRural.CodigoVeiculo := cdsViagensveiculo.Value;
+            FCargaRural.Placa := cdsViagensPlacaVeiculo.Value;
+            FCargaRural.UfPlaca := 'MG';
+            FCargaRural.QtdeCompartimentos := cdsViagensbocas.AsInteger;
+            FCargaRural.HodometroInicial := cdsViagenskm_inicial.Value;
+            FCargaRural.HodometroFinal := cdsViagenskm_final.Value;
+            FCargaRural.DataTransacao := FormatDateTime('dd/MM/yyyy',cdsViagensdt_abertura.Value);
+
+            // Gera cabeçalho no arquivo de saída
+            _ArqSaida.Add(FCargaRural.toString);
           end;
 
           FlgGeraCabec := True;
           cdsColetas.First;
+
           for j := 0 to (cdsColetas.RecordCount -1 )  do
           begin
             // se a coleta não for desta viagem, pula..
@@ -1899,6 +1667,7 @@ begin
               cdsColetas.Next;
               Continue;
             end;
+
             try
               // Completa Dados dos atores na coleta atual
               cdsColetas.Edit;
@@ -1912,6 +1681,19 @@ begin
               begin
                  cdsColetasCodigoProdutor.Value := cdsProdutorCodigo.Value;
                  cdsColetasProdutor.Value := cdsProdutorNome.Value;
+                 _DocProdutor := cdsProdutordoc.Value;
+              end;
+              // se o código da fazenda estiver vazio, tenta pegar pelo codigo do produtor
+              if ((cdsColetasCodigoFazenda.AsString = EmptyStr) or (cdsColetasCodigoFazenda.AsString = 'null'))  then
+              begin
+                if (cdsColetasCodigoProdutor.Value <> EmptyStr) then
+                begin
+                  if cdsFazendas.Locate('produtor',cdsColetasCodigoProdutor.Value,[loPartialKey]) then
+                  begin
+                    cdsColetasCodigoFazenda.Value := cdsFazendascodigo.Value;
+                    cdsColetasFazenda.Value := cdsFazendasnome.Value;
+                  end;
+                end;
               end;
               if cdsLinha.Locate('codigo',cdsViagenslinha.Value,[loPartialKey])then
               begin
@@ -1934,29 +1716,115 @@ begin
               end;
               // Atualiza registro
               cdsColetas.Post;
-
-              // Insere registro de coleta no arquivo texto
-              if FlgGeraCabec then
+              if Layout = 'Magis' then
               begin
-                if _VerMagis = '2' then // Modelo novo de arquivo
-                  begin
-                    _ArqSaida.Add( coletasToStringInt(cdsColetas, cdsViagens,';',True,2)); // Registro 2 = Cabeçalho da coleta
-                    _ArqSaida.Add(coletasToStringInt(cdsColetas, cdsViagens,';',False,3)); // registro 3 = dados das coletas
-                  end
-                else // Modelo antigo de arquivo
-                  _ArqSaida.Add( coletasToString(cdsColetas,';',True));
+                // Insere registro de coleta no arquivo texto
+                if FlgGeraCabec then
+                begin
+                  if _VerMagis = '2' then // Modelo novo de arquivo
+                    begin
+                      _ArqSaida.Add( coletasToStringInt(cdsColetas, cdsViagens,';',True,2)); // Registro 2 = Cabeçalho da coleta
+                      _ArqSaida.Add(coletasToStringInt(cdsColetas, cdsViagens,';',False,3)); // registro 3 = dados das coletas
+                    end
+                  else // Modelo antigo de arquivo
+                    _ArqSaida.Add( coletasToString(cdsColetas,';',True));
 
-                FlgGeraCabec := False;
-              end
-              else
-              begin
-                if _VerMagis = '2' then // Modelo novo de arquivo
-                  _ArqSaida.Add(coletasToStringInt(cdsColetas, cdsViagens,';',False,3)) // registro 3 = dados das coletas
-                else // Modelo antigo de arquivo
-                  _ArqSaida.Add( coletasToString(cdsColetas,';',False));
+                  FlgGeraCabec := False;
+                end
+                else
+                begin
+                  if _VerMagis = '2' then // Modelo novo de arquivo
+                    _ArqSaida.Add(coletasToStringInt(cdsColetas, cdsViagens,';',False,3)) // registro 3 = dados das coletas
+                  else // Modelo antigo de arquivo
+                    _ArqSaida.Add( coletasToString(cdsColetas,';',False));
+                end;
               end;
-               // Acumula total descarregado no objeto viagem persistencia log
-               ObjViagem.QtdeColetado := ObjViagem.QtdeColetado + cdsColetasquantidade.Value;
+
+              if Layout = 'Datasul' then
+              begin
+
+                FProdutorCarga.setValoresDefault;
+                FProdutorCarga.Carga := IntToStr(cdsViagensid.Value);
+                FProdutorCarga.Produtor := cdsColetasCodigoProdutor.AsString;
+                FProdutorCarga.PontoColeta := Copy(cdsColetastanque.AsString,0,(Pos('/',cdsColetastanque.AsString)-1));
+                if (cdsColetasBoca.AsString <> EmptyStr) then
+                  FProdutorCarga.Compartimento :=  StrToInt(Copy(cdsColetasBoca.AsString,1,1))
+                else
+                  FProdutorCarga.Compartimento := 1;
+
+                FProdutorCarga.QtdeColetada := cdsColetasquantidade.AsFloat;
+                FProdutorCarga.Temperatura := cdsColetastemperatura.Value;
+                FProdutorCarga.Amostra := cdsColetasamostra.Value;
+                FProdutorCarga.Regua := cdsColetasregua.Value;
+                FProdutorCarga.Lacre := cdsColetascontraprova.AsString;
+                FProdutorCarga.Propriedade := EmptyStr; //cdsColetasCodigoFazenda.AsString;
+                FProdutorCarga.Repostiorio := StrToInt(Copy(cdsColetastanque.AsString,(Pos('/',cdsColetastanque.AsString)+1),1)); //1;
+                FProdutorCarga.DataColeta := FormatDateTime('dd/MM/yyyy',cdsColetasdt_coleta.Value);
+                FProdutorCarga.HoraColeta := FormatDateTime('hhmmss', cdsColetasdt_coleta.Value);
+
+                // Gera registro de coleta no arquivo
+                _ArqSaida.Add(FProdutorCarga.toString)
+
+              end;
+              if Layout = 'RM' then
+              begin
+                if cdsColetasquantidade.Value > 0 then
+                begin
+                  _RegistroMovimento.setValoresDefault;
+                  _ItemRegistro.setValoresDefault;
+
+                  // popula linha de movimento
+                  _RegistroMovimento.codClienteFornecedor := cdsColetasCodigoProdutor.Value + PreencheEspacoDireita('',(25 - Length(cdsColetasCodigoProdutor.Value)));
+                  _RegistroMovimento.numeroMovimento := RetZero(cdsColetasid.AsString,6)  + PreencheEspacoDireita('',(35 - Length(RetZero(cdsColetasid.AsString,6))));
+                  _RegistroMovimento.dataEmissao := FormatDateTime('dd/MM/yyyy',cdsColetasdt_coleta.Value);
+                  _RegistroMovimento.dataSaida := FormatDateTime('dd/MM/yyyy',cdsColetasdt_coleta.Value);
+                  _RegistroMovimento.horaEmissaoMovimento := FormatDateTime('dd/MM/yyyy',cdsColetasdt_coleta.Value) + PreencheEspacoDireita('',10);
+                  _RegistroMovimento.datalancamento := FormatDateTime('dd/MM/yyyy',cdsColetasdt_coleta.Value);
+                  _RegistroMovimento.dataMovimento := FormatDateTime('dd/MM/yyyy',cdsColetasdt_coleta.Value);
+                  _RegistroMovimento.quantidade := cdsColetasquantidade.Value;
+                  _RegistroMovimento.codUsuario := 'LUCIANO.FREITAS' + PreencheEspacoDireita('',05);
+
+                  // Pega documento do produtor
+                  _RegistroMovimento.campoCnpj := _DocProdutor + PreencheEspacoDireita('',(20 - Length(_DocProdutor)));
+
+                  // Popula linha de Item de movimento
+                  _ItemRegistro.quantidade := cdsColetasquantidade.Value;
+                  _ItemRegistro.quantidadeReceber := cdsColetasquantidade.Value;
+                  _ItemRegistro.precoUnitario :=  1;
+                  _ItemRegistro.precoTabela := 1;
+                  _ItemRegistro.dataEmissao := FormatDateTime('dd/MM/yyyy',cdsColetasdt_coleta.Value);
+                  _ItemRegistro.codUnidade := 'L' + PreencheEspacoDireita('',4);
+                  _ItemRegistro.valorTotalItem := cdsColetasquantidade.Value;
+                  _ItemRegistro.valorLiquidoItem := cdsColetasquantidade.Value;
+                  _ItemRegistro.codigoProduto := '4.0000132' + PreencheEspacoDireita('',21);
+
+
+                  // Adiciona registros ao arquivo
+                  _ArqSaida.Add(_RegistroMovimento.toString);
+                  _ArqSaida.Add(_ItemRegistro.toString);
+
+                end;
+              end;
+              if Layout = 'SCL' then
+              begin
+                 _LinhaDados :=
+                  cdsColetasdt_coleta.AsString + _Separador +
+                  RetZero(cdsColetasCodigoLinha.AsString,4) + _Separador +
+                  RetZero(cdsColetasCodigoRota.AsString,4)+ _Separador +
+                  RetZero(cdsColetasCodigoMotorista.AsString,5) + _Separador +
+                  RetZero(cdsColetasCodigoProdutor.AsString,15) + _Separador +
+                  Retzero(cdsColetasquantidade.AsString, 5) + _Separador +
+                  Retzero(FloatToStr(cdsColetastemperatura.AsFloat * 100),5) + _Separador +
+                  RetZero(cdsColetastanque.AsString,18) + _Separador +
+                  Retzero(cdsColetasAmostra.Value, 11) + _Separador +
+                  Retzero(IntToStr(0), 11) + _Separador +
+                  Retzero(FloatToStr(cdsColetasregua.AsFloat * 100),7) + _Separador  ;
+
+                _ArqSaida.Add(_LinhaDados);
+              end;
+
+              // Acumula total descarregado no objeto viagem persistencia log
+              ObjViagem.QtdeColetado := ObjViagem.QtdeColetado + cdsColetasquantidade.Value;
 
               // Proxima coleta
               cdsColetas.Next;
@@ -1978,40 +1846,71 @@ begin
            begin
              // Monta nome arquivo saida
 
-             if not DirectoryExists(DadosConta.PathArqMagis+'\MagisErp\'+ DadosConta.IdConta) then
+             if not DirectoryExists(FolderSaida ) then  // DadosConta.PathArqMagis +'\MagisErp\'+ DadosConta.IdConta
              begin
-               CreateDir(DadosConta.PathArqMagis+'\MagisErp\'+ DadosConta.IdConta );
-
-               CreateDir( DadosConta.PathArqMagis+'\MagisErp\' + DadosConta.IdConta +'\'+
-                       IntToStr(MonthOfTheYear(Date())) +
-                       IntToStr(YearOf(Date())) );
+               NomePasta := FolderSaida + '\'+ IntToStr(MonthOfTheYear(Date())) + IntToStr(YearOf(Date()));
+               ForceDirectories(NomePasta);
              end
              else
              begin
-               if not  DirectoryExists(  DadosConta.PathArqMagis+'\MagisErp\'+ DadosConta.IdConta + '\'+
-                       IntToStr(MonthOfTheYear(Date())) +
+               if not  DirectoryExists(  FolderSaida + '\'+ IntToStr(MonthOfTheYear(Date())) +
                        IntToStr(YearOf(Date()))  ) then
                begin
-                 CreateDir( DadosConta.PathArqMagis+'\MagisErp\'+ DadosConta.IdConta +'\'+
-                       IntToStr(MonthOfTheYear(Date())) +
-                       IntToStr(YearOf(Date())) );
+                 NomePasta := FolderSaida +'\'+  IntToStr(MonthOfTheYear(Date())) +
+                       IntToStr(YearOf(Date()));
+                 ForceDirectories(NomePasta);
                end;
-
              end;
              // Nome do arquivo de saida no diretorio
-             arqTexto := DadosConta.PathArqMagis+'\MagisErp\'+ DadosConta.IdConta +'\' +
-                       IntToStr(MonthOfTheYear(Date())) +
+             arqTexto := FolderSaida + '\' + IntToStr(MonthOfTheYear(Date())) +
                        IntToStr(YearOf(Date()))+ '\';
              // Nome do arquivo para backup de o arquivo existir
              ArqRename := arqTexto;
 
+             if ((Layout = 'RM') or (Layout = 'SCL')) then
+             begin
+               if Layout = 'RM' then
+               begin
+                 if DadosConta.VerRm = 'M' then  // Gera Multiplos arquivos, 1 por viagem
+                 begin
+                   arqTexto := arqTexto + IntToStr(cdsViagensid.Value)+ '_' + cdsViagenslinha.Value + '_'+
+                             FormatDateTime('ddMMyyyy',cdsViagensdt_abertura.Value)+ '.txt';
+                    // Renomear
+                   ArqRename := ArqRename + IntToStr(cdsViagensid.Value)+ '_' + cdsViagenslinha.Value + '_'+
+                             FormatDateTime('ddMMyyyy',cdsViagensdt_abertura.Value)+ '.tx_';
+                 end
+                 else if DadosConta.VerRm = 'U' then // Gera um único arquivo com todas as viagens
+                 begin
+                   arqTexto := arqTexto + 'RM'+ FormatDateTime('ddMMyyyy', DataInicio)+'.txt';
 
-             arqTexto := arqTexto + IntToStr(cdsViagensid.Value)+ '_' + cdsViagenslinha.Value + '_'+
+                    ArqRename := ArqRename + 'RM'+ FormatDateTime('ddMMyyyy', DataInicio)+'.tx_';
+                 end;
+               end;
+               if Layout = 'SCL' then
+               begin
+                 arqTexto := arqTexto + IntToStr(cdsViagensid.Value)+ '_' + cdsViagenslinha.Value + '_'+
+                           FormatDateTime('ddMMyyyy',cdsViagensdt_abertura.Value)+ '.txt';
+                  // Renomear
+                 ArqRename := ArqRename + IntToStr(cdsViagensid.Value)+ '_' + cdsViagenslinha.Value + '_'+
+                           FormatDateTime('ddMMyyyy',cdsViagensdt_abertura.Value)+ '.tx_';
+
+                 if DadosConta.VerScl = '2' then  // S2
+                 begin
+                   CplNome := FormatDateTime('dd',Now) + RetZero(IntToStr(cdsViagensid.Value),6) ;
+                    arqTexto :=  's:\leite\mobile\'+  CplNome + '.txt';
+                    // Renomear
+                   ArqRename :=  's:\leite\mobile\'+  CplNome +'.tx_';
+                 end;
+               end
+             end
+             else
+             begin
+               arqTexto := arqTexto + IntToStr(cdsViagensid.Value)+ '_' + cdsViagenslinha.Value + '_'+
                          FormatDateTime('ddMMyyyy',cdsViagensdt_abertura.Value)+ '.csv';
-              // Renomear
-              ArqRename := ArqRename + IntToStr(cdsViagensid.Value)+ '_' + cdsViagenslinha.Value + '_'+
+                // Renomear
+               ArqRename := ArqRename + IntToStr(cdsViagensid.Value)+ '_' + cdsViagenslinha.Value + '_'+
                          FormatDateTime('ddMMyyyy',cdsViagensdt_abertura.Value)+ '.cs_';
-
+             end;
 
               // renomeia arquivo existente
               if FileExists(arqTexto) then
@@ -2022,7 +1921,23 @@ begin
               end;
 
              // Salva Arquivo de saida
-             _ArqSaida.SaveToFile(arqTexto);
+             if ((Layout <> 'RM') OR (DadosConta.VerRm <> 'U')) then
+             begin
+                _ArqSaida.SaveToFile(arqTexto);
+             end;
+
+             // Registra a geração do arquivo no log de atividades
+             FArqLog.Append('Arquivo de saida gerado:  |<><>| Viagem ' + IntToStr(cdsViagensid.Value) + ' |<><>| ' + arqTexto + ' |<><>| data: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now) );
+           end;
+           if Layout = 'Datasul' then
+           begin
+             FCargaRural.Destroy;
+             FProdutorCarga.Destroy;
+           end;
+           if Layout = 'RM' then
+           begin
+             _RegistroMovimento.Destroy;
+             _ItemRegistro.Destroy;
            end;
         end;
 
@@ -2037,24 +1952,44 @@ begin
          cdsViagens.Next;
       end;
 
+      // Salva Arquivo de saida Único do RM
+      if (Layout = 'RM') AND (DadosConta.VerRm = 'U') then
+      begin
+        _ArqSaida.SaveToFile(arqTexto);
+      end;
+
       //Atualizar Parâmetros
       if FlgAtualizaUltDataLeitura then
       AtualizarDatLeituraParam(DataTermino);
+
+      // Fecha e salva registro de log
+      FArqLog.Append('Milk´s Rota :: Fim Geração Arquivos - ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
+      FArqLog.Append('*******************************************');
+
+
+      if DirectoryExists(FolderSaida) then
+      begin
+        FArqSaveLog := FolderSaida +  '\'+ 'Log_' + DadosConta.IdConta +'_' + FormatDateTime('dd_MM_yyyy_hh_mm_ss',Now) + '.txt';
+        FArqLog.SaveToFile(FArqSaveLog);
+      end
+      else
+      begin
+        ForceDirectories(FolderSaida);
+        FArqSaveLog := FolderSaida +  '\'+ 'Log_' + DadosConta.IdConta +'_' + FormatDateTime('dd_MM_yyyy_hh_mm_ss',Now) + '.txt';
+        FArqLog.SaveToFile(FArqSaveLog);
+      end;
+
     finally
-      cdsColetas.EmptyDataSet;
-      cdsViagens.EmptyDataSet;
-      cdsRota.EmptyDataSet;
-      cdsLinha.EmptyDataSet;
-      cdsColetor.EmptyDataSet;
-      cdsProdutor.EmptyDataSet;
-      cdsFazendas.EmptyDataSet;
-      cdsVeiculos.EmptyDataSet;
+      clearTables;  // Empty dataset nas tabelas
       _ArqSaida.Free;
+      FArqLog.Destroy;
     end;
 
   except
     on E: Exception do
-    Result := 'Erro: ' + E.message;
+    begin
+      Result := 'Erro: ' + E.message;
+    end;
   end;
 end;
 
@@ -2306,7 +2241,7 @@ begin
   if TryStrToInt(numero,_Saida) then
     Result := _Saida
   else
-    Result := -1;
+    Result := 0;
 end;
 
 { TColeta }
@@ -2529,6 +2464,11 @@ begin
      CodEmpresa := '6';
      NomeEmpresa :=  'Porto Alegre - Filial São Gotardo';
    end
+   else if DadosConta.IdConta = '20170' then
+   begin
+     CodEmpresa := '1';
+     NomeEmpresa :=  'Laticinios Verde Campo';
+   end
    else if DadosConta.IdConta = '156007' then
    begin
      CodEmpresa := '1';
@@ -2609,7 +2549,7 @@ begin
      Viagem.FieldByName('NomeLinha').AsString + separator +
      Viagem.FieldByName('Coletor').AsString + separator +
      Viagem.FieldByName('NomeColetor').AsString + separator +
-     Viagem.FieldByName('PlacaVeiculo').AsString + separator +
+     StringReplace(Viagem.FieldByName('PlacaVeiculo').AsString,'-','',[rfReplaceAll]) + separator +
      FormatDateTime('dd/MM/yyy hh:mm:ss', Viagem.FieldByName('dt_abertura').AsDateTime) + separator +
      FormatDateTime('dd/MM/yyy hh:mm:ss', Viagem.FieldByName('dt_fechamento').AsDateTime) + separator +
      IntToStr(Viagem.FieldByName('km_inicial').AsInteger) + separator +
@@ -2710,6 +2650,1012 @@ end;
 // Popula coleçoes com os atores das coletas em um período
 procedure TVSSCLRotaConsoleDTM.PopulaAtoresColeta(DataInicio, DataTermino: TDateTime; Sync:string; Comunitario: string = '9');
 
+ function getRotas(): TListaRota;
+  var
+    i: Integer;
+  begin
+    Result := TListaRota.Create;
+
+    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
+    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
+    DadosRetornoRota :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readRota');
+    if DadosRetornoRota.Sucesso then
+    begin
+      ColecaoRota := TJSONArray.create(DadosRetornoRota.Dados);
+      if cdsRota.Active then
+        cdsRota.Close;
+      cdsRota.CreateDataSet;
+      for i := 0 to ColecaoRota.length -1 do
+      begin
+        Rota := ColecaoRota.getJSONObject(i);
+        objRota := TRota.Create;
+        try
+           objRota.id := Rota.getInt('id');
+           objRota.Codigo :=  Rota.getString('codigo');
+           objRota.Nome := Rota.getString('nome');
+           // Empilha rota
+           //Result.Add(objRota);
+
+           // popula dataset rota
+           cdsRota.Insert;
+
+           cdsRotaCodigo.Value := objRota.Codigo;
+           cdsRotaNome.Value := objRota.Nome;
+
+           cdsRota.Post;
+        finally
+          ;
+        end;
+      end;
+    end;
+  end;
+
+  function getLinhas(): TListaLinha;
+  var
+    i: Integer;
+  begin
+    Result := TListaLinha.Create;
+
+    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
+    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
+    DadosRetornoLinha :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readLinha');
+    if DadosRetornoLinha.Sucesso then
+    begin
+      ColecaoLinha := TJSONArray.create(DadosRetornoLinha.Dados);
+      if cdsLinha.Active then
+        cdsLinha.Close;
+      cdsLinha.CreateDataSet;
+      for i := 0 to ColecaoLinha.length -1 do
+      begin
+        Linha := ColecaoLinha.getJSONObject(i);
+        objLinha := TLinha.Create;
+
+        try
+           objLinha.id := Linha.getInt('id');
+           objLinha.Codigo :=  Linha.getString('codigo');
+           objLinha.Nome := Linha.getString('nome');
+           // objLinha.Distancia :=  StrToInt(Linha.getString('distancia'));
+           TryStrToInt(Linha.getString('distancia'),objLinha.Distancia);
+           // Empilha Linha
+           //Result.Add(objLinha);
+
+           // popula dataset linhas
+           cdsLinha.Insert;
+
+           cdsLinhaCodigo.Value := objLinha.Codigo;
+           cdsLinhaNome.Value := objLinha.Nome;
+           cdsLinhadistancia.Value := objLinha.Distancia;
+
+           cdsLinha.Post;
+
+        finally
+         ;
+        end;
+      end;
+    end;
+  end;
+
+  function getProdutores(): TListaProdutor;
+  var
+    i: Integer;
+  begin
+    Result := TListaProdutor.Create;
+
+    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
+    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
+    DadosRetornoProdutor :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readProdutor');
+    if DadosRetornoProdutor.Sucesso then
+    begin
+      ColecaoProdutor := TJSONArray.create(DadosRetornoProdutor.Dados);
+      if cdsProdutor.Active then
+        cdsProdutor.Close;
+      cdsProdutor.CreateDataSet;
+      for i := 0 to ColecaoProdutor.length -1 do
+      begin
+        Produtor := ColecaoProdutor.getJSONObject(i);
+        objProdutor := TProdutor.Create;
+        try
+           objProdutor.id := Produtor.getInt('id');
+           objProdutor.Codigo :=  Produtor.getString('codigo');
+           objProdutor.Nome := Produtor.getString('nome');
+           objProdutor.Doc := Produtor.getString('doc');
+
+           // Empilha produtor
+          // Result.Add(objProdutor);
+
+          // popula cds produtor
+           cdsProdutor.Insert;
+
+           cdsProdutorCodigo.Value := objProdutor.Codigo;
+           cdsProdutorNome.Value := objProdutor.Nome;
+           cdsProdutordoc.Value := objProdutor.Doc;
+
+           cdsProdutor.Post;
+
+        finally
+         ;
+        end;
+      end;
+    end;
+  end;
+
+  function getFazendas(): TListaFazenda;
+  var
+    i: Integer;
+  begin
+    Result := TListaFazenda.Create;
+
+    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
+    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
+    DadosRetornoFazenda :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readFazenda');
+    if DadosRetornoFazenda.Sucesso then
+    begin
+      ColecaoFazenda := TJSONArray.create(DadosRetornoFazenda.Dados);
+      if cdsFazendas.Active then
+        cdsFazendas.Close;
+      cdsFazendas.CreateDataSet;
+      for i := 0 to ColecaoFazenda.length -1 do
+      begin
+        Fazenda := ColecaoFazenda.getJSONObject(i);
+        objFazenda := TFazenda.Create;
+
+        try
+           objFazenda.id := Fazenda.getInt('id');
+           objFazenda.Codigo :=  Fazenda.getString('codigo');
+           objFazenda.Nome := Fazenda.getString('nome');
+           objFazenda.produtor := Fazenda.getString('produtor');
+           // Empilha Fazenda
+           //Result.Add(objFazenda);
+
+           // popula dataset fazendas
+           cdsFazendas.Insert;
+
+           cdsFazendascodigo.Value := objFazenda.Codigo;
+           cdsFazendasnome.Value := objFazenda.Nome;
+           cdsFazendasprodutor.Value := objFazenda.produtor;
+
+           cdsFazendas.Post;
+
+        finally
+         ;
+        end;
+      end;
+    end;
+  end;
+
+  function getColetores(): TListaColetor;
+  var
+    i: Integer;
+  begin
+    Result := TListaColetor.Create;
+
+    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
+    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
+    DadosRetornoColetor :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readColetor');
+    if DadosRetornoColetor.Sucesso then
+    begin
+      ColecaoColetor := TJSONArray.create(DadosRetornoColetor.Dados);
+      if cdsColetor.Active then
+        cdsColetor.Close;
+      cdsColetor.CreateDataSet;
+      for i := 0 to ColecaoColetor.length -1 do
+      begin
+        Coletor := ColecaoColetor.getJSONObject(i);
+        objColetor := TColetor.Create;
+        try
+           objColetor.id := Coletor.getInt('id');
+           objColetor.Codigo :=  Coletor.getString('codigo');
+           objColetor.Nome := Coletor.getString('nome');
+           // Empilha Coletor
+          //  Result.Add(objColetor);
+
+          // popula dataset de coletores
+           cdsColetor.Insert;
+
+           cdsColetorCodigo.Value := objColetor.Codigo;
+           cdsColetorNome.Value := objColetor.Nome;
+
+           cdsColetor.Post;
+
+
+        finally
+         ;
+        end;
+      end;
+    end;
+  end;
+
+  function getVeiculos(): TListaVeiculo;
+  var
+    i: Integer;
+  begin
+    Result := TListaVeiculo.Create;
+
+    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
+    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
+    DadosRetornoVeiculo :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readVeiculo');
+    if DadosRetornoVeiculo.Sucesso then
+    begin
+      ColecaoVeiculo := TJSONArray.create(DadosRetornoVeiculo.Dados);
+      if cdsVeiculos.Active then
+        cdsVeiculos.Close;
+      cdsVeiculos.CreateDataSet;
+      for i := 0 to ColecaoVeiculo.length -1 do
+      begin
+        Veiculo := ColecaoVeiculo.getJSONObject(i);
+        objVeiculo := TVeiculo.Create;
+        try
+           objVeiculo.id := Veiculo.getInt('id');
+           objVeiculo.Codigo :=  Veiculo.getString('codigo');
+           objVeiculo.Placa := Veiculo.getString('placa');
+           // Empilha Veiculo
+           //  Result.Add(objVeiculo);
+
+           // popula dataset de veiculo
+           cdsVeiculos.Insert;
+
+           cdsVeiculoscodigo.Value := objVeiculo.Codigo;
+           cdsVeiculosid.Value := objVeiculo.id;
+           cdsVeiculosplaca.Value := objVeiculo.Placa;
+
+           cdsVeiculos.Post;
+        finally
+         ;
+        end;
+      end;
+    end;
+  end;
+  {Carrega viagens}
+
+  function getViagens(): TListaRegViagem;
+  var
+    i: Integer;
+    ExtFile: TStringList;
+  begin
+    Result := TListaRegViagem.Create;
+
+    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
+    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
+    DadosRetornoViagem :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readViagem');
+    if DadosRetornoViagem.Sucesso then
+    begin
+      ColecaoViagem := TJSONArray.create(DadosRetornoViagem.Dados);
+      if cdsViagens.Active then
+        cdsViagens.Close;
+      cdsViagens.CreateDataSet;
+      for i := 0 to ColecaoViagem.length -1 do
+      begin
+        Viagem := ColecaoViagem.getJSONObject(i);
+        objRegViagem := TRegViagem.Create;
+        try
+           objRegViagem.id := ValidaInt(Viagem.getString('id'));
+           objRegViagem.veiculo_id := ValidaInt(Viagem.getString('veiculo_id'));
+           objRegViagem.coletor_id := ValidaInt(Viagem.getString('coletor_id'));
+           objRegViagem.linha_id := ValidaInt(Viagem.getString('linha_id'));
+           objRegViagem.rota_id := ValidaInt(Viagem.getString('rota_id'));
+           objRegViagem.conta_id := ValidaInt(Viagem.getString('conta_id'));
+          // objRegViagem.tecnico_id := ValidaInt(Viagem.getString('tecnico_id'));
+           objRegViagem.dt_fechamento := GetDataHora(Viagem.getString('dt_fechamento'));
+           objRegViagem.dt_push := GetDataHora(Viagem.getString('dt_push'));
+           objRegViagem.dt_abertura := GetDataHora(Viagem.getString('dt_abertura'));
+           objRegViagem.dt_descarga := GetDataHora(Viagem.getString('dt_descarga'));
+           objRegViagem.dt_liberacao := GetDataHora(Viagem.getString('dt_liberacao'));
+           objRegViagem.km_inicial := Viagem.getInt('km_inicial');
+           objRegViagem.km_final := Viagem.getInt('km_final');
+           objRegViagem.km_distancia := Viagem.getInt('km_distancia');
+           objRegViagem.km_justificativa := Viagem.getString('km_justificativa');
+           objRegViagem.descarrega := Viagem.getString('descarregada');
+           objRegViagem.liberada := Viagem.getString('liberada');
+           objRegViagem.Rota := Viagem.getString('rota');
+           objRegViagem.Linha := Viagem.getString('linha');
+           objRegViagem.Coletor := Viagem.getString('coletor');
+           objRegViagem.Veiculo := Viagem.getString('veiculo');
+           objRegViagem.ComunitarioPendente :=  Viagem.getString('comunitario_pendente');
+           objRegViagem.bocas := Viagem.getString('bocas');
+
+           // Empilha Viagem
+          // Result.Add(objRegViagem);
+
+           // popula dataset de viagens
+
+           cdsViagens.Insert;
+
+           cdsViagensid.Value            :=  objRegViagem.id ;
+           cdsViagensveiculo_id.Value    :=  objRegViagem.veiculo_id;
+           cdsViagenscoletor_id.Value    :=  objRegViagem.coletor_id;
+           cdsViagenslinha_id.Value      :=  objRegViagem.linha_id;
+           cdsViagensrota_id.Value       :=  objRegViagem.rota_id;
+           cdsViagensdt_push.Value       :=  objRegViagem.dt_push;
+           cdsViagensdt_abertura.Value   :=  objRegViagem.dt_abertura;
+           cdsViagensdt_fechamento.Value :=  objRegViagem.dt_fechamento;
+           cdsViagenskm_inicial.Value    :=  objRegViagem.km_inicial;
+           cdsViagenskm_final.Value      :=  objRegViagem.km_final;
+           cdsViagensdt_liberacao.Value  :=  objRegViagem. dt_liberacao;
+           cdsViagensrota.Value          :=  objRegViagem.Rota;
+           cdsViagenslinha.Value         :=  objRegViagem.Linha;
+           cdsViagenscoletor.Value       :=  objRegViagem.Coletor;
+           cdsViagensveiculo.Value       :=  objRegViagem.Veiculo;
+           cdsViagenskm_distancia.Value  :=  objRegViagem.km_distancia;
+           cdsViagenskm_real.Value       :=  objRegViagem.km_distancia;
+           cdsViagenscomunitario_pendente.Value := objRegViagem.ComunitarioPendente;
+           cdsViagensbocas.Value := objRegViagem.bocas;
+
+           cdsViagens.Post;
+        finally
+         ;
+        end;
+      end;
+    end;
+  end;
+  {Carrega coletas }
+  function getColetas(): TListaColeta;
+  var
+    i: Integer;
+  begin
+    Result := TListaColeta.Create;
+
+    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
+    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
+
+    // Coletas tanques individuais
+    DadosRetornoColeta :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readColeta', NaoRetornaComunitario);
+    if DadosRetornoColeta.Sucesso then
+    begin
+      ColecaoColeta := TJSONArray.create(DadosRetornoColeta.Dados);
+      // Ativa dataset
+      if cdsColetas.Active then
+        cdsColetas.Close;
+      cdsColetas.CreateDataSet;
+
+      for i := 0 to ColecaoColeta.length -1 do
+      begin
+        Coleta := ColecaoColeta.getJSONObject(i);
+        objColeta := TColeta.Create;
+        try
+           objColeta.id := Coleta.getInt('id');
+           objColeta.dt_push :=  GetDataHora(Coleta.getString('dt_push'));
+           objColeta.viagem_id := ValidaInt(Coleta.getString('viagem_id'));
+           objColeta.parada_id := ValidaInt(Coleta.getString('parada_id'));
+           objColeta.coletor_id := ValidaInt(Coleta.getString('coletor_id'));
+           objColeta.tanque_id := ValidaInt(Coleta.getString('tanque_id'));
+           objColeta.dt_coleta := GetDataHora(Coleta.getString('dt_coleta'));
+           objColeta.CodigoFazenda := Coleta.getString('fazenda');
+           objColeta.CodigoProdutor := Coleta.getString('produtor');
+           objColeta.tanque := Coleta.getString('tanque');
+           objColeta.quantidade := Coleta.getInt('quantidade');
+           objColeta.regua := Coleta.optDouble('regua',0);
+           objColeta.alizarol := Coleta.getString('alizarol');
+           objColeta.amostra := Coleta.getString('amostra');
+           objColeta.contraprova := Coleta.getString('contraprova');
+           objColeta.temperatura := Coleta.optDouble('temperatura',0);
+           objColeta.coletada := Coleta.getString('coletada');
+           objColeta.dt_edicao := GetDataHora(Coleta.getString('dt_edicao'));
+           objColeta.CodigoMotorista := Coleta.getString('coletor');
+           objColeta.boca := Coleta.getString('boca');
+           // Empilha Coleta
+         //  Result.Add(objColeta);
+
+           // Popula dataset de coleta
+           cdsColetas.Append;
+
+           cdsColetasid.Value := objColeta.Id;
+           cdsColetasviagem_id.Value := objColeta.viagem_id;
+           cdsColetasdt_push.Value := objColeta.dt_push;
+           cdsColetascoletor_id.Value := objColeta.coletor_id;
+           cdsColetasparada_id.Value := objColeta.parada_id;
+           cdsColetastanque_id.Value := objColeta.tanque_id;
+           cdsColetasdt_coleta.Value := objColeta.dt_coleta ;
+           cdsColetasCodigoProdutor.Value := objColeta.CodigoProdutor;
+           cdsColetasquantidade.Value := objColeta.quantidade;
+           cdsColetasregua.Value := objColeta.regua;
+           cdsColetasalizarol.Value := objColeta.alizarol;
+           cdsColetasamostra.Value := objColeta.amostra;
+           cdsColetascontraprova.Value := objColeta.contraprova;
+           cdsColetastemperatura.Value := objColeta.temperatura;
+           cdsColetascoletada.Value := objColeta.coletada;
+           cdsColetasdt_edicao.Value := objColeta.dt_edicao;
+           cdsColetasCodigoFazenda.Value := objColeta.CodigoFazenda;
+           cdsColetastanque.Value := objColeta.tanque;
+           cdsColetasBoca.Value := objColeta.boca;
+
+           cdsColetas.Post;
+        finally
+         objColeta.Free;
+        end;
+      end;
+    end;
+
+    // Coletas Distribuicao dos tanques coletivos
+    DadosRetornoColeta :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readColetaComunitaria',RetornaComunitario );
+    if DadosRetornoColeta.Sucesso then
+    begin
+      ColecaoColeta := TJSONArray.create(DadosRetornoColeta.Dados);
+      // Ativa dataset
+     // cdsColetas.CreateDataSet;
+      for i := 0 to ColecaoColeta.length -1 do
+      begin
+        Coleta := ColecaoColeta.getJSONObject(i);
+        objColeta := TColeta.Create;
+        try
+           objColeta.id := Coleta.getInt('id');
+           objColeta.dt_push :=  GetDataHora(Coleta.getString('dt_push'));
+           objColeta.viagem_id := ValidaInt(Coleta.getString('viagem_id'));
+           objColeta.parada_id := ValidaInt(Coleta.getString('parada_id'));
+           objColeta.coletor_id := ValidaInt(Coleta.getString('coletor_id'));
+           objColeta.tanque_id := ValidaInt(Coleta.getString('tanque_id'));
+           objColeta.dt_coleta := GetDataHora(Coleta.getString('dt_coleta'));
+           objColeta.CodigoFazenda := Coleta.getString('fazenda');
+           objColeta.CodigoProdutor := Coleta.getString('produtor');
+           objColeta.tanque := Coleta.getString('tanque');
+           objColeta.quantidade := ValidaInt(Coleta.getString('quantidade'));
+           objColeta.regua := Coleta.optDouble('regua',0);
+           objColeta.alizarol := Coleta.getString('alizarol');
+           objColeta.amostra := Coleta.getString('amostra');
+           objColeta.contraprova := Coleta.getString('contraprova');
+           objColeta.temperatura := Coleta.optDouble('temperatura',0);
+           objColeta.coletada := Coleta.getString('coletada');
+           objColeta.dt_edicao := GetDataHora(Coleta.getString('dt_edicao'));
+           objColeta.CodigoMotorista := Coleta.getString('coletor');
+           objColeta.boca := Coleta.getString('boca');
+           // Empilha Coleta
+         //  Result.Add(objColeta);
+
+           // Popula dataset de coleta
+           cdsColetas.Append;
+
+           cdsColetasid.Value := objColeta.Id;
+           cdsColetasviagem_id.Value := objColeta.viagem_id;
+           cdsColetasdt_push.Value := objColeta.dt_push;
+           cdsColetascoletor_id.Value := objColeta.coletor_id;
+           cdsColetasparada_id.Value := objColeta.parada_id;
+           cdsColetastanque_id.Value := objColeta.tanque_id;
+           cdsColetasdt_coleta.Value := objColeta.dt_coleta ;
+           cdsColetasCodigoProdutor.Value := objColeta.CodigoProdutor;
+           cdsColetasquantidade.Value := objColeta.quantidade;
+           cdsColetasregua.Value := objColeta.regua;
+           cdsColetasalizarol.Value := objColeta.alizarol;
+           cdsColetasamostra.Value := objColeta.amostra;
+           cdsColetascontraprova.Value := objColeta.contraprova;
+           cdsColetastemperatura.Value := objColeta.temperatura;
+           cdsColetascoletada.Value := objColeta.coletada;
+           cdsColetasdt_edicao.Value := objColeta.dt_edicao;
+           cdsColetasviagem_id.Value := objColeta.viagem_id;
+           cdsColetasCodigoFazenda.Value := objColeta.CodigoFazenda;
+           cdsColetastanque.Value := objColeta.tanque;
+           cdsColetasBoca.Value := objColeta.boca;
+
+           cdsColetas.Post;
+        finally
+         objColeta.Free;
+        end;
+      end;
+    end;
+  end;
+
+  {Visitas em uma periodo}
+
+  function getVisitas(): TListaVisita;
+  var
+    i: Integer;
+  begin
+    Result := TListaVisita.Create;
+
+    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
+    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
+    DadosRetornoVisita :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readVisita');
+    if DadosRetornoVisita.Sucesso then
+    begin
+      ColecaoVisita := TJSONArray.create(DadosRetornoVisita.Dados);
+      for i := 0 to ColecaoVisita.length -1 do
+      begin
+        Visita := ColecaoVisita.getJSONObject(i);
+        objVisita := TVisita.Create;
+        try
+           objVisita.id := Visita.getInt('id');
+           objVisita.viagem_id := ValidaInt(Visita.getString('viagem_id'));
+           objVisita.conta_id := ValidaInt(Visita.getString('conta_id'));
+           objVisita.rota_id := ValidaInt(Visita.getString('rota_id'));
+           objVisita.linha_id := ValidaInt(Visita.getString('linha_id'));
+           objVisita.fazenda_id := ValidaInt(Visita.getString('fazenda_id'));
+           objVisita.dt_push := GetData(Visita.getString('dt_push'));
+           objVisita.dt_inicio := GetData(Visita.getString('dt_inicio'));
+           objVisita.dt_fim := GetData(Visita.getString('dt_fim'));
+           objVisita.motivo := Visita.getString('motivo');
+           objVisita.cancelado := Visita.getString('cancelado');
+           objVisita.total_coleta := Visita.getInt('total_coleta');
+           // Empilha Visita
+           Result.Add(objVisita);
+        finally
+         ;
+        end;
+      end;
+    end;
+  end;
+begin
+    getRotas;
+    getLinhas;
+    getProdutores;
+    getFazendas;
+    getColetores;
+    getVeiculos;
+    getViagens;
+    getColetas;
+
+end;
+// Exporta dados para o sistema de rasteabilidade SIGA
+procedure TVSSCLRotaConsoleDTM.ExportaSiga;
+var
+  DataProcIni, DataProcFim : TDateTime;
+begin
+  InserirMsgLog('Início Exporta SIGA.');
+  try
+    qryParametros.Close;
+    qryParametros.Open;
+    DataProcIni := qryParametrosParDatIniLeituraDescargaWS.AsDateTime;
+    DataProcFim := Date;
+    GetDadosSiga(DataProcIni, DataProcFim, '0',EmptyStr, False);
+    InserirMsgLog('Término Siga');
+  except on E:Exception do
+    InserirMsgLog('ERRO : ' + E.Message);
+  end;
+
+end;
+
+function TVSSCLRotaConsoleDTM.GetDadosSiga(DataInicio,
+  DataTermino: TDateTime; Sync, Comunitario: string;
+  FlgAtualizaUltDataLeitura: Boolean): String;
+  var
+    objColetaSiga: TSigaColetaIndividual;
+    objViagemSiga: TSigaViagem;
+
+  function ViagemJahProcessada(IdViagem: Integer): Boolean;
+  begin
+    qrySQL.Close;
+    qrySQL.SQL.Text := 'SELECT 1 FROM LogViagem WHERE LovViagemId = :Id and LovGerSiga = :LovGerSiga';
+    qrySQL.ParamByName('Id').Value := IdViagem;
+    qrySQL.ParamByName('LovGerSiga').Value := FlagSim;
+    qrySQL.Open;
+
+    Result := not qrySQL.IsEmpty;
+  end;
+
+  function ViagemJahRegistrada(idViagem: Integer): TViagem;
+  begin
+    Result := TViagem.Create;
+    qrySQL.Close;
+    qrySQL.SQL.Text := 'Select * from LogViagem WHERE LovViagemId = :Id';
+    qrySQL.ParamByName('Id').Value := idViagem;
+    qrySQL.Open;
+    if not qrySQL.IsEmpty then
+    begin
+      Result.Id := qrySQL.FieldByName('LovId').AsInteger;
+      Result.RotaId := qrySQL.FieldByName('LovRotaId').AsInteger;
+      Result.RotaCodigo := qrySQL.FieldByName('LovRotaCod').AsString;
+      Result.DatAbertura := qrySQL.FieldByName('LovDataViagem').AsDateTime;
+      Result.Liberada := True;
+      Result.GerouDatasul := qrySQL.FieldByName('LovGerDatasul').AsString;
+      Result.GerouRm := qrySQL.FieldByName('LovGerRm').AsString;
+      Result.GerouMagis := qrySQL.FieldByName('LovGerMagis').AsString;
+      Result.GerouMeta := qrySQL.FieldByName('LovGerMeta').AsString;
+      Result.GerouSiga := qrySQL.FieldByName('LovGerSiga').AsString;
+      Result.GerouScl := qrySQL.FieldByName('LovGerScl').AsString;
+      Result.Registrada := True;
+    end
+    else
+    begin
+      Result.GerouDatasul := FlagNao;
+      Result.GerouRm := FlagNao;
+      Result.GerouMagis := FlagNao;
+      Result.GerouMeta := FlagNao;
+      Result.GerouSiga := FlagNao;
+      Result.GerouScl := FlagNao;
+      Result.Liberada := False;
+      Result.Registrada := False;
+    end;
+  end;
+
+begin
+   try
+    // Polula datasets
+    PopulaAtoresColeta(DataInicio,DataTermino,Sync,Comunitario);
+
+    // Gera Arquivos de Agendes Siga
+    _ArqCadSiga := TStringList.Create;
+    _ArqCadSiga.Clear;
+
+    cdsColetor.First;
+    while not cdsColetor.Eof do
+    begin
+      try
+         objTranspSiga := TSigaTransportador.Create;
+         objTranspSiga.idRegistro := 'T';
+         objTranspSiga.codigoTransportador := cdsColetorCodigo.Value;
+         objTranspSiga.nomeTransportador := cdsColetorNome.Value;
+
+         if ((objTranspSiga.codigoTransportador = EmptyStr) or (objTranspSiga.nomeTransportador = EmptyStr)) then
+         begin
+           cdsColetor.Next;
+           Continue;
+         end;
+
+         // Adiciona registro no arquivo
+         _ArqCadSiga.Add(objTranspSiga.toString(';'));
+
+        // proximo registro
+        cdsColetor.Next;
+      finally
+       objTranspSiga.Free;
+      end;
+    end;
+
+    // Arquivo com dados coleta formatado
+    _ArqSaida := TStringList.Create;
+
+    // ordena as viagem por id
+    cdsViagens.IndexFieldNames := 'id';
+
+    // Ordena as coletas por viagem
+    cdsColetas.IndexFieldNames := 'viagem_id';
+
+    cdsViagens.First;
+    i := 0;
+    try
+      for i := 0 to (cdsViagens.RecordCount -1) do
+      begin
+        try
+          _ArqSaida.Clear;
+
+          // Verifica se a viagem já foi processada
+          if ViagemJahProcessada(cdsViagensid.Value) then
+          begin
+            cdsViagens.Next;
+            Continue;
+          end;
+
+          // Verifica se a distribuição do tanque comunitario esta pendente e não gera o arquivo
+          if (cdsViagenscomunitario_pendente.Value = 'true') then
+          begin
+            cdsViagens.Next;
+            Continue;
+          end;
+
+          // Cria objeto viagem para persistencia no log
+          ObjViagem := ViagemJahRegistrada(cdsViagensid.Value);
+          ObjViagem.Id := cdsViagensid.Value;
+          ObjViagem.RotaId := cdsViagensrota_id.Value;
+          ObjViagem.RotaCodigo := cdsViagensrota.Value;
+          ObjViagem.DatAbertura := cdsViagensdt_abertura.Value;
+          ObjViagem.DatFechamento := cdsViagensdt_fechamento.Value;
+          ObjViagem.GerouSiga := FlagSim;
+
+          // Completa dados da viagem
+          cdsViagens.Edit;
+          if cdsLinha.Locate('codigo', cdsViagenslinha.Value,[loPartialKey]) then
+          begin
+            cdsViagensNomeLinha.Value := cdsLinhaNome.Value;
+            cdsViagenskm_padrao.Value := cdsLinhadistancia.Value;
+          end;
+          if cdsRota.Locate('codigo', cdsViagensrota.Value,[loPartialKey]) then
+          begin
+            cdsViagensNomeRota.Value := cdsRotaNome.Value;
+          end;
+          if cdsColetor.Locate('codigo', cdsViagenscoletor.Value,[loPartialKey])then
+          begin
+            cdsViagensNomeColetor.Value := cdsColetorNome.Value;
+          end;
+          if cdsVeiculos.Locate('codigo',cdsViagensveiculo.Value,[loPartialKey])then
+          begin
+            cdsViagensPlacaVeiculo.Value := cdsVeiculosplaca.Value;
+          end;
+          ObjViagem.Coletor := cdsViagenscoletor.Value;
+          ObjViagem.Veiculo := cdsViagensPlacaVeiculo.Value;
+
+          // Numero da viagem para o veículo e motorista coletor
+          qryAux.SQL.Clear;
+          qryAux.SQL.Add('Select Count(LovId) Total from LogViagem where LovColetor = :LovColetor and LovVeiculo = :LovVeiculo and LovDataViagem = :LovDataViagem');
+          qryAux.ParamByName('LovColetor').Value := ObjViagem.Coletor;
+          qryAux.ParamByName('LovVeiculo').Value := ObjViagem.Veiculo;
+          qryAux.ParamByName('LovDataViagem').Value := GetData(DateToStr(ObjViagem.DatAbertura));
+          qryAux.Open;
+          FResultado := (qryAux.FieldByName('Total').Value + 1);
+          cdsViagensNumeroViagem.Value := FResultado;
+
+          cdsViagens.Post;
+
+          // Popula linha de cabecalho no arquivo de integração SIGA - REgistro C
+          objViagemSiga := TSigaViagem.Create;
+
+          objViagemSiga.idRegistro := 'C';
+          objViagemSiga.rota := cdsViagenslinha.Value;
+          objViagemSiga.ramal := 'N';
+          objViagemSiga.inicio := ObjViagem.DatAbertura;
+          objViagemSiga.final := ObjViagem.DatFechamento;
+          objViagemSiga.equipamento := ObjViagem.Veiculo;
+          objViagemSiga.transportador := ObjViagem.Coletor;
+          objViagemSiga.volumecoleta :=  ObjViagem.QtdeColetado;
+          objViagemSiga.dtRecepcao := ObjViagem.DatFechamento; // Substituir para data entrada na plataforma para descarga
+          objViagemSiga.recebido := 's';  // substituir pelo status descarga - realizada (s)  nao realizada (n) - minúsculo;
+          objViagemSiga.motivo := ' '; // motivo pre-cadaastrado de não recebimento do leite na descarga
+          objViagemSiga.temperatura := 5; // Temperatura do produto no inicio da descarga;
+          objViagemSiga.volumeEfetivo := ObjViagem.QtdeArmazenado;
+          objViagemSiga.alizarol := 'n';  // negativo (N - Leite bom)  positivo (S - Leite acido)
+          objViagemSiga.fimDescarga := ObjViagem.DatFechamento; // Substituir pelo horario real de final de descarga
+
+          // insere o registro de cabeçalho da viagem no arquivo
+          _ArqSaida.Add(objViagemSiga.toString(';'));
+
+
+          cdsColetas.First;
+          for j := 0 to (cdsColetas.RecordCount -1 )  do
+          begin
+            // se a coleta não for desta viagem, pula..
+            if (cdsColetasviagem_id.Value <> cdsViagensid.Value) then
+            begin
+              cdsColetas.Next;
+              Continue;
+            end;
+            try
+              // Completa Dados dos atores na coleta atual
+              cdsColetas.Edit;
+              // Localiza dados dos atores na coleta
+              if cdsFazendas.Locate('codigo',cdsColetasCodigoFazenda.Value,[loPartialKey]) then
+              begin
+                cdsColetasCodigoFazenda.Value := cdsFazendascodigo.Value;
+                cdsColetasFazenda.Value := cdsFazendasnome.Value;
+              end;
+              if cdsProdutor.Locate('codigo',cdsColetasCodigoProdutor.Value,[loCaseInsensitive]) then
+              begin
+                 cdsColetasCodigoProdutor.Value := cdsProdutorCodigo.Value;
+                 cdsColetasProdutor.Value := cdsProdutorNome.Value;
+              end;
+              if cdsLinha.Locate('codigo',cdsViagenslinha.Value,[loPartialKey])then
+              begin
+                cdsColetasCodigoLinha.Value := cdsLinhaCodigo.Value;
+                cdsColetasNomeLinha.Value := cdsLinhaNome.Value;
+              end;
+              if cdsRota.Locate('codigo',cdsViagensrota.Value,[loPartialKey]) then
+              begin
+                cdsColetasCodigoRota.Value := cdsRotaCodigo.Value;
+                cdsColetasRota.Value := cdsRotaNome.Value;
+              end;
+              if cdsColetor.Locate('codigo',cdsViagenscoletor.Value,[loPartialKey]) then
+              begin
+                cdsColetasCodigoMotorista.Value := cdsColetorCodigo.Value;
+                cdsColetasNomeMotorista.Value := cdsColetorNome.Value;
+              end;
+              if cdsVeiculos.Locate('codigo',cdsViagensveiculo.Value,[loPartialKey]) then
+              begin
+                cdsColetasVeiculo.Value := cdsVeiculosplaca.Value;
+              end;
+              // Atualiza registro
+              cdsColetas.Post;
+
+              // Cria instancia do objeto de coleta individual siga
+              objColetaSiga := TSigaColetaIndividual.Create;
+
+              objColetaSiga.idRegistro := 'L';
+              objColetaSiga.veiculo := ObjViagem.Veiculo;
+              objColetaSiga.recepcao := ObjViagem.DatFechamento;
+              objColetaSiga.dtColeta := cdsColetasdt_coleta.Value;
+              objColetaSiga.fornecedor := cdsColetasCodigoProdutor.Value;
+              objColetaSiga.filial := '0';
+              objColetaSiga.volume := cdsColetasquantidade.AsInteger;
+              objColetaSiga.temperatura := cdsColetastemperatura.Value;
+              objColetaSiga.amostra := FlagNao;
+              objColetaSiga.alizarol := FlagNao;
+              objColetaSiga.amostraRede := FlagNao;
+
+
+              // Insere registro de coleta no arquivo texto
+               _ArqSaida.Add( objColetaSiga.toString(';'));
+
+              // Proxima coleta
+              cdsColetas.Next;
+            finally
+              objColetaSiga.Destroy;
+            end;
+          end;
+        finally
+           if (_ArqSaida.Count > 0) then
+           begin
+             // Monta nome arquivo saida
+
+             if not DirectoryExists(DadosConta.PathArqSiga + '\Siga' + DadosConta.IdConta) then
+             begin
+               NomePasta := DadosConta.PathArqSiga + '\Siga\' + DadosConta.IdConta;
+               ForceDirectories(NomePasta);
+               NomePasta :=DadosConta.PathArqSiga + '\Siga\'+ DadosConta.IdConta +'\' +
+                       IntToStr(MonthOfTheYear(Date())) +
+                       IntToStr(YearOf(Date()));
+
+               ForceDirectories(NomePasta);
+
+               // Diretorio de Cadastros basicos Siga
+               NomePasta := DadosConta.PathArqSiga + '\Siga\'+ DadosConta.IdConta +'\Cadastros';
+
+               ForceDirectories(NomePasta);
+
+             end
+             else
+             begin
+               if not  DirectoryExists(  DadosConta.PathArqSiga + '\Siga\'+ DadosConta.IdConta + '\' +
+                       IntToStr(MonthOfTheYear(Date())) +
+                       IntToStr(YearOf(Date()))  ) then
+               begin
+
+                 NomePasta := DadosConta.PathArqSiga + '\Siga\'+ DadosConta.IdConta +'\'+
+                       IntToStr(MonthOfTheYear(Date())) +
+                       IntToStr(YearOf(Date()));
+                 ForceDirectories(NomePasta);      
+               end;
+
+             end;
+             // Nome do arquivo de saida no diretorio
+             arqTexto := DadosConta.PathArqSiga + '\Siga\'+ DadosConta.IdConta + '\'+
+                       IntToStr(MonthOfTheYear(Date())) +
+                       IntToStr(YearOf(Date()))+ '\';
+             // Nome do arquivo para backup de o arquivo existir
+             ArqRename := arqTexto;
+
+             // Nome Arquivo de Cadastro Coletores
+             ArqSigaColetor := DadosConta.PathArqSiga + '\Siga\'+ DadosConta.IdConta + '\Cadastros\TransSiga.txt';
+
+
+             arqTexto := arqTexto + IntToStr(cdsViagensid.Value)+ '_' + cdsViagenslinha.Value + '_'+
+                         FormatDateTime('ddMMyyyy',cdsViagensdt_abertura.Value)+ '.txt';
+              // Renomear
+              ArqRename := ArqRename + IntToStr(cdsViagensid.Value)+ '_' + cdsViagenslinha.Value + '_'+
+                         FormatDateTime('ddMMyyyy',cdsViagensdt_abertura.Value)+ '.tx_';
+
+              // renomeia arquivo existente
+              if FileExists(arqTexto) then
+              begin
+                if FileExists(ArqRename) then
+                  DeleteFile(ArqRename);
+                RenameFile(arqTexto, ArqRename);
+              end;
+
+             // Salva Arquivo de saida
+             _ArqSaida.SaveToFile(arqTexto);
+
+           end;
+        end;
+
+         // Persistir log viagem
+         if Assigned(ObjViagem) then
+         begin
+           ObjViagem.Registrada := True;
+           PersistirLogViagem(ObjViagem);
+           FreeAndNil(ObjViagem);
+         end;
+
+         cdsViagens.Next;
+      end;
+
+      // Gera cadastratos
+      _ArqCadSiga.SaveToFile(ArqSigaColetor);
+
+      //Atualizar Parâmetros
+      if FlgAtualizaUltDataLeitura then
+      AtualizarDatLeituraParam(DataTermino);
+    finally
+      cdsColetas.EmptyDataSet;
+      cdsViagens.EmptyDataSet;
+      cdsRota.EmptyDataSet;
+      cdsLinha.EmptyDataSet;
+      cdsColetor.EmptyDataSet;
+      cdsProdutor.EmptyDataSet;
+      cdsFazendas.EmptyDataSet;
+      cdsVeiculos.EmptyDataSet;
+      _ArqSaida.Free;
+      _ArqCadSiga.Free;
+    end;
+  except
+    on E: Exception do
+    Result := 'Erro: ' + E.message;
+  end;
+end;
+{ TSigaViagem }
+
+function TSigaViagem.toString(Separador: Char): string;
+begin
+  Result := Self.idRegistro + Separador +
+
+            Self.rota + Separador  +
+            Self.ramal + Separador +
+            FormatDateTime('dd/MM/yyy hh:mm',Self.inicio) + separador +
+            FormatDateTime('dd/MM/yyy hh:mm',Self.final) + separador +
+            Self.equipamento + Separador +
+            Self.transportador + Separador +
+            IntToStr(Self.volumecoleta) + separador +
+            FormatDateTime('dd/MM/yyy hh:mm',Self.dtRecepcao) + separador +
+            Self.recebido + Separador +
+            Self.motivo + Separador +
+            FloatToStr(Self.temperatura) + separador +
+            IntToStr(Self.volumeEfetivo) + separador +
+            Self.alizarol + Separador +
+            FormatDateTime('dd/MM/yyy hh:mm',Self.fimDescarga);
+end;
+// Sincroniza os dados do ERP com o Servidor
+
+procedure TVSSCLRotaConsoleDTM.tmrSyncTimer(Sender: TObject);
+var
+  x: Integer;
+  FLogAtu : TStringList;
+  FNomeArqLog : string;
+begin
+  try
+   tmrConsole.Enabled := False;
+   sheConsole.StopAll;
+   // Inicia log de envio de dados ao servidor
+   FLogAtu := TStringList.Create;
+   FLogAtu.Append('Milk´s Rota :: Log Envio de Arquivos API Milk´s Rota - Início Operação: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
+   FLogAtu.Append('*******************************************');
+
+   Try
+     for x:= 1 to 6 do
+     begin
+       DadosConta.IdConta := DadosConta.ChaveContas[x];
+
+       // Gerencia envio de dados com arquivos gerados para multiplas empresas ou filiais
+       if (DadosConta.CargaMultiEmpresa = FlagSim) then
+       begin
+         CargaMultiEmpresa.IdConta := StrToInt(DadosConta.IdConta);
+         CargaMultiEmpresa.CodigoERP := DadosConta.ChaveERP[x] ;
+         CargaMultiEmpresa.NomeAtributo := 'rota';
+         CargaMultiEmpresa.CargaMultipla := True;
+       end;
+
+       // Log
+       FLogAtu.Append('Conta: ' + DadosConta.IdConta );
+
+       // Se não houver numero de conta, pula para proxima posição
+       if DadosConta.IdConta = EmptyStr then
+          Continue;
+       // Monta nome do arquivo de controle de mapas
+       _FileMapName := DadosConta.PathArqCarga + '\Maps\' + DadosConta.IdConta + '\Map'+ DadosConta.IdConta + '.ini';
+       // Carrega dados do mapa;
+       _MapasCarga :=  LoadFromMapIni('0', StrToInt(DadosConta.IdConta), _FileMapName); // Parametro 0 indica que foi chamado pelo timmer;
+       // Atualiza Tabelas no servidor MilkRota
+       FLogAtu.Append('Atualizando dados da conta na API Milk´s Rota ... |<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss',Now));
+       AtualizaTabelasWs(_MapasCarga);
+       FLogAtu.Append('Fim Atualização dados da conta na API Milk´s Rota ...|<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
+       // Gera arquivos para conferencia com dados baixados do servidor e grava no local espeficico
+       FLogAtu.Append('Inicio Consulta de arquivos para conferência ...|<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
+       ExportDataWs(_MapasCarga);
+       FLogAtu.Append('Fim Consulta de arquivos para conferência ...|<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
+     end;
+   except
+     on E: Exception do
+       FLogAtu.Append('Falha ao enviar arquivos: Msg. Erro: ' +  E.Message);
+   end
+ finally
+    // Fecha e salva registro de log
+    FLogAtu.Append('Milk´s Rota :: Fim Envio de Arquivos - ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
+    FLogAtu.Append('*******************************************');
+
+
+    if DirectoryExists( DadosConta.PathArqCarga + '\Log') then
+    begin
+      FNomeArqLog := DadosConta.PathArqCarga + '\Log' +  '\'+ 'LogEnv_' + FormatDateTime('dd_MM_yyyy_hh_mm_ss',Now) + '.txt';
+      FLogAtu.SaveToFile(FNomeArqLog);
+    end
+    else
+    begin
+      ForceDirectories(DadosConta.PathArqCarga + '\Log');
+      FNomeArqLog := DadosConta.PathArqCarga + '\Log' +  '\'+ 'LogEnv_' + FormatDateTime('dd_MM_yyyy_hh_mm_ss',Now) + '.txt';
+      FLogAtu.SaveToFile(FNomeArqLog);
+    end;
+
+    FLogAtu.Destroy;
+    tmrConsole.Enabled := True;
+    sheConsole.StartAll;
+ end;
+end;
+
+end.
+
+{
  function getRotas(): TListaRota;
   var
     i: Integer;
@@ -2960,7 +3906,7 @@ procedure TVSSCLRotaConsoleDTM.PopulaAtoresColeta(DataInicio, DataTermino: TDate
       end;
     end;
   end;
-  {Carrega viagens}
+  //Carrega viagens
 
   function getViagens(): TListaRegViagem;
   var
@@ -2988,7 +3934,7 @@ procedure TVSSCLRotaConsoleDTM.PopulaAtoresColeta(DataInicio, DataTermino: TDate
            objRegViagem.linha_id := ValidaInt(Viagem.getString('linha_id'));
            objRegViagem.rota_id := ValidaInt(Viagem.getString('rota_id'));
            objRegViagem.conta_id := ValidaInt(Viagem.getString('conta_id'));
-          // objRegViagem.tecnico_id := ValidaInt(Viagem.getString('tecnico_id'));
+           objRegViagem.tecnico_id := ValidaInt(Viagem.getString('tecnico_id'));
            objRegViagem.dt_fechamento := GetDataHora(Viagem.getString('dt_fechamento'));
            objRegViagem.dt_push := GetDataHora(Viagem.getString('dt_push'));
            objRegViagem.dt_abertura := GetDataHora(Viagem.getString('dt_abertura'));
@@ -3004,7 +3950,6 @@ procedure TVSSCLRotaConsoleDTM.PopulaAtoresColeta(DataInicio, DataTermino: TDate
            objRegViagem.Linha := Viagem.getString('linha');
            objRegViagem.Coletor := Viagem.getString('coletor');
            objRegViagem.Veiculo := Viagem.getString('veiculo');
-           objRegViagem.ComunitarioPendente :=  Viagem.getString('comunitario_pendente');
 
            // Empilha Viagem
           // Result.Add(objRegViagem);
@@ -3030,7 +3975,6 @@ procedure TVSSCLRotaConsoleDTM.PopulaAtoresColeta(DataInicio, DataTermino: TDate
            cdsViagensveiculo.Value       :=  objRegViagem.Veiculo;
            cdsViagenskm_distancia.Value  :=  objRegViagem.km_distancia;
            cdsViagenskm_real.Value       :=  objRegViagem.km_distancia;
-           cdsViagenscomunitario_pendente.Value := objRegViagem.ComunitarioPendente;
 
            cdsViagens.Post;
         finally
@@ -3039,7 +3983,7 @@ procedure TVSSCLRotaConsoleDTM.PopulaAtoresColeta(DataInicio, DataTermino: TDate
       end;
     end;
   end;
-  {Carrega coletas }
+  //Carrega coletas
   function getColetas(): TListaColeta;
   var
     i: Integer;
@@ -3179,7 +4123,7 @@ procedure TVSSCLRotaConsoleDTM.PopulaAtoresColeta(DataInicio, DataTermino: TDate
     end;
   end;
 
-  {Visitas em uma periodo}
+  //Visitas em uma periodo
 
   function getVisitas(): TListaVisita;
   var
@@ -3217,403 +4161,7 @@ procedure TVSSCLRotaConsoleDTM.PopulaAtoresColeta(DataInicio, DataTermino: TDate
         end;
       end;
     end;
-  end;
-begin
-    getRotas;
-    getLinhas;
-    getProdutores;
-    getFazendas;
-    getColetores;
-    getVeiculos;
-    getColetas;
-    getViagens;
-end;
-// Exporta dados para o sistema de rasteabilidade SIGA
-procedure TVSSCLRotaConsoleDTM.ExportaSiga;
-var
-  DataProcIni, DataProcFim : TDateTime;
-begin
-  InserirMsgLog('Início Exporta SIGA.');
-  try
-    qryParametros.Close;
-    qryParametros.Open;
-    DataProcIni := qryParametrosParDatIniLeituraDescargaWS.AsDateTime;
-    DataProcFim := Date;
-    GetDadosSiga(DataProcIni, DataProcFim, '0',EmptyStr, False);
-    InserirMsgLog('Término Siga');
-  except on E:Exception do
-    InserirMsgLog('ERRO : ' + E.Message);
-  end;
+  end;                    
 
-end;
+}
 
-function TVSSCLRotaConsoleDTM.GetDadosSiga(DataInicio,
-  DataTermino: TDateTime; Sync, Comunitario: string;
-  FlgAtualizaUltDataLeitura: Boolean): String;
-  var
-    objColetaSiga: TSigaColetaIndividual;
-    objViagemSiga: TSigaViagem;
-
-  function ViagemJahProcessada(IdViagem: Integer): Boolean;
-  begin
-    qrySQL.Close;
-    qrySQL.SQL.Text := 'SELECT 1 FROM LogViagem WHERE LovViagemId = :Id and LovGerSiga = :LovGerSiga';
-    qrySQL.ParamByName('Id').Value := IdViagem;
-    qrySQL.ParamByName('LovGerSiga').Value := FlagSim;
-    qrySQL.Open;
-
-    Result := not qrySQL.IsEmpty;
-  end;
-
-  function ViagemJahRegistrada(idViagem: Integer): TViagem;
-  begin
-    Result := TViagem.Create;
-    qrySQL.Close;
-    qrySQL.SQL.Text := 'Select * from LogViagem WHERE LovViagemId = :Id';
-    qrySQL.ParamByName('Id').Value := idViagem;
-    qrySQL.Open;
-    if not qrySQL.IsEmpty then
-    begin
-      Result.Id := qrySQL.FieldByName('LovId').AsInteger;
-      Result.RotaId := qrySQL.FieldByName('LovRotaId').AsInteger;
-      Result.RotaCodigo := qrySQL.FieldByName('LovRotaCod').AsString;
-      Result.DatAbertura := qrySQL.FieldByName('LovDataViagem').AsDateTime;
-      Result.Liberada := True;
-      Result.GerouDatasul := qrySQL.FieldByName('LovGerDatasul').AsString;
-      Result.GerouRm := qrySQL.FieldByName('LovGerRm').AsString;
-      Result.GerouMagis := qrySQL.FieldByName('LovGerMagis').AsString;
-      Result.GerouMeta := qrySQL.FieldByName('LovGerMeta').AsString;
-      Result.GerouSiga := qrySQL.FieldByName('LovGerSiga').AsString;
-      Result.GerouScl := qrySQL.FieldByName('LovGerScl').AsString;
-      Result.Registrada := True;
-    end
-    else
-    begin
-      Result.GerouDatasul := FlagNao;
-      Result.GerouRm := FlagNao;
-      Result.GerouMagis := FlagNao;
-      Result.GerouMeta := FlagNao;
-      Result.GerouSiga := FlagNao;
-      Result.GerouScl := FlagNao;
-      Result.Liberada := False;
-      Result.Registrada := False;
-    end;
-  end;
-
-begin
-   try
-    // Polula datasets
-    PopulaAtoresColeta(DataInicio,DataTermino,Sync,Comunitario);
-
-    // Gera Arquivos de Agendes Siga
-    _ArqCadSiga := TStringList.Create;
-    _ArqCadSiga.Clear;
-
-    cdsColetor.First;
-    while not cdsColetor.Eof do
-    begin
-      try
-         objTranspSiga := TSigaTransportador.Create;
-         objTranspSiga.idRegistro := 'T';
-         objTranspSiga.codigoTransportador := cdsColetorCodigo.Value;
-         objTranspSiga.nomeTransportador := cdsColetorNome.Value;
-
-         if ((objTranspSiga.codigoTransportador = EmptyStr) or (objTranspSiga.nomeTransportador = EmptyStr)) then
-         begin
-           cdsColetor.Next;
-           Continue;
-         end;
-
-         // Adiciona registro no arquivo
-         _ArqCadSiga.Add(objTranspSiga.toString(';'));
-
-        // proximo registro
-        cdsColetor.Next;
-      finally
-       objTranspSiga.Free;
-      end;
-    end;
-
-    // Arquivo com dados coleta formatado
-    _ArqSaida := TStringList.Create;
-
-    // ordena as viagem por id
-    cdsViagens.IndexFieldNames := 'id';
-
-    // Ordena as coletas por viagem
-    cdsColetas.IndexFieldNames := 'viagem_id';
-
-    cdsViagens.First;
-    i := 0;
-    try
-      for i := 0 to (cdsViagens.RecordCount -1) do
-      begin
-        try
-          _ArqSaida.Clear;
-
-          // Verifica se a viagem já foi processada
-          if ViagemJahProcessada(cdsViagensid.Value) then
-          begin
-            cdsViagens.Next;
-            Continue;
-          end;
-
-          // Verifica se a distribuição do tanque comunitario esta pendente e não gera o arquivo
-          if (cdsViagenscomunitario_pendente.Value = 'true') then
-          begin
-            cdsViagens.Next;
-            Continue;   
-          end;
-
-          // Cria objeto viagem para persistencia no log
-          ObjViagem := ViagemJahRegistrada(cdsViagensid.Value);
-          ObjViagem.Id := cdsViagensid.Value;
-          ObjViagem.RotaId := cdsViagensrota_id.Value;
-          ObjViagem.RotaCodigo := cdsViagensrota.Value;
-          ObjViagem.DatAbertura := cdsViagensdt_abertura.Value;
-          ObjViagem.DatFechamento := cdsViagensdt_fechamento.Value;
-          ObjViagem.GerouSiga := FlagSim;
-
-          // Completa dados da viagem
-          cdsViagens.Edit;
-          if cdsLinha.Locate('codigo', cdsViagenslinha.Value,[loPartialKey]) then
-          begin
-            cdsViagensNomeLinha.Value := cdsLinhaNome.Value;
-            cdsViagenskm_padrao.Value := cdsLinhadistancia.Value;
-          end;
-          if cdsRota.Locate('codigo', cdsViagensrota.Value,[loPartialKey]) then
-          begin
-            cdsViagensNomeRota.Value := cdsRotaNome.Value;
-          end;
-          if cdsColetor.Locate('codigo', cdsViagenscoletor.Value,[loPartialKey])then
-          begin
-            cdsViagensNomeColetor.Value := cdsColetorNome.Value;
-          end;
-          if cdsVeiculos.Locate('codigo',cdsViagensveiculo.Value,[loPartialKey])then
-          begin
-            cdsViagensPlacaVeiculo.Value := cdsVeiculosplaca.Value;
-          end;
-          ObjViagem.Coletor := cdsViagenscoletor.Value;
-          ObjViagem.Veiculo := cdsViagensPlacaVeiculo.Value;
-
-          // Numero da viagem para o veículo e motorista coletor
-          qryAux.SQL.Clear;
-          qryAux.SQL.Add('Select Count(LovId) Total from LogViagem where LovColetor = :LovColetor and LovVeiculo = :LovVeiculo and LovDataViagem = :LovDataViagem');
-          qryAux.ParamByName('LovColetor').Value := ObjViagem.Coletor;
-          qryAux.ParamByName('LovVeiculo').Value := ObjViagem.Veiculo;
-          qryAux.ParamByName('LovDataViagem').Value := GetData(DateToStr(ObjViagem.DatAbertura));
-          qryAux.Open;
-          FResultado := (qryAux.FieldByName('Total').Value + 1);
-          cdsViagensNumeroViagem.Value := FResultado;
-
-          cdsViagens.Post;
-
-          // Popula linha de cabecalho no arquivo de integração SIGA - REgistro C
-          objViagemSiga := TSigaViagem.Create;
-
-          objViagemSiga.idRegistro := 'C';
-          objViagemSiga.rota := cdsViagenslinha.Value;
-          objViagemSiga.ramal := 'N';
-          objViagemSiga.inicio := ObjViagem.DatAbertura;
-          objViagemSiga.final := ObjViagem.DatFechamento;
-          objViagemSiga.equipamento := ObjViagem.Veiculo;
-          objViagemSiga.transportador := ObjViagem.Coletor;
-          objViagemSiga.volumecoleta :=  ObjViagem.QtdeColetado;
-          objViagemSiga.dtRecepcao := ObjViagem.DatFechamento; // Substituir para data entrada na plataforma para descarga
-          objViagemSiga.recebido := 's';  // substituir pelo status descarga - realizada (s)  nao realizada (n) - minúsculo;
-          objViagemSiga.motivo := ' '; // motivo pre-cadaastrado de não recebimento do leite na descarga
-          objViagemSiga.temperatura := 5; // Temperatura do produto no inicio da descarga;
-          objViagemSiga.volumeEfetivo := ObjViagem.QtdeArmazenado;
-          objViagemSiga.alizarol := 'n';  // negativo (N - Leite bom)  positivo (S - Leite acido)
-          objViagemSiga.fimDescarga := ObjViagem.DatFechamento; // Substituir pelo horario real de final de descarga
-
-          // insere o registro de cabeçalho da viagem no arquivo
-          _ArqSaida.Add(objViagemSiga.toString(';'));
-
-
-          cdsColetas.First;
-          for j := 0 to (cdsColetas.RecordCount -1 )  do
-          begin
-            // se a coleta não for desta viagem, pula..
-            if (cdsColetasviagem_id.Value <> cdsViagensid.Value) then
-            begin
-              cdsColetas.Next;
-              Continue;
-            end;
-            try
-              // Completa Dados dos atores na coleta atual
-              cdsColetas.Edit;
-              // Localiza dados dos atores na coleta
-              if cdsFazendas.Locate('codigo',cdsColetasCodigoFazenda.Value,[loPartialKey]) then
-              begin
-                cdsColetasCodigoFazenda.Value := cdsFazendascodigo.Value;
-                cdsColetasFazenda.Value := cdsFazendasnome.Value;
-              end;
-              if cdsProdutor.Locate('codigo',cdsColetasCodigoProdutor.Value,[loCaseInsensitive]) then
-              begin
-                 cdsColetasCodigoProdutor.Value := cdsProdutorCodigo.Value;
-                 cdsColetasProdutor.Value := cdsProdutorNome.Value;
-              end;
-              if cdsLinha.Locate('codigo',cdsViagenslinha.Value,[loPartialKey])then
-              begin
-                cdsColetasCodigoLinha.Value := cdsLinhaCodigo.Value;
-                cdsColetasNomeLinha.Value := cdsLinhaNome.Value;
-              end;
-              if cdsRota.Locate('codigo',cdsViagensrota.Value,[loPartialKey]) then
-              begin
-                cdsColetasCodigoRota.Value := cdsRotaCodigo.Value;
-                cdsColetasRota.Value := cdsRotaNome.Value;
-              end;
-              if cdsColetor.Locate('codigo',cdsViagenscoletor.Value,[loPartialKey]) then
-              begin
-                cdsColetasCodigoMotorista.Value := cdsColetorCodigo.Value;
-                cdsColetasNomeMotorista.Value := cdsColetorNome.Value;
-              end;
-              if cdsVeiculos.Locate('codigo',cdsViagensveiculo.Value,[loPartialKey]) then
-              begin
-                cdsColetasVeiculo.Value := cdsVeiculosplaca.Value;
-              end;
-              // Atualiza registro
-              cdsColetas.Post;
-
-              // Cria instancia do objeto de coleta individual siga
-              objColetaSiga := TSigaColetaIndividual.Create;
-
-              objColetaSiga.idRegistro := 'L';
-              objColetaSiga.veiculo := ObjViagem.Veiculo;
-              objColetaSiga.recepcao := ObjViagem.DatFechamento;
-              objColetaSiga.dtColeta := cdsColetasdt_coleta.Value;
-              objColetaSiga.fornecedor := cdsColetasCodigoProdutor.Value;
-              objColetaSiga.filial := '0';
-              objColetaSiga.volume := cdsColetasquantidade.AsInteger;
-              objColetaSiga.temperatura := cdsColetastemperatura.Value;
-              objColetaSiga.amostra := FlagNao;
-              objColetaSiga.alizarol := FlagNao;
-              objColetaSiga.amostraRede := FlagNao;
-
-
-              // Insere registro de coleta no arquivo texto
-               _ArqSaida.Add( objColetaSiga.toString(';'));
-
-              // Proxima coleta
-              cdsColetas.Next;
-            finally
-              objColetaSiga.Destroy;
-            end;
-          end;
-        finally
-           if (_ArqSaida.Count > 0) then
-           begin
-             // Monta nome arquivo saida
-
-             if not DirectoryExists(DadosConta.PathArqSiga + '\Siga' + DadosConta.IdConta) then
-             begin
-               CreateDir(DadosConta.PathArqSiga + '\Siga\' + DadosConta.IdConta);
-
-               CreateDir( DadosConta.PathArqSiga + '\Siga\'+ DadosConta.IdConta +'\' +
-                       IntToStr(MonthOfTheYear(Date())) +
-                       IntToStr(YearOf(Date())) );
-               // Diretorio de Cadastros basicos Siga
-               CreateDir( DadosConta.PathArqSiga + '\Siga\'+ DadosConta.IdConta +'\Cadastros');
-
-             end
-             else
-             begin
-               if not  DirectoryExists(  DadosConta.PathArqSiga + '\Siga\'+ DadosConta.IdConta + '\' +
-                       IntToStr(MonthOfTheYear(Date())) +
-                       IntToStr(YearOf(Date()))  ) then
-               begin
-                 CreateDir( DadosConta.PathArqSiga + '\Siga\'+ DadosConta.IdConta +'\'+
-                       IntToStr(MonthOfTheYear(Date())) +
-                       IntToStr(YearOf(Date())) );
-               end;
-
-             end;
-             // Nome do arquivo de saida no diretorio
-             arqTexto := DadosConta.PathArqSiga + '\Siga\'+ DadosConta.IdConta + '\'+
-                       IntToStr(MonthOfTheYear(Date())) +
-                       IntToStr(YearOf(Date()))+ '\';
-             // Nome do arquivo para backup de o arquivo existir
-             ArqRename := arqTexto;
-
-             // Nome Arquivo de Cadastro Coletores
-             ArqSigaColetor := DadosConta.PathArqSiga + '\Siga\'+ DadosConta.IdConta + '\Cadastros\TransSiga.txt';
-
-
-             arqTexto := arqTexto + IntToStr(cdsViagensid.Value)+ '_' + cdsViagenslinha.Value + '_'+
-                         FormatDateTime('ddMMyyyy',cdsViagensdt_abertura.Value)+ '.txt';
-              // Renomear
-              ArqRename := ArqRename + IntToStr(cdsViagensid.Value)+ '_' + cdsViagenslinha.Value + '_'+
-                         FormatDateTime('ddMMyyyy',cdsViagensdt_abertura.Value)+ '.tx_';
-
-              // renomeia arquivo existente
-              if FileExists(arqTexto) then
-              begin
-                if FileExists(ArqRename) then
-                  DeleteFile(ArqRename);
-                RenameFile(arqTexto, ArqRename);
-              end;
-
-             // Salva Arquivo de saida
-             _ArqSaida.SaveToFile(arqTexto);
-
-           end;
-        end;
-
-         // Persistir log viagem
-         if Assigned(ObjViagem) then
-         begin
-           ObjViagem.Registrada := True;
-           PersistirLogViagem(ObjViagem);
-           FreeAndNil(ObjViagem);
-         end;
-
-         cdsViagens.Next;
-      end;
-
-      // Gera cadastratos
-      _ArqCadSiga.SaveToFile(ArqSigaColetor);
-
-      //Atualizar Parâmetros
-      if FlgAtualizaUltDataLeitura then
-      AtualizarDatLeituraParam(DataTermino);
-    finally
-      cdsColetas.EmptyDataSet;
-      cdsViagens.EmptyDataSet;
-      cdsRota.EmptyDataSet;
-      cdsLinha.EmptyDataSet;
-      cdsColetor.EmptyDataSet;
-      cdsProdutor.EmptyDataSet;
-      cdsFazendas.EmptyDataSet;
-      cdsVeiculos.EmptyDataSet;
-      _ArqSaida.Free;
-      _ArqCadSiga.Free;
-    end;
-  except
-    on E: Exception do
-    Result := 'Erro: ' + E.message;
-  end;
-end;
-{ TSigaViagem }
-
-function TSigaViagem.toString(Separador: Char): string;
-begin
-  Result := Self.idRegistro + Separador +
-
-            Self.rota + Separador  +
-            Self.ramal + Separador +
-            FormatDateTime('dd/MM/yyy hh:mm',Self.inicio) + separador +
-            FormatDateTime('dd/MM/yyy hh:mm',Self.final) + separador +
-            Self.equipamento + Separador +
-            Self.transportador + Separador +
-            IntToStr(Self.volumecoleta) + separador +
-            FormatDateTime('dd/MM/yyy hh:mm',Self.dtRecepcao) + separador +
-            Self.recebido + Separador +
-            Self.motivo + Separador +
-            FloatToStr(Self.temperatura) + separador +
-            IntToStr(Self.volumeEfetivo) + separador +
-            Self.alizarol + Separador +
-            FormatDateTime('dd/MM/yyy hh:mm',Self.fimDescarga);
-end;
-
-end.

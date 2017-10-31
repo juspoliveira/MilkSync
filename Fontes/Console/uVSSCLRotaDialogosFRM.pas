@@ -18,92 +18,152 @@ uses
   cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB, cxDBData,
   cxGridLevel, cxClasses, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid, Mask, JvExMask, JvToolEdit,
-  ComCtrls;
+  ComCtrls, cxCheckGroup, cxRadioGroup, dxCntner, dxExEdtr, dxEdLib,
+  cxProgressBar, Buttons, DBClient,  uJSON, uVSSCLRotaComum, sSpeedButton,
+  sGroupBox, sPageControl, sMemo, sPanel, sEdit, sLabel, sBitBtn,
+  sMaskEdit, sCustomComboEdit, sTooledit, sCheckBox,uVSSCLRotaConsoleDTM;
 
 type
   TVSDialogosFRM = class(TForm)
-    Panel1: TPanel;
-    btnOk: TcxButton;
-    btnCancelar: TcxButton;
-    pgcDialogos: TcxPageControl;
-    tbsAut: TcxTabSheet;
-    pnlTitulo: TJvGradientHeaderPanel;
-    tbsSobre: TcxTabSheet;
-    JvGradientHeaderPanel2: TJvGradientHeaderPanel;
-    cxLabel13: TcxLabel;
-    edtVersaoAp: TcxTextEdit;
-    tbsConfig: TcxTabSheet;
-    JvGradientHeaderPanel1: TJvGradientHeaderPanel;
-    cxGroupBox5: TcxGroupBox;
-    edtSenha: TcxTextEdit;
-    cxLabel1: TcxLabel;
-    edtUsu: TcxTextEdit;
-    cxLabel2: TcxLabel;
-    cxGroupBox6: TcxGroupBox;
-    pgcConfig: TPageControl;
-    tsParametros: TTabSheet;
-    tsPathFile: TTabSheet;
-    cxGroupBox3: TcxGroupBox;
-    cxLabel5: TcxLabel;
-    cxLabel10: TcxLabel;
-    edtServidor: TcxTextEdit;
-    chxLog: TcxCheckBox;
+    pgcDialogos: TsPageControl;
+    tbsAut: TsTabSheet;
+    tbsConfig: TsTabSheet;
+    tbsSobre: TsTabSheet;
+    pgcConfig: TsPageControl;
+    tsPathFile: TsTabSheet;
+    tsMapas: TsTabSheet;
+    tsParametros: TsTabSheet;
+    pgcLigacao: TsPageControl;
+    sTabSheet7: TsTabSheet;
+    tsPage2: TsTabSheet;
+    tsRegLog: TsTabSheet;
+    sGroupBox1: TsGroupBox;
+    sLabel1: TsLabel;
+    sLabel2: TsLabel;
+    edtUsu: TsEdit;
+    edtSenha: TsEdit;
+    sGroupBox2: TsGroupBox;
+    sGroupBox3: TsGroupBox;
+    sGroupBox4: TsGroupBox;
+    sGroupBox5: TsGroupBox;
+    sGroupBox6: TsGroupBox;
+    cxLabel5: TsLabel;
+    cxLabel10: TsLabel;
+    edtServidor: TsEdit;
+    chxLog: TsCheckBox;
     edtTempo: TcxSpinEdit;
-    chxUsarProxy: TcxCheckBox;
-    edtConta1: TcxTextEdit;
-    cxLabel9: TcxLabel;
-    cxgrpbx1: TcxGroupBox;
-    cxLabel4: TcxLabel;
-    edtProxyPorta: TcxTextEdit;
-    cxLabel6: TcxLabel;
-    edtProxyUsu: TcxTextEdit;
-    cxLabel7: TcxLabel;
-    edtProxySenha: TcxTextEdit;
-    cxLabel8: TcxLabel;
-    edtProxyUrl: TcxTextEdit;
-    cxGroupBox4: TcxGroupBox;
-    ckbDatasul: TcxCheckBox;
-    ckbRM: TcxCheckBox;
-    ckbMagis: TcxCheckBox;
-    ckbMeta: TcxCheckBox;
-    ckbSiga: TcxCheckBox;
+    edtConta1: TsEdit;
+    cxLabel9: TsLabel;
+    edtConta2: TsEdit;
+    edtConta3: TsEdit;
+    edtConta4: TsEdit;
+    edtConta5: TsEdit;
+    edtConta6: TsEdit;
+    cxLabel4: TsLabel;
+    edtProxyPorta: TsEdit;
+    cxLabel6: TsLabel;
+    edtProxyUsu: TsEdit;
+    cxLabel7: TsLabel;
+    edtProxySenha: TsEdit;
+    cxLabel8: TsLabel;
+    edtProxyUrl: TsEdit;
+    ckbDatasul: TsCheckBox;
+    ckbRM: TsCheckBox;
+    ckbMagis: TsCheckBox;
+    ckbMeta: TsCheckBox;
+    ckbSiga: TsCheckBox;
     cbxMagis: TcxImageComboBox;
     cbxDatasul: TcxImageComboBox;
     cbxRm: TcxImageComboBox;
     cbxMeta: TcxImageComboBox;
     cbxSiga: TcxImageComboBox;
     cbxScl: TcxImageComboBox;
-    ckbScl: TcxCheckBox;
-    cxGroupBox2: TcxGroupBox;
-    edtDifAtesto: TcxTextEdit;
-    cxLabel11: TcxLabel;
-    chxEnviarNota: TcxCheckBox;
-    cxGroupBox1: TcxGroupBox;
-    lbl6: TLabel;
-    edtIniLeitura: TcxDateEdit;
-    cxLabel3: TcxLabel;
-    cxLabel14: TcxLabel;
+    ckbScl: TsCheckBox;
+    edtDifAtesto: TsEdit;
+    cxLabel11: TsLabel;
+    chxEnviarNota: TsCheckBox;
+    lbl6: TsLabel;
+    cxLabel3: TsLabel;
+    cxLabel14: TsLabel;
     edtUltLeitura: TcxDateEdit;
-    cxGroupBox7: TcxGroupBox;
-    lbl17: TLabel;
-    lbl1: TLabel;
-    lbl2: TLabel;
-    lbl3: TLabel;
-    lbl4: TLabel;
-    lbl5: TLabel;
+    sGroupBox7: TsGroupBox;
+    sGroupBox8: TsGroupBox;
+    lbl17: TsLabel;
+    lbl1: TsLabel;
+    lbl2: TsLabel;
+    lbl3: TsLabel;
+    lbl4: TsLabel;
+    lbl5: TsLabel;
     deDatasul: TJvDirectoryEdit;
     deRm: TJvDirectoryEdit;
     deMagis: TJvDirectoryEdit;
     deMeta: TJvDirectoryEdit;
     deScl: TJvDirectoryEdit;
     deSiga: TJvDirectoryEdit;
-    lbl7: TLabel;
     dePathDescarga: TJvDirectoryEdit;
-    edtConta2: TcxTextEdit;
-    edtConta3: TcxTextEdit;
-    edtConta4: TcxTextEdit;
-    edtConta5: TcxTextEdit;
-    edtConta6: TcxTextEdit;
+    lbl8: TsLabel;
+    deBaseCarga: TJvDirectoryEdit;
+    sGroupBox10: TsGroupBox;
+    lbl22: TsLabel;
+    lbl23: TsLabel;
+    lbl9: TsLabel;
+    lbl10: TsLabel;
+    lbl15: TsLabel;
+    lbl16: TsLabel;
+    lbl24: TsLabel;
+    lbl18: TsLabel;
+    lbl19: TsLabel;
+    feAnalises: TJvFilenameEdit;
+    feColetores: TJvFilenameEdit;
+    feExtratos: TJvFilenameEdit;
+    feFazendas: TJvFilenameEdit;
+    feItinerarios: TJvFilenameEdit;
+    feLinhas: TJvFilenameEdit;
+    feMotivos: TJvFilenameEdit;
+    feProdutores: TJvFilenameEdit;
+    feGrupoRotas: TJvFilenameEdit;
+    sGroupBox9: TsGroupBox;
+    lbl20: TsLabel;
+    lbl14: TsLabel;
+    lbl11: TsLabel;
+    lbl13: TsLabel;
+    lbl21: TsLabel;
+    lbl12: TsLabel;
+    feVeiculos: TJvFilenameEdit;
+    feNfc: TJvFilenameEdit;
+    feVinculados: TJvFilenameEdit;
+    feTanques: TJvFilenameEdit;
+    feRotas: TJvFilenameEdit;
+    feTecnicos: TJvFilenameEdit;
+    memLog: TsMemo;
+    sGroupBox11: TsGroupBox;
+    sGroupBox12: TsGroupBox;
+    edtVersaoAp: TsEdit;
+    pnlTitulo: TJvGradientHeaderPanel;
+    sPanel2: TsPanel;
+    btnOK: TsBitBtn;
+    btnCancelar: TsBitBtn;
+    sLabel3: TsLabel;
+    edtIniLeitura: TsDateEdit;
+    sPanel1: TsPanel;
+    btnSalvarAssoc: TsSpeedButton;
+    btnExportar: TsSpeedButton;
+    rgCtaAtiva: TsRadioGroup;
+    chxUsarProxy: TsCheckBox;
+    edtCad: TcxSpinEdit;
+    sLabel4: TsLabel;
+    sLabel5: TsLabel;
+    edtkey1: TsEdit;
+    edtkey2: TsEdit;
+    edtkey3: TsEdit;
+    edtkey4: TsEdit;
+    edtkey5: TsEdit;
+    edtkey6: TsEdit;
+    chkCargaMultiEmpresa: TsCheckBox;
+    sLabel6: TsLabel;
+    deRetornoApi: TJvDirectoryEdit;
+    chkDropTable: TsCheckBox;
+    chkhoje: TsCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure cbxDatasulPropertiesInitPopup(Sender: TObject);
     procedure cbxMagisPropertiesInitPopup(Sender: TObject);
@@ -111,21 +171,37 @@ type
     procedure cbxMetaPropertiesInitPopup(Sender: TObject);
     procedure cbxSigaPropertiesInitPopup(Sender: TObject);
     procedure cbxSclPropertiesInitPopup(Sender: TObject);
+    procedure pgcConfigChange(Sender: TObject);
+    procedure btnSalvarAssocClick(Sender: TObject);
+    procedure rgCtaAtivaClick(Sender: TObject);
+    procedure btnImporAllClick(Sender: TObject);
   private
-    { Private declarations }
+    function dtm: TVSSCLRotaConsoleDTM;
   public
+    NotificaInterface: procedure of object;
     function Autenticado(SubTitulo: string = ''): Boolean;
     procedure Sobre;
     function EditarConfiguracoes: Boolean;
     function InfoDadosUsuario(var Usuario: string; var Senha: string): Boolean;
+    function ValidarArquivoMapa(aFile, aTabela: string): Boolean;
+    function ValidarAssociacao:Boolean;
+    procedure SalvarAssociacao;
+    procedure LimpaControles;
+    procedure PopulaConroles;
+    procedure PopularMapaCarga;
+    function GerarJson(conta_id: Integer; Token:string; aDataset: TClientDataSet; StartPoint:Integer = 0; Limit: Integer = 0): WideString;
   end;
-
+var
+  _FileMapName: string;
+  _MapasCarga : TMapasCarga;
+  fNomeTabela : string;
+  fTotalRegistros : Integer;
 implementation
 
 {$R *.dfm}
 
-uses uRotinasComuns, uRotinasComunsUI, uVSSCLRotaComum,
-  uVSSCLRotaConsoleDTM;
+uses uRotinasComuns, uRotinasComunsUI;
+
 
 { TVSDialogosFRM }
 
@@ -137,6 +213,7 @@ begin
   edtServidor.Text := DadosConta.HostURL;
  // edtConta.Text := DadosConta.IdConta;
   edtTempo.Text := IntToStr(DadosConta.TimerProcInterno);
+  edtCad.Text := IntToStr(DadosConta.TimerProcCadastro);
   chxUsarProxy.Checked := DadosConta.UsarProxy;
   chxLog.Checked := DadosConta.Log;
   edtProxyUrl.Text := DadosConta.DadosProxy.Host;
@@ -144,15 +221,15 @@ begin
   edtProxyUsu.Text := DadosConta.DadosProxy.Usuario;
   edtProxySenha.Text := DadosConta.DadosProxy.Senha;
   chxEnviarNota.Checked := DadosConta.EnviarNotifiAtesto;
-  edtDifAtesto.EditValue := DadosConta.PercAtesto;
-  edtIniLeitura.EditValue := DadosConta.DatIniLeituraDescargaWS;
+  edtDifAtesto.Text := FormatFloat('##0.####',DadosConta.PercAtesto);
+  edtIniLeitura.date := DadosConta.DatIniLeituraDescargaWS;
   edtUltLeitura.EditValue := DadosConta.DatUltLeituraDescargaWS;
-  ckbDatasul.EditValue := DadosConta.GeraTotvsDatasul;
-  ckbRM.EditValue := DadosConta.GeraTotvsRm;
-  ckbMagis.EditValue := DadosConta.GeraMagis;
-  ckbMeta.EditValue := DadosConta.GeraMeta;
-  ckbSiga.EditValue := DadosConta.GeraSiga;
-  ckbScl.EditValue  := DadosConta.GeraScl;
+  ckbDatasul.Checked := (DadosConta.GeraTotvsDatasul = FlagSim);
+  ckbRM.Checked := (DadosConta.GeraTotvsRm = FlagSim);
+  ckbMagis.Checked := (DadosConta.GeraMagis = FlagSim);
+  ckbMeta.Checked := (DadosConta.GeraMeta = FlagSim);
+  ckbSiga.Checked := (DadosConta.GeraSiga = FlagSim);
+  ckbScl.Checked  := (DadosConta.GeraScl = FlagSim);
   cbxDatasul.EditValue := DadosConta.VerDatasul;
   cbxRm.EditValue := DadosConta.VerRm;
   cbxMagis.EditValue := DadosConta.VerMagis;
@@ -167,7 +244,21 @@ begin
   deSiga.Directory := DadosConta.PathArqSiga;
   deScl.Directory := DadosConta.PathArqScl;
   dePathDescarga.Directory := DadosConta.PathArqDescarga;
-  // Identificadores das contas
+
+  // Arquivo de carga com dados de mais de uma empresa
+  chkCargaMultiEmpresa.Checked := (DadosConta.CargaMultiEmpresa = FlagSim);
+
+  // Limpa Tabelas antes de enviar dados para o servidor
+  chkDropTable.Checked := (DadosConta.DropTable = FlagSim);
+
+  // Verifica geração de arquivos da data atual (hoje)
+  chkhoje.Checked := (DadosConta.ColetasHoje = FlagSim);
+
+  // Diretorio de base de dados carga de integração ERP
+  deBaseCarga.Directory := DadosConta.PathArqCarga;
+  // Diretorio de saida de dados retorno da API
+  deRetornoApi.Directory := DadosConta.PathArqCargaApi;
+  // Identificadores das contas no getMilk
   edtConta1.Text := DadosConta.IdConta1;
   edtConta2.Text := DadosConta.IdConta2;
   edtConta3.Text := DadosConta.IdConta3;
@@ -175,10 +266,19 @@ begin
   edtConta5.Text := DadosConta.IdConta5;
   edtConta6.Text := DadosConta.IdConta6;
 
+  // Associação das chaves do getMilk com ERP Cliente
+  edtkey1.Text := DadosConta.KeyId1;
+  edtkey2.Text := DadosConta.KeyId2;
+  edtkey3.Text := DadosConta.KeyId3;
+  edtkey4.Text := DadosConta.KeyId4;
+  edtkey5.Text := DadosConta.KeyId5;
+  edtkey6.Text := DadosConta.KeyId6;
+
   Self.Visible := False;
   Self.Height := 610;
   if (Self.ShowModal = mrOk) then
   begin
+    // identificação das contas no getMilk
     DadosConta.HostURL := edtServidor.Text;
     DadosConta.IdConta1 := edtConta1.Text;
     DadosConta.IdConta2 := edtConta2.Text;
@@ -193,19 +293,28 @@ begin
     DadosConta.ChaveContas[4] := edtConta4.Text;
     DadosConta.ChaveContas[5] := edtConta5.Text;
     DadosConta.ChaveContas[6] := edtConta6.Text;
+    // Associação das contas co getMilk com ERP cliente
+    DadosConta.KeyId1 := edtkey1.Text;
+    DadosConta.KeyId2 := edtkey2.Text;
+    DadosConta.KeyId3 := edtkey3.Text;
+    DadosConta.KeyId4 := edtkey4.Text;
+    DadosConta.KeyId5 := edtkey5.Text;
+    DadosConta.KeyId6 := edtkey6.Text;
 
     DadosConta.PathArqDescarga := dePathDescarga.Directory;
     DadosConta.PercAtesto := StrToFloat(edtDifAtesto.Text);
     DadosConta.UsarProxy := chxUsarProxy.Checked;
     DadosConta.PathBase := EmptyStr ; // edtPathExp.EditValue;
     DadosConta.TimerProcInterno := edtTempo.EditValue;
+    DadosConta.TimerProcCadastro := edtCad.EditValue;
+
     DadosConta.Log := chxLog.Checked;
     DadosConta.EnviarNotifiAtesto := chxEnviarNota.Checked;
 
-    if VarIsNull(edtIniLeitura.EditValue) then
+    if edtIniLeitura.Text = '  /  /    ' then // VarIsNull(edtIniLeitura.dEditValue) then
       DadosConta.DatIniLeituraDescargaWS := 0
     else
-      DadosConta.DatIniLeituraDescargaWS := edtIniLeitura.EditValue;
+      DadosConta.DatIniLeituraDescargaWS := edtIniLeitura.Date;
     // Dados Proxy
     DadosConta.DadosProxy.Host := edtProxyUrl.Text;
     DadosConta.DadosProxy.Porta := edtProxyPorta.Text;
@@ -213,12 +322,30 @@ begin
     DadosConta.DadosProxy.Senha := edtProxySenha.Text;
 
     // Arquivos a serem gerados
-    DadosConta.GeraTotvsDatasul := ckbDatasul.EditValue;
-    DadosConta.GeraTotvsRm := ckbRM.EditValue;
-    DadosConta.GeraMagis := ckbMagis.EditValue;
-    DadosConta.GeraMeta := ckbMeta.EditValue;
-    DadosConta.GeraSiga := ckbSiga.EditValue;
-    DadosConta.GeraScl := ckbScl.EditValue;
+    if ckbDatasul.Checked then
+      DadosConta.GeraTotvsDatasul := FlagSim
+    else
+      DadosConta.GeraTotvsDatasul := FlagNao;
+    if ckbRM.Checked then
+      DadosConta.GeraTotvsRm := FlagSim
+    else
+      DadosConta.GeraTotvsRm := FlagNao;
+    if ckbMagis.Checked then
+      DadosConta.GeraMagis := FlagSim
+    else
+      DadosConta.GeraMagis := FlagNao;
+    if ckbMeta.Checked then
+      DadosConta.GeraMeta := FlagSim
+    else
+      DadosConta.GeraMeta := FlagNao;
+    if ckbSiga.Checked then
+      DadosConta.GeraSiga := FlagSim
+    else
+      DadosConta.GeraSiga := FlagNao;
+    if ckbScl.Checked then
+      DadosConta.GeraScl := FlagSim
+    else
+      DadosConta.GeraScl := FlagNao;
 
     // Versao dos arquivos a serem gerados
     DadosConta.VerDatasul := cbxDatasul.EditValue;
@@ -236,6 +363,29 @@ begin
     DadosConta.PathArqSiga := deSiga.Directory;
     DadosConta.PathArqScl := deScl.Directory;
 
+    // Arquivo de carga com dados de mais de uma empresa ou filial
+    if  chkCargaMultiEmpresa.Checked then
+      DadosConta.CargaMultiEmpresa := FlagSim
+    else
+      DadosConta.CargaMultiEmpresa := FlagNao;
+
+    // Apaga Tabelas antes de enviar dados de sincronização
+    if  chkDropTable.Checked then
+      DadosConta.DropTable := FlagSim
+    else
+      DadosConta.DropTable := FlagNao;
+
+    // Verifica geração de arquivos do dia (hoje)
+    if  chkhoje.Checked then
+      DadosConta.ColetasHoje := FlagSim
+    else
+      DadosConta.ColetasHoje := FlagNao;
+
+    // Arquivo de carga integração ERP
+    DadosConta.PathArqCarga := deBaseCarga.Directory;
+    // Arquivos de carga vindos da API
+    DadosConta.PathArqCargaApi := deRetornoApi.Directory;
+
     Result := True;
   end;
 end;
@@ -246,12 +396,12 @@ begin
   pgcDialogos.ActivePage := tbsAut;
 
   Self.ActiveControl := edtUsu;
-
+ (*
   Self.pnlTitulo.LabelCaption := 'Autenticação';
 
   if (SubTitulo <> EmptyStr) then
     Self.pnlTitulo.LabelCaption := Self.pnlTitulo.LabelCaption + ' :: ' + SubTitulo;
-
+ *)
   edtSenha.Text := EmptyStr;
 
   Self.Visible := False;
@@ -267,9 +417,14 @@ end;
 
 procedure TVSDialogosFRM.FormCreate(Sender: TObject);
 begin
+  // ativa primeira pagina do page control
+  pgcConfig.ActivePage := tsParametros;
+
   tbsAut.TabVisible := False;
   tbsSobre.TabVisible := False;
   tbsConfig.TabVisible := False;
+  // Mostra a versão da app na barra de titulos
+  Self.Caption := self.Caption + '  :: Versão : ' + VersaoAplicativo('.\SclRotaIntegrador.exe');
 end;
 
 procedure TVSDialogosFRM.Sobre;
@@ -290,7 +445,7 @@ begin
 
   Self.ActiveControl := edtUsu;
 
-  Self.pnlTitulo.LabelCaption := 'Autenticação';
+ // Self.pnlTitulo.LabelCaption := 'Autenticação';
 
   Self.Visible := False;
 
@@ -328,6 +483,363 @@ end;
 procedure TVSDialogosFRM.cbxSclPropertiesInitPopup(Sender: TObject);
 begin
   cbxScl.Properties.ReadOnly := not ckbScl.Checked;
+end;
+
+procedure TVSDialogosFRM.pgcConfigChange(Sender: TObject);
+begin
+  // Limpa Controles
+  LimpaControles;
+  // Carrega dados das contas no radio group de ativação de contas
+  if pgcConfig.ActivePage = tsMapas then
+  begin
+    rgCtaAtiva.Items.Clear;
+    if DadosConta.IdConta1 <> EmptyStr then
+      rgCtaAtiva.Items.Add(DadosConta.IdConta1);
+    if DadosConta.IdConta2 <> EmptyStr then
+      rgCtaAtiva.Items.Add(DadosConta.IdConta2);
+    if DadosConta.IdConta3 <> EmptyStr then
+      rgCtaAtiva.Items.Add(DadosConta.IdConta3);
+    if DadosConta.IdConta4 <> EmptyStr then
+      rgCtaAtiva.Items.Add(DadosConta.IdConta4);
+    if DadosConta.IdConta5 <> EmptyStr then
+      rgCtaAtiva.Items.Add(DadosConta.IdConta5);
+    if DadosConta.IdConta6 <> EmptyStr then
+      rgCtaAtiva.Items.Add(DadosConta.IdConta6);
+
+      // Ativa controles na interface
+     if (rgCtaAtiva.ItemIndex <> -1 ) then
+     begin
+       btnSalvarAssoc.Enabled := True;
+       btnExportar.Enabled := True;
+     end
+     else
+     begin
+       btnSalvarAssoc.Enabled := False;
+       btnExportar.Enabled := False;
+     end;
+  end;
+end;
+
+function TVSDialogosFRM.ValidarArquivoMapa(aFile,
+  aTabela: string): Boolean;
+var
+  _ArqOrgem, _TabelaDestino, _Separador, _TipoArquivo, _ChaveObrigatoria, _ChaveConta : string;
+begin
+  try
+    Result := True;
+    if FileExists(aFile) then
+    begin
+      LeIni(_TabelaDestino,aFile,'DESTINO','Tabela');
+      LeIni(_ChaveConta,aFile,'CONTA','ChaveConta');
+
+      if (rgCtaAtiva.Items[rgCtaAtiva.ItemIndex] <> _ChaveConta) then
+      begin
+        ShowMessage('Arquivo carregado da tabela [ '+ aTabela +' ], não pertence a conta ativa : Conta Arquivo( '+ _ChaveConta + ' )' +
+        ' Conta Ativa : ( ' + (rgCtaAtiva.Items[rgCtaAtiva.ItemIndex])+ ' )');
+        Result := False;
+      end;
+      if _TabelaDestino <> aTabela then
+      begin
+         ShowMessage('Arquivo carregado não é da tabela : ' + aTabela);
+        Result := False;
+      end;
+    end
+    else
+      ShowMessage('Arquivo associado à tabela : '+ aTabela + ' - ' + aFile + ', não localizado, verifique !');
+  finally
+    ;
+  end;
+end;
+
+function TVSDialogosFRM.ValidarAssociacao: Boolean;
+begin
+  if (feAnalises.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feAnalises.Text, 'Analise') then
+      Result := False;
+  end;
+  if (feColetores.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feColetores.Text, 'Coletor') then
+      Result := False;
+  end;
+  if (feExtratos.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feExtratos.Text, 'Extrato') then
+      Result := False;
+  end;
+  if (feFazendas.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feFazendas.Text, 'Fazenda') then
+      Result := False;
+  end;
+  if (feItinerarios.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feItinerarios.Text, 'Itinerario') then
+      Result := False;
+  end;
+  if (feLinhas.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feLinhas.Text, 'Linha') then
+      Result := False;
+  end;
+  if (feMotivos.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feMotivos.Text, 'MotivoClto') then
+      Result := False;
+  end;
+  if (feProdutores.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feProdutores.Text, 'Produtor') then
+      Result := False;
+  end;
+  if (feGrupoRotas.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feGrupoRotas.Text, 'grupo_rota') then
+      Result := False;
+  end;
+  if (feRotas.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feRotas.Text, 'Rota') then
+      Result := False;
+  end;
+  if (feTecnicos.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feTecnicos.Text, 'Tecnico') then
+      Result := False;
+  end;
+  if (feTanques.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feTanques.Text, 'Tanque') then
+      Result := False;
+  end;
+  if (feVinculados.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feVinculados.Text, 'tanque_vinculado') then
+      Result := False;
+  end;
+  if (feNfc.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feNfc.Text, 'Tag') then
+      Result := False;
+  end;
+  if (feVeiculos.Text <> EmptyStr) then
+  begin
+    if not ValidarArquivoMapa(feVeiculos.Text, 'Veiculo') then
+      Result := False;
+  end;
+end;
+
+procedure TVSDialogosFRM.btnSalvarAssocClick(Sender: TObject);
+begin
+  ValidarAssociacao;
+  SalvarAssociacao;
+  // Recarrega mapa de carga
+  PopularMapaCarga;
+end;
+
+procedure TVSDialogosFRM.rgCtaAtivaClick(Sender: TObject);
+var
+  _ContaAtiva : string;
+begin
+ {Monitora seleção de conta}
+  PopularMapaCarga;
+
+  // Ativa controles na interface
+  if DadosConta.IdConta <> EmptyStr then
+  begin
+    btnSalvarAssoc.Enabled := True;
+    btnExportar.Enabled := True;
+  end;
+end;
+
+
+
+// Limpa controles na interface
+procedure TVSDialogosFRM.LimpaControles;
+begin
+  feAnalises.Clear;
+  feColetores.Clear;
+  feExtratos.Clear;
+  feFazendas.Clear;
+  feItinerarios.Clear;
+  feLinhas.Clear;
+  feMotivos.Clear;
+  feProdutores.Clear;
+  feGrupoRotas.Clear;
+  feVeiculos.Clear;
+  feNfc.Clear;
+  feVinculados.Clear;
+  feTanques.Clear;
+  feRotas.Clear;
+  feTecnicos.Clear;
+end;
+
+// importa os arquivos para envio ao WebService
+procedure TVSDialogosFRM.btnImporAllClick(Sender: TObject);
+var
+  FNomeArqLog : string;
+begin
+  if MostraMsgConf('Confirma Atualização de Dados no Servidor ?') then
+  begin
+    try
+      // Desativa timer de geração de arquivos
+      dtm.tmrConsole.Enabled := False;
+      dtm.sheConsole.StopAll;
+      if rgCtaAtiva.ItemIndex >= 0 then
+      begin
+        pnlTitulo.LabelCaption := 'AGUARDE, enviando dados ao servidor MilkRota !';
+        Application.ProcessMessages;
+        memLog.Clear;
+        memLog.Lines.Append('Milk´s Rota :: Log Envio de Arquivos API Milk´s Rota - Início Operação: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
+        memLog.Lines.Append('*******************************************');
+
+        // envia dados para o servidor e registra no log
+        memLog.Lines.Append (AtualizaTabelasWs(_MapasCarga).Text);
+
+        memLog.Lines.Append('**Fim Envio de Dados**');
+        pnlTitulo.LabelCaption := 'MilkRota - Gerando arquivos para conferencia';
+        Application.ProcessMessages;
+        memLog.Lines.Append('*******************************************');
+        memLog.Lines.Append('Gerando Arquivos Dump ....');
+
+        pnlTitulo.LabelCaption := 'Gerando arquivo para conferência... !';
+        Application.ProcessMessages;
+
+        // Gera arquivos de consulta da API para pasta de consulta da base - dados da API
+        ExportDataWs(_MapasCarga);
+        memLog.Lines.Append('*******************************************');
+        memLog.Lines.Append('**Fim Envio de Dados**');
+
+        pnlTitulo.LabelCaption := 'MilkRota - Integrador';
+        Application.ProcessMessages;
+
+      end
+    finally
+     // Reativa timer de geração de arquivos
+     dtm.tmrConsole.Enabled := True;
+     dtm.sheConsole.StartAll;
+     if memLog.Lines.Count > 2 then
+     begin
+        if DirectoryExists( DadosConta.PathArqCarga + '\Log') then
+        begin
+          FNomeArqLog := DadosConta.PathArqCarga + '\Log' +  '\'+ 'LogEnv_' + FormatDateTime('dd_MM_yyyy_hh_mm_ss',Now) + '.txt';
+          memLog.Lines.SaveToFile(FNomeArqLog);
+        end
+        else
+        begin
+          ForceDirectories(DadosConta.PathArqCarga + '\Log');
+          FNomeArqLog := DadosConta.PathArqCarga + '\Log' +  '\'+ 'LogEnv_' + FormatDateTime('dd_MM_yyyy_hh_mm_ss',Now) + '.txt';
+          memLog.Lines.SaveToFile(FNomeArqLog);
+        end;
+      end;
+    end;
+  end;
+
+end;
+
+// Gera o arquivo json para envio ao servidor
+function TVSDialogosFRM.GerarJson(conta_id: Integer; Token:string; aDataset: TClientDataSet; StartPoint,
+  Limit: Integer): WideString;
+begin
+  if aDataset.RecordCount > 0 then
+  begin
+    Result := DatasetToJsonTxt(aDataset, conta_id, Token, StartPoint, Limit);
+  end;
+end;
+
+// Popula controles com dados de carga dos mapas
+procedure TVSDialogosFRM.PopulaConroles;
+begin
+  feGrupoRotas.Text := _MapasCarga.Mapas[1];
+  feRotas.Text := _MapasCarga.Mapas[2];
+  feLinhas.Text := _MapasCarga.Mapas[3];
+  feProdutores.Text := _MapasCarga.Mapas[4];
+  feFazendas.Text := _MapasCarga.Mapas[5];
+  feVeiculos.Text := _MapasCarga.Mapas[6];
+  feTanques.Text := _MapasCarga.Mapas[7];
+  feVinculados.Text := _MapasCarga.Mapas[8];
+  feColetores.Text := _MapasCarga.Mapas[9];
+  feTecnicos.Text := _MapasCarga.Mapas[10];
+  feNfc.Text := _MapasCarga.Mapas[11];
+  feItinerarios.Text := _MapasCarga.Mapas[12];
+  feAnalises.Text := _MapasCarga.Mapas[13];
+  feExtratos.Text := _MapasCarga.Mapas[14];
+  feMotivos.Text := _MapasCarga.Mapas[15];
+end;
+
+procedure TVSDialogosFRM.SalvarAssociacao;
+var  _FileMap: TStringList;
+begin
+  try
+    _FileMap := TStringList.Create;
+    if FileExists(_FileMapName) then
+      _FileMap.LoadFromFile(_FileMapName)
+    else
+    begin
+      _FileMap.Add('[Conta]');
+      _FileMap.Add('ChaveConta=' + rgCtaAtiva.Items[rgCtaAtiva.ItemIndex]);
+      _FileMap.SaveToFile(_FileMapName);
+    end;
+    GravaIni(_FileMapName,'ANALISE',feAnalises.Text);
+    GravaIni(_FileMapName,'COLETOR',feColetores.Text);
+    GravaIni(_FileMapName,'EXTRATO',feExtratos.Text);
+    GravaIni(_FileMapName,'FAZENDA',feFazendas.Text);
+    GravaIni(_FileMapName,'ITINERARIO',feItinerarios.Text);
+    GravaIni(_FileMapName,'LINHA',feLinhas.Text);
+    GravaIni(_FileMapName,'MOTIVOCLTO',feMotivos.Text);
+    GravaIni(_FileMapName,'PRODUTOR',feProdutores.Text);
+    GravaIni(_FileMapName,'GRUPO_ROTA',feGrupoRotas.Text);
+    GravaIni(_FileMapName,'ROTA',feRotas.Text);
+    GravaIni(_FileMapName,'TECNICO',feTecnicos.Text);
+    GravaIni(_FileMapName,'TANQUE',feTanques.Text);
+    GravaIni(_FileMapName,'VINCULADO',feVinculados.Text);
+    GravaIni(_FileMapName,'TAGNFC',feNfc.Text);
+    GravaIni(_FileMapName,'VEICULO',feVeiculos.Text);
+
+    ShowMessage('Associação dos arquivos salva com sucesso !');
+  finally
+    _FileMap.Free;
+  end;
+end;
+
+function TVSDialogosFRM.dtm: TVSSCLRotaConsoleDTM;
+begin
+   result := VSSCLRotaConsoleDTM;
+end;
+
+// Popula o mapa de carga de dados na memória
+procedure TVSDialogosFRM.PopularMapaCarga;
+var
+  _ContaAtiva: string;
+begin
+   // Limpa controles
+   LimpaControles;
+
+   // Monta nome do arquivo de controle de mapas
+   _ContaAtiva := rgCtaAtiva.Items[rgCtaAtiva.ItemIndex];
+   _FileMapName := DadosConta.PathArqCarga + '\Maps\' + _ContaAtiva + '\Map'+ _ContaAtiva + '.ini';
+
+   // Verifica se a pasta não existe e cria
+   ForceDirectories(DadosConta.PathArqCarga + '\Maps\' + _ContaAtiva);
+
+   // Carrega conta ativa na estrutura de dados
+   DadosConta.IdConta := _ContaAtiva;
+
+   // Carrega dados do mapa;
+   _MapasCarga :=  LoadFromMapIni('1', StrToInt(DadosConta.IdConta), _FileMapName); // Parametro 1 indica que foi chamado pela interface;
+
+   // Atualiza interface
+   PopulaConroles;
+
+   // Gerencia envio de dados com arquivos gerados para multiplas empresas ou filiais
+   if chkCargaMultiEmpresa.Checked then
+   begin
+     CargaMultiEmpresa.IdConta := StrToInt(_ContaAtiva);
+     CargaMultiEmpresa.CodigoERP := DadosConta.ChaveERP[rgCtaAtiva.ItemIndex +1] ;
+     CargaMultiEmpresa.NomeAtributo := 'rota';
+     CargaMultiEmpresa.CargaMultipla := True;
+   end;
 end;
 
 end.

@@ -78,8 +78,6 @@ function ValidarData(Data: TDateTime): Boolean;
 procedure ExpXML(DataSet : TDataSet; Arq : string);
 function GeraGUID:String;
 function LimpaGUID(GUID: string): string;
-function TrocaVirgPPto(Valor: string): String;
-function TrocaPtoPVirg(Valor: string): String;
 
 implementation
 
@@ -716,32 +714,6 @@ begin
   FTexto := Elimina(FTexto,']');
   Result := FTexto;
 end;
-// Substituição de Virgula e ponto
-function TrocaVirgPPto(Valor: string): String;
-const
-  CPonto = '.';
-  CVirugula = ',';
-var
-  i:integer;
-begin
-  for i := 1 to Length(Valor) do
-  if Pos(Valor[i], CVirugula) <> 0 then
-    Valor[i] := CPonto;
-  Result := Valor;
-end;
-function TrocaPtoPVirg(Valor: string): String;
-const
-  CPonto = '.';
-  CVirugula = ',';
-var
-  i:integer;
-begin
-  for i := 1 to Length(Valor) do
-  if Pos(Valor[i], CPonto) <> 0 then
-    Valor[i] := CVirugula;
-  Result := Valor;
-end;
-
 end.
 
 
