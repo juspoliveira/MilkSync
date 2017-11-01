@@ -173,6 +173,9 @@ function getToken(contaId: integer): TTokenConta;
 function VersaoAplicativo(Executavel: string): string;
 // Liberar memoria
 procedure TrimAppMemorySize(pReinicia: Boolean; Programa:string);
+// Cria ou exibe formulario
+procedure CriaFormNome(NomeForm : String; ExibeModal: Boolean);
+
 
 var
   DadosConta: TDadosConta;
@@ -1693,4 +1696,6 @@ begin
 
   end;
 end;
+
+
 end.

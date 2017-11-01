@@ -231,9 +231,8 @@ object VSSCLRotaConsoleFRM: TVSSCLRotaConsoleFRM
         Width = 611
         Height = 297
         Align = alClient
-        Color = clWhite
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clBlack
+        Font.Color = clWindowText
         Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
@@ -318,7 +317,7 @@ object VSSCLRotaConsoleFRM: TVSSCLRotaConsoleFRM
           Caption = 'Dt. Inicial'
           ParentFont = False
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
+          Font.Color = clWindowText
           Font.Height = -11
           Font.Name = 'Tahoma'
           Font.Style = []
@@ -331,7 +330,7 @@ object VSSCLRotaConsoleFRM: TVSSCLRotaConsoleFRM
           Caption = 'Dt. Final'
           ParentFont = False
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
+          Font.Color = clWindowText
           Font.Height = -11
           Font.Name = 'Tahoma'
           Font.Style = []
@@ -342,10 +341,9 @@ object VSSCLRotaConsoleFRM: TVSSCLRotaConsoleFRM
           Width = 95
           Height = 21
           AutoSize = False
-          Color = clWhite
           EditMask = '!99/99/9999;1; '
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
+          Font.Color = clWindowText
           Font.Height = -11
           Font.Name = 'Tahoma'
           Font.Style = []
@@ -372,10 +370,9 @@ object VSSCLRotaConsoleFRM: TVSSCLRotaConsoleFRM
           Width = 95
           Height = 21
           AutoSize = False
-          Color = clWhite
           EditMask = '!99/99/9999;1; '
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
+          Font.Color = clWindowText
           Font.Height = -11
           Font.Name = 'Tahoma'
           Font.Style = []
@@ -413,9 +410,8 @@ object VSSCLRotaConsoleFRM: TVSSCLRotaConsoleFRM
           BoundLabel.MaxWidth = 0
           BoundLabel.UseSkinColor = True
           SkinData.SkinSection = 'COMBOBOX'
-          Color = clWhite
           Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
+          Font.Color = clWindowText
           Font.Height = -11
           Font.Name = 'Tahoma'
           Font.Style = []
@@ -436,9 +432,8 @@ object VSSCLRotaConsoleFRM: TVSSCLRotaConsoleFRM
         Height = 302
         Hint = 'Resultado da consulta'
         Align = alClient
-        Color = clWhite
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clBlack
+        Font.Color = clWindowText
         Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
@@ -596,6 +591,7 @@ object VSSCLRotaConsoleFRM: TVSSCLRotaConsoleFRM
     Top = 152
   end
   object skmMaster: TsSkinManager
+    Active = False
     InternalSkins = <
       item
         Name = 'MacOS (internal)'
@@ -4872,7 +4868,7 @@ object VSSCLRotaConsoleFRM: TVSSCLRotaConsoleFRM
       'C:\Arquivos de programas\Borland\Delphi7\Componentes\Alpha\Alpha' +
       'Controls.2009.v6.21.by.Space-FW\Skins'
     SkinName = 'MacOS (internal)'
-    SkinInfo = '6.14'
+    SkinInfo = 'N/A'
     ThirdParty.ThirdEdits = ' '
     ThirdParty.ThirdButtons = ' '
     ThirdParty.ThirdBitBtns = ' '

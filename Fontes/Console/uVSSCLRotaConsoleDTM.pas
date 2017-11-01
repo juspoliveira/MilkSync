@@ -8,7 +8,7 @@ uses
   ZAbstractDataset, ZDataset, ZAbstractConnection, ZConnection, uJSON, JvTimer,
   JvAppInst, ExtCtrls, JvScheduledEvents, UCBase, UCZEOSConn, DBClient, WebAdapt,
   uVSSCLRotaComum, uRotinasComuns, JvComponentBase, JvCSVBaseControls,
-  JvCsvData, sSkinProvider, sSkinManager, Forms, Provider;
+  JvCsvData, sSkinProvider, sSkinManager, Forms, Provider, uS2ZSQLDataSet, uConexaoZeos;
 
 type
   TViagem = class
@@ -432,51 +432,6 @@ type
     cdsViagensbocas: TStringField;
     cdsParametrosParDropTable: TStringField;
     cdsParametrosParColetasHoje: TStringField;
-    cdsContas: TClientDataSet;
-    qryContas: TZQuery;
-    pvdContas: TDataSetProvider;
-    cdsContasId: TIntegerField;
-    cdsContasContaId: TIntegerField;
-    cdsContasKeyId: TStringField;
-    cdsContasAtiva: TStringField;
-    cdsContasDatUltLeituraDescargaWS: TDateField;
-    cdsContasPathArqDescarga: TStringField;
-    cdsContasPercAtesto: TFloatField;
-    cdsContasHostURL: TStringField;
-    cdsContasLog: TStringField;
-    cdsContasProxyHost: TStringField;
-    cdsContasProxyPorta: TStringField;
-    cdsContasProxyUsuario: TStringField;
-    cdsContasProxySenha: TStringField;
-    cdsContasIntervalo: TFloatField;
-    cdsContasProxyUsar: TStringField;
-    cdsContasEnviarNotifAtesto: TStringField;
-    cdsContasDatIniLeituraDescargaWS: TDateField;
-    cdsContasGeraTotvsDatasul: TStringField;
-    cdsContasGeraTotvsRm: TStringField;
-    cdsContasGeraMagis: TStringField;
-    cdsContasGeraMeta: TStringField;
-    cdsContasGeraSiga: TStringField;
-    cdsContasVerDatasul: TStringField;
-    cdsContasVerRm: TStringField;
-    cdsContasVerMagis: TStringField;
-    cdsContasVerMeta: TStringField;
-    cdsContasVerSiga: TStringField;
-    cdsContasGeraScl: TStringField;
-    cdsContasVerScl: TStringField;
-    cdsContasPathArqDatasul: TStringField;
-    cdsContasPathArqRm: TStringField;
-    cdsContasPathArqMagis: TStringField;
-    cdsContasPathArqMeta: TStringField;
-    cdsContasPathArqSiga: TStringField;
-    cdsContasPathArqScl: TStringField;
-    cdsContasParContaId1: TIntegerField;
-    cdsContasPathArqCarga: TStringField;
-    cdsContasIntervaloCarga: TFloatField;
-    cdsContasCargaMultiEmpresa: TStringField;
-    cdsContasPathCargaApi: TStringField;
-    cdsContasDropTable: TStringField;
-    cdsContasParColetasHoje: TStringField;
     procedure DataModuleCreate(Sender: TObject);
     procedure tmrConsoleTimer(Sender: TObject);
     procedure sheConsoleEvents0Execute(Sender: TJvEventCollectionItem;
@@ -491,6 +446,7 @@ type
     function GetDataHora(Data: string): TDateTime;
     function ValidaInt(Numero: string): Integer;
   public
+
     procedure PopulaAtoresColeta(DataInicio, DataTermino: TDateTime; Sync:string; Comunitario: string = '9');
     procedure ExportarDescargas(PersistirLog: Boolean = True);
     procedure ExportarColetas(Layout: string);
@@ -561,6 +517,9 @@ var
   DatAultColeta: TDateTime;
   NomePasta: string;
 
+  // Instancia de conexao com o Banco de dados
+   ConexaoBanco : TConexaoZeos;
+
 
 implementation
 
@@ -575,6 +534,7 @@ procedure TVSSCLRotaConsoleDTM.DataModuleCreate(Sender: TObject);
 var
   PathBancoDados: string;
   PathAplicacao: string;
+  _Conec : TConexaoZeos;
 begin
  // Ativa conexão com o banco de dados
   PathAplicacao := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
@@ -666,17 +626,17 @@ begin
     Halt;
   end;
   qryParametros.Open;
-  qryDescarga.Open;
-  qryContas.Open;
-  cdsContas.Open;
-  
+
   PopularDadosConta(qryParametros);
   tmrConsole.Enabled := True;
   tmrConsole.Interval := Trunc(DadosConta.TimerProcInterno * 60000); // Minutos
   // Ativa timer de envio de cadastro
   tmrSync.Enabled := True;
   tmrSync.Interval := Trunc(DadosConta.TimerProcCadastro * 60000); // Minutos
-end;
+  // Instancia da conexao do banco
+  _Conec := TConexaoZeos.Create(zcnnRota);
+  ConexaoBanco := _Conec;
+ end;
 
 procedure TVSSCLRotaConsoleDTM.AtualizarDatLeituraParam(Data: TDateTime);
 begin
@@ -3700,6 +3660,7 @@ begin
     sheConsole.StartAll;
  end;
 end;
+
 
 end.
 

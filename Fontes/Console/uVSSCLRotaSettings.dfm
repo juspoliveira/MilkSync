@@ -1,262 +1,30 @@
-object VSDialogosFRM: TVSDialogosFRM
-  Left = 454
-  Top = 128
-  ActiveControl = btnOK
-  BorderStyle = bsDialog
-  Caption = 'Milk'#180's Rota - Controle de Coleta de Leite'
-  ClientHeight = 641
-  ClientWidth = 646
-  Color = clWhite
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
-  Font.Style = []
-  OldCreateOrder = False
-  OnCreate = FormCreate
+inherited VSSCLRotaSettings: TVSSCLRotaSettings
+  Left = 527
+  Top = 180
+  ActiveControl = pgcConfig
+  Caption = 'Configuracao das Contas'
+  ClientHeight = 598
+  ClientWidth = 584
+  OldCreateOrder = True
+  Position = poDesktopCenter
   PixelsPerInch = 96
   TextHeight = 13
-  object pnlTitulo: TJvGradientHeaderPanel
-    Left = 0
-    Top = 0
-    Width = 646
-    Height = 33
-    GradientStartColor = clBackground
-    GradientStyle = grVertical
-    LabelCaption = 'Milk'#180's Rota - Integrador'
-    LabelFont.Charset = DEFAULT_CHARSET
-    LabelFont.Color = clWhite
-    LabelFont.Height = -13
-    LabelFont.Name = 'Verdana'
-    LabelFont.Style = [fsBold]
-    LabelAlignment = taCenter
-    Align = alTop
-    DoubleBuffered = False
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -13
-    Font.Name = 'Verdana'
-    Font.Style = []
-    TabOrder = 0
-  end
-  object sPanel2: TsPanel
-    Left = 0
-    Top = 600
-    Width = 646
-    Height = 41
-    Align = alBottom
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 1
-    SkinData.SkinSection = 'PANEL'
-    object btnOK: TsBitBtn
-      Left = 196
-      Top = 6
-      Width = 75
-      Height = 30
-      Hint = 'Salva e Reinicia Servi'#231'o'
-      Caption = '&Ok'
-      ModalResult = 1
-      TabOrder = 0
-      Glyph.Data = {
-        36040000424D3604000000000000360000002800000010000000100000000100
-        2000000000000004000000000000000000000000000000000000000000000000
-        000000000000000000000B9D25480FAD319812B035E913B637F413B637F412B0
-        35E90FAD31980B9D254800000000000000000000000000000000000000000000
-        0000099A22060D9E27BA19C140FF1FCE4CFF24DC58FF27DD5CFF27DD5CFF24DC
-        58FF1FCE4CFF19C140FF0D9E27BA099A22060000000000000000000000000B93
-        1E050DA128EA1ED04EFF21D454FF20D053FF04B62AFF18C440FF1DCE4AFF18C8
-        44FF20D151FF21D454FF1ED04EFF0DA128EA0B931E0500000000000000000B94
-        1DBA1ECE4DFF22D456FF15C948FF1CAC2FFF9DD2A1FF37AF46FF14C13BFF1FD2
-        4EFF1ECE4BFF1ECD4AFF20D253FF1ECE4DFF0B941DBA000000000B85114617BA
-        3FFF21D85AFF13C646FF12A826FFF2F4ECFFFFFFFFFFEAF2E6FF26AA38FF0DC0
-        39FF20D24FFF1ECE49FF1DCD4DFF20D758FF17BA3FFF0B851146088F189A18D1
-        52FF14CB4EFF0BA01EFFF2F4ECFFFFFBFFFFFFFAFFFFFFFFFFFFEAF2E6FF23A8
-        35FF0BC03AFF1ED359FF1CCF53FF1ED258FF18CF51FF088F189A1C972CE92DE1
-        72FF1BA82DFFF2F4ECFFFFF8FFFFEAF2E6FFA9D5A4FFEEF2EBFFFFFFFFFFD0EB
-        D3FF23A834FF0AC242FF18D662FF13CF54FF30E173FF1C982EE929A03CF765EA
-        A1FF58B25CFFEAF2E6FFEAF2E6FF0EB42FFF00BF30FF3AB649FFF2F4ECFFFFFF
-        FFFFEAF2E6FF23A833FF07C13DFF24D869FF73F0B1FF299D3BF71B9130F778F4
-        BCFF49CD7AFF74BF7FFF2DB64CFF24D367FF2ED872FF19CC5AFF48B558FFEAF2
-        E6FFFFFFFFFFEAF2E6FF26A731FF25D060FF77F6BEFF1B912EF71F882AE971F2
-        B5FF61E4A8FF4CDB95FF5BE1A5FF61DEA5FF63DDA4FF63E2ABFF4DDA96FF4FB8
-        60FFEEF2E8FFFFFFFFFFEAF2E6FF2AB343FF6DF0B3FF1F882AE90373019A86E3
-        B5FF62E7A9FF5DE2A4FF60E2A6FF5FE1A6FF5FE1A6FF5EE1A5FF63E5ADFF4CDA
-        95FF4DB75EFFEAF0E5FFFFFFFFFF61BC65FF80DFAEFF0373019A005F00464EB0
-        68FFA8FCE1FF5FE1A2FF57E09FFF5BE0A3FF5DE1A4FF5DE1A4FF5DE1A4FF61E5
-        ABFF4EDC97FF48BA60FF5DC270FF96EABFFF4EB068FF005F004600000000005C
-        00BA7BDBA7FFB0FCE8FF76E5B5FF62E3AAFF5EE0A6FF5EE1A6FF5EE1A6FF5EE0
-        A5FF66E6B0FF6FE3AFFFA7F9E0FF7ADCA8FF005C00BA00000000000000000068
-        0005006500EA6DD6A3FFB3FDF0FFA4F5DFFF8CE9C7FF8CE8C4FF8AE7C2FF8DE9
-        C6FFA5F5DEFFB3FDF0FF6DD6A3FF006500EA0068000500000000000000000000
-        0000005E0006005800BA38A75EFF7FE1B8FFA9FFECFFB9FFFBFFB9FFFBFFA9FF
-        ECFF7FE1B8FF38A75EFF005800BA005E00060000000000000000000000000000
-        00000000000000000000004E0048006800980F701FE91E812EF41E812EF40F70
-        1FE900680098004E004800000000000000000000000000000000}
-      SkinData.SkinSection = 'BUTTON'
-    end
-    object btnCancelar: TsBitBtn
-      Left = 299
-      Top = 6
-      Width = 75
-      Height = 30
-      Hint = 'Cancela Altera'#231#245'es'
-      Cancel = True
-      Caption = '&Cancelar'
-      ModalResult = 2
-      TabOrder = 1
-      Glyph.Data = {
-        36040000424D3604000000000000360000002800000010000000100000000100
-        2000000000000004000000000000000000000000000000000000000000000000
-        000000000000000000000500AAFB0000C5FF0000C2FF0000C2FF0000C2FF0000
-        C3FF0000C5FF0000A7FB00000000000000000000000000000000000000000000
-        0000000000000701AFFF2826F7FF6464FCFF6464FCFF6464FCFF6464FCFF6464
-        FCFF3E3AFCFF0000F6FF0000AEFF000000000000000000000000000000000000
-        00000B05B5FF191EF7FFC5C3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-        FFFFC5C3FFFF6464FCFF0200F4FF0000B3FF0000000000000000000000000F0A
-        BCFF2833F7FF6A72FCFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-        FFFFFFFFFFFFC5C3FFFF3336F7FF0D10F5FF0000BBFF00000000100BC2FA3344
-        F8FF0B1CF5FFEDEDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-        FFFFFFFFFFFFFFFFFFFF9396FFFF0B13F4FF141BF6FF0200C2FA3638DCFF172F
-        F7FF1026F4FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-        FFFFFFFFFFFFFFFFFFFF8F96FFFF0B1BF3FF1723F6FF0A0CD9FF3639DEFF1B38
-        F7FF142FF4FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-        FFFF7683FDFFFFFFFFFFBBC3FFFF0F24F4FF1A2EF7FF0C10DBFF3337E1FF1E3D
-        F7FF1735F5FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-        FFFF6D80FBFFFFFFFFFFBBC3FFFF122AF4FF1A35F7FF0C12DEFF6D70EFFF425B
-        FAFF2441F6FFFFFFFFFFFFFFFFFFFBFCFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-        FFFF6D80FBFFFFFFFFFFBBC3FFFF1732F5FF334FF8FF3F45E8FF6F73F1FF647C
-        FDFF5E76FCFFFFFFFFFF93A1FFFFD7DCFFFF93A1FFFFFFFFFFFF8696FEFFFFFF
-        FFFF6D80FBFFFDFEFFFFBBC3FFFF5B72FBFF6175FCFF5359EFFF7176F4FF6880
-        FDFF5E76FBFFFFFFFFFFB5C2FFFFE4E9FFFFACB8FFFFFFFFFFFFAAB6FFFFFFFF
-        FFFF6D80FBFF8F96FFFF8F96FFFF6076FCFF6278FDFF535AF2FF5350EFFA97AB
-        FFFF617CFBFFFFFFFFFFB5C2FFFFE3E8FFFFACBBFFFFFFFFFFFFA9B7FFFFFFFF
-        FFFF6D80FBFF617BFBFF657CFCFF667DFCFF657DFCFF4C49EFFA000000005451
-        F2FF94A7FFFF5E7CFCFFB5C2FFFFE6EBFFFFAFBDFFFFFFFFFFFFAABAFFFFFFFF
-        FFFF6D80FBFF657DFBFF6981FCFF6781FCFF4D49F2FF00000000000000000000
-        00005350F4FF95AAFFFF5E7CFCFFF1F3FFFFB5C2FFFFFFFFFFFFAEBDFFFFFFFF
-        FFFF7E96FFFF6983FBFF6C87FDFF4E4AF3FF0000000000000000000000000000
-        0000000000005552F6FF99ADFFFF7E96FFFF829AFFFF7E96FFFF7E96FFFF7E96
-        FFFF7E96FFFF6D89FCFF4F4AF5FF000000000000000000000000000000000000
-        000000000000000000005652F8FB7378FCFF7276FCFF6C72FCFF6F73FCFF6D73
-        FCFF7578FDFF5954FAFB00000000000000000000000000000000}
-      SkinData.SkinSection = 'BUTTON'
-    end
-  end
-  object pgcDialogos: TsPageControl
-    Left = 0
-    Top = 33
-    Width = 646
-    Height = 567
-    ActivePage = tbsConfig
-    Align = alClient
-    TabOrder = 2
-    SkinData.SkinSection = 'PAGECONTROL'
-    object tbsAut: TsTabSheet
-      Caption = 'Login'
-      SkinData.CustomColor = False
-      SkinData.CustomFont = False
-      object sGroupBox1: TsGroupBox
-        Left = 0
-        Top = 0
-        Width = 638
-        Height = 105
-        Align = alTop
-        Caption = '| Autoriza'#231#227'o |'
-        TabOrder = 0
-        SkinData.SkinSection = 'GROUPBOX'
-        object sLabel1: TsLabel
-          Left = 175
-          Top = 32
-          Width = 36
-          Height = 13
-          Caption = 'Usu'#225'rio'
-          ParentFont = False
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Tahoma'
-          Font.Style = []
-        end
-        object sLabel2: TsLabel
-          Left = 179
-          Top = 59
-          Width = 30
-          Height = 13
-          Caption = 'Senha'
-          ParentFont = False
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Tahoma'
-          Font.Style = []
-        end
-        object edtUsu: TsEdit
-          Left = 221
-          Top = 28
-          Width = 148
-          Height = 21
-          Color = clWhite
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          TabOrder = 0
-          SkinData.SkinSection = 'EDIT'
-          BoundLabel.Indent = 0
-          BoundLabel.Font.Charset = DEFAULT_CHARSET
-          BoundLabel.Font.Color = clWindowText
-          BoundLabel.Font.Height = -11
-          BoundLabel.Font.Name = 'MS Sans Serif'
-          BoundLabel.Font.Style = []
-          BoundLabel.Layout = sclLeft
-          BoundLabel.MaxWidth = 0
-          BoundLabel.UseSkinColor = True
-        end
-        object edtSenha: TsEdit
-          Left = 221
-          Top = 57
-          Width = 148
-          Height = 21
-          Color = clWhite
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          PasswordChar = '*'
-          TabOrder = 1
-          Text = 'edtSenha'
-          SkinData.SkinSection = 'EDIT'
-          BoundLabel.Indent = 0
-          BoundLabel.Font.Charset = DEFAULT_CHARSET
-          BoundLabel.Font.Color = clWindowText
-          BoundLabel.Font.Height = -11
-          BoundLabel.Font.Name = 'MS Sans Serif'
-          BoundLabel.Font.Style = []
-          BoundLabel.Layout = sclLeft
-          BoundLabel.MaxWidth = 0
-          BoundLabel.UseSkinColor = True
-        end
-      end
-    end
-    object tbsConfig: TsTabSheet
-      Caption = 'Par'#226'metros'
-      SkinData.CustomColor = False
-      SkinData.CustomFont = False
+  inherited pgcMaster: TcxPageControl
+    Top = 78
+    Width = 584
+    Height = 501
+    ClientRectBottom = 501
+    ClientRectRight = 584
+    inherited tabsRegistro: TcxTabSheet
       object pgcConfig: TsPageControl
         Left = 0
         Top = 0
-        Width = 638
-        Height = 539
+        Width = 584
+        Height = 482
         ActivePage = tsParametros
         Align = alClient
         Style = tsFlatButtons
         TabOrder = 0
-        OnChange = pgcConfigChange
         SkinData.SkinSection = 'PAGECONTROL'
         object tsParametros: TsTabSheet
           Caption = 'Par'#226'metros'
@@ -265,448 +33,210 @@ object VSDialogosFRM: TVSDialogosFRM
           object sGroupBox2: TsGroupBox
             Left = 0
             Top = 0
-            Width = 630
-            Height = 149
+            Width = 576
+            Height = 153
             Align = alTop
             Caption = '| Contas |'
             TabOrder = 0
             SkinData.SkinSection = 'GROUPBOX'
             object cxLabel5: TsLabel
               Left = 9
-              Top = 20
-              Width = 44
+              Top = 36
+              Width = 51
               Height = 13
               Caption = 'URL Host'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
-              Font.Style = []
+              Font.Style = [fsBold]
             end
             object cxLabel10: TsLabel
-              Left = 9
-              Top = 102
-              Width = 140
+              Left = 259
+              Top = 80
+              Width = 103
               Height = 13
-              Caption = 'Gerar Arquivos a Cada (Min.)'
+              Caption = 'Gerar Arquivos (Min.)'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
             end
             object cxLabel9: TsLabel
               Left = 9
-              Top = 46
-              Width = 50
+              Top = 80
+              Width = 48
               Height = 13
-              Caption = 'Id Contas '
+              Caption = 'Id Conta'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
-              Font.Style = []
+              Font.Style = [fsBold]
             end
             object sLabel4: TsLabel
-              Left = 7
-              Top = 124
-              Width = 162
+              Left = 371
+              Top = 80
+              Width = 113
               Height = 13
-              Caption = 'Atualizar Cadastros a Cada (Min.)'
+              Caption = 'Enviar Cadastros (Min.)'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
             end
             object sLabel5: TsLabel
-              Left = 9
-              Top = 75
-              Width = 35
+              Left = 145
+              Top = 80
+              Width = 53
               Height = 13
-              Caption = 'Id ERP '
+              Caption = 'Chave ERP'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
             end
-            object edtServidor: TsEdit
-              Left = 81
-              Top = 16
-              Width = 436
-              Height = 21
-              Color = clWhite
+            object sLabel1: TsLabel
+              Left = 9
+              Top = 14
+              Width = 49
+              Height = 13
+              Caption = 'Empresa'
+              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
-              TabOrder = 0
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
+              Font.Style = [fsBold]
             end
-            object chxLog: TsCheckBox
-              Left = 470
-              Top = 121
-              Width = 84
-              Height = 21
-              Caption = 'Gravar Log'
-              Alignment = taLeftJustify
-              TabOrder = 16
-              SkinData.SkinSection = 'CHECKBOX'
-              ImgChecked = 0
-              ImgUnchecked = 0
-            end
-            object edtTempo: TcxSpinEdit
-              Left = 171
-              Top = 98
-              Properties.EditFormat = '# '
-              Properties.MinValue = 2.000000000000000000
-              TabOrder = 13
-              Value = 2
-              Width = 57
-            end
-            object edtConta1: TsEdit
-              Left = 81
-              Top = 42
-              Width = 67
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
+            object edtServidor: TcxDBTextEdit
+              Left = 8
+              Top = 54
+              DataBinding.DataField = 'HostURL'
+              DataBinding.DataSource = dsMaster
               TabOrder = 1
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
+              Width = 529
             end
-            object edtConta2: TsEdit
-              Left = 155
-              Top = 42
-              Width = 67
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
-              TabOrder = 2
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
-            end
-            object edtConta3: TsEdit
-              Left = 225
-              Top = 42
-              Width = 67
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
+            object edtIdErp: TcxDBTextEdit
+              Left = 133
+              Top = 96
+              DataBinding.DataField = 'KeyId'
+              DataBinding.DataSource = dsMaster
               TabOrder = 3
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
+              Width = 121
             end
-            object edtConta4: TsEdit
-              Left = 297
-              Top = 42
-              Width = 67
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
+            object edtTempo: TcxDBSpinEdit
+              Left = 265
+              Top = 95
+              DataBinding.DataField = 'Intervalo'
+              DataBinding.DataSource = dsMaster
               TabOrder = 4
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
+              Width = 74
             end
-            object edtConta5: TsEdit
-              Left = 371
-              Top = 42
-              Width = 67
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
+            object edtCad: TcxDBSpinEdit
+              Left = 373
+              Top = 96
+              DataBinding.DataField = 'IntervaloCarga'
+              DataBinding.DataSource = dsMaster
               TabOrder = 5
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
+              Width = 74
             end
-            object edtConta6: TsEdit
-              Left = 449
-              Top = 42
-              Width = 67
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
-              TabOrder = 6
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
-            end
-            object edtCad: TcxSpinEdit
-              Left = 170
+            object chkCargaMultiEmpresa: TcxDBCheckBox
+              Left = 6
               Top = 120
-              Properties.EditFormat = '# '
-              Properties.MinValue = 2.000000000000000000
-              TabOrder = 14
-              Value = 2
-              Width = 60
+              Caption = 'Carga Multi-Empresa'
+              DataBinding.DataField = 'CargaMultiEmpresa'
+              DataBinding.DataSource = dsMaster
+              Properties.DisplayChecked = 'S'
+              Properties.DisplayUnchecked = 'N'
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              TabOrder = 6
+              Transparent = True
+              Width = 121
             end
-            object edtkey1: TsEdit
-              Left = 81
-              Top = 71
-              Width = 67
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
-              TabOrder = 7
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
-            end
-            object edtkey2: TsEdit
-              Left = 155
-              Top = 71
-              Width = 67
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
-              TabOrder = 8
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
-            end
-            object edtkey3: TsEdit
-              Left = 225
-              Top = 71
-              Width = 67
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
-              TabOrder = 9
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
-            end
-            object edtkey4: TsEdit
-              Left = 297
-              Top = 71
-              Width = 67
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
-              TabOrder = 10
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
-            end
-            object edtkey5: TsEdit
-              Left = 371
-              Top = 71
-              Width = 67
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
-              TabOrder = 11
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
-            end
-            object edtkey6: TsEdit
-              Left = 449
-              Top = 71
-              Width = 67
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
-              TabOrder = 12
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
-            end
-            object chkCargaMultiEmpresa: TsCheckBox
-              Left = 234
-              Top = 121
-              Width = 135
-              Height = 21
-              Caption = 'Carga Multi-Empresas'
-              Alignment = taLeftJustify
-              TabOrder = 15
-              SkinData.SkinSection = 'CHECKBOX'
-              ImgChecked = 0
-              ImgUnchecked = 0
-            end
-            object chkDropTable: TsCheckBox
-              Left = 365
-              Top = 121
-              Width = 102
-              Height = 21
+            object chkDropTable: TcxDBCheckBox
+              Left = 135
+              Top = 120
               Caption = 'Limpar Tabelas'
-              Alignment = taLeftJustify
-              TabOrder = 17
-              SkinData.SkinSection = 'CHECKBOX'
-              ImgChecked = 0
-              ImgUnchecked = 0
+              DataBinding.DataField = 'DropTable'
+              DataBinding.DataSource = dsMaster
+              Properties.DisplayChecked = 'S'
+              Properties.DisplayUnchecked = 'N'
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              TabOrder = 7
+              Transparent = True
+              Width = 121
+            end
+            object chkLog: TcxDBCheckBox
+              Left = 263
+              Top = 119
+              Caption = 'Gravar Log'
+              DataBinding.DataField = 'Log'
+              DataBinding.DataSource = dsMaster
+              Properties.DisplayChecked = 'S'
+              Properties.DisplayUnchecked = 'N'
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              TabOrder = 8
+              Transparent = True
+              Width = 82
+            end
+            object cxDBCheckBox1: TcxDBCheckBox
+              Left = 455
+              Top = 118
+              Caption = 'ATIVO'
+              DataBinding.DataField = 'Ativa'
+              DataBinding.DataSource = dsMaster
+              ParentFont = False
+              Properties.DisplayChecked = 'S'
+              Properties.DisplayUnchecked = 'N'
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Style.Font.Charset = DEFAULT_CHARSET
+              Style.Font.Color = clWindowText
+              Style.Font.Height = -11
+              Style.Font.Name = 'MS Sans Serif'
+              Style.Font.Style = [fsBold]
+              Style.IsFontAssigned = True
+              TabOrder = 9
+              Transparent = True
+              Width = 82
+            end
+            object edtConta: TcxDBTextEdit
+              Left = 9
+              Top = 95
+              DataBinding.DataField = 'ContaId'
+              DataBinding.DataSource = dsMaster
+              TabOrder = 2
+              Width = 121
+            end
+            object edtNomeEmpresa: TcxDBTextEdit
+              Left = 66
+              Top = 12
+              DataBinding.DataField = 'NomeEmpresa'
+              DataBinding.DataSource = dsMaster
+              TabOrder = 0
+              Width = 470
             end
           end
           object sGroupBox3: TsGroupBox
             Left = 0
-            Top = 149
-            Width = 630
+            Top = 153
+            Width = 576
             Height = 75
             Align = alTop
             Caption = '| Proxy |'
@@ -720,7 +250,7 @@ object VSDialogosFRM: TVSDialogosFRM
               Caption = 'URL'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
@@ -733,7 +263,7 @@ object VSDialogosFRM: TVSDialogosFRM
               Caption = 'Usu'#225'rio'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
@@ -746,199 +276,94 @@ object VSDialogosFRM: TVSDialogosFRM
               Caption = 'Porta'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
             end
             object cxLabel8: TsLabel
-              Left = 306
+              Left = 367
               Top = 46
               Width = 30
               Height = 13
               Caption = 'Senha'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
             end
-            object edtProxyPorta: TsEdit
-              Left = 450
-              Top = 19
-              Width = 63
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
-              TabOrder = 2
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
-            end
-            object edtProxyUsu: TsEdit
-              Left = 134
-              Top = 44
-              Width = 161
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
-              TabOrder = 3
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
-            end
-            object edtProxySenha: TsEdit
-              Left = 350
-              Top = 44
-              Width = 161
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
-              TabOrder = 4
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
-            end
-            object edtProxyUrl: TsEdit
-              Left = 134
-              Top = 19
-              Width = 257
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              ParentFont = False
-              TabOrder = 1
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
-            end
-            object chxUsarProxy: TsCheckBox
+            object ckbProxy: TcxDBCheckBox
               Left = 7
               Top = 19
-              Width = 84
-              Height = 21
-              Caption = 'Usar Proxy'
+              Caption = 'Proxy'
+              DataBinding.DataField = 'ProxyUsar'
+              DataBinding.DataSource = dsMaster
+              ParentFont = False
+              Properties.DisplayChecked = 'S'
+              Properties.DisplayUnchecked = 'N'
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Style.Font.Charset = DEFAULT_CHARSET
+              Style.Font.Color = clWindowText
+              Style.Font.Height = -11
+              Style.Font.Name = 'MS Sans Serif'
+              Style.Font.Style = [fsBold]
+              Style.IsFontAssigned = True
               TabOrder = 0
-              SkinData.SkinSection = 'CHECKBOX'
-              ImgChecked = 0
-              ImgUnchecked = 0
+              Transparent = True
+              Width = 82
+            end
+            object edtProxyUrl: TcxDBTextEdit
+              Left = 127
+              Top = 17
+              DataBinding.DataField = 'ProxyHost'
+              DataBinding.DataSource = dsMaster
+              TabOrder = 1
+              Width = 266
+            end
+            object edtProxyPorta: TcxDBTextEdit
+              Left = 445
+              Top = 17
+              DataBinding.DataField = 'ProxyPorta'
+              DataBinding.DataSource = dsMaster
+              TabOrder = 2
+              Width = 84
+            end
+            object edtProxyUsu: TcxDBTextEdit
+              Left = 130
+              Top = 42
+              DataBinding.DataField = 'ProxyUsuario'
+              DataBinding.DataSource = dsMaster
+              TabOrder = 3
+              Width = 169
+            end
+            object edtProxySenha: TcxDBTextEdit
+              Left = 410
+              Top = 42
+              DataBinding.DataField = 'ProxySenha'
+              DataBinding.DataSource = dsMaster
+              Properties.PasswordChar = '*'
+              TabOrder = 4
+              Width = 121
             end
           end
           object sGroupBox4: TsGroupBox
             Left = 0
-            Top = 224
-            Width = 630
-            Height = 87
+            Top = 228
+            Width = 576
+            Height = 74
             Align = alTop
-            Caption = '| Arquivos Sa'#237'da |'
+            Caption = '| Formato Arquivos Sa'#237'da |'
             TabOrder = 2
             SkinData.SkinSection = 'GROUPBOX'
-            object ckbDatasul: TsCheckBox
-              Left = 5
-              Top = 19
-              Width = 110
-              Height = 21
-              Caption = 'TOTVS (Datasul)'
-              TabOrder = 0
-              SkinData.SkinSection = 'CHECKBOX'
-              ImgChecked = 0
-              ImgUnchecked = 0
-            end
-            object ckbRM: TsCheckBox
-              Left = 111
-              Top = 19
-              Width = 89
-              Height = 21
-              Caption = 'TOTVS (RM)'
-              TabOrder = 1
-              SkinData.SkinSection = 'CHECKBOX'
-              ImgChecked = 0
-              ImgUnchecked = 0
-            end
-            object ckbMagis: TsCheckBox
-              Left = 196
-              Top = 19
-              Width = 89
-              Height = 21
-              Caption = 'MAGISTECH'
-              TabOrder = 2
-              SkinData.SkinSection = 'CHECKBOX'
-              ImgChecked = 0
-              ImgUnchecked = 0
-            end
-            object ckbMeta: TsCheckBox
-              Left = 290
-              Top = 19
-              Width = 80
-              Height = 21
-              Caption = 'WEBMETA'
-              TabOrder = 3
-              SkinData.SkinSection = 'CHECKBOX'
-              ImgChecked = 0
-              ImgUnchecked = 0
-            end
-            object ckbSiga: TsCheckBox
-              Left = 390
-              Top = 19
-              Width = 55
-              Height = 21
-              Caption = 'SIGA'
-              TabOrder = 4
-              SkinData.SkinSection = 'CHECKBOX'
-              ImgChecked = 0
-              ImgUnchecked = 0
-            end
-            object cbxMagis: TcxImageComboBox
-              Left = 195
-              Top = 39
+            object cbxMagis: TcxDBImageComboBox
+              Left = 221
+              Top = 42
+              DataBinding.DataField = 'VerMagis'
+              DataBinding.DataSource = dsMaster
               Properties.ClearKey = 46
               Properties.ImmediatePost = True
               Properties.Items = <
@@ -954,9 +379,11 @@ object VSDialogosFRM: TVSDialogosFRM
               TabOrder = 8
               Width = 86
             end
-            object cbxDatasul: TcxImageComboBox
-              Left = 6
-              Top = 40
+            object cbxDatasul: TcxDBImageComboBox
+              Left = 7
+              Top = 43
+              DataBinding.DataField = 'VerDatasul'
+              DataBinding.DataSource = dsMaster
               Properties.ClearKey = 46
               Properties.ImmediatePost = True
               Properties.Items = <
@@ -970,10 +397,11 @@ object VSDialogosFRM: TVSDialogosFRM
               TabOrder = 6
               Width = 91
             end
-            object cbxRm: TcxImageComboBox
-              Left = 109
-              Top = 40
-              EditValue = 'U'
+            object cbxRm: TcxDBImageComboBox
+              Left = 123
+              Top = 43
+              DataBinding.DataField = 'VerRm'
+              DataBinding.DataSource = dsMaster
               Properties.ClearKey = 46
               Properties.ImmediatePost = True
               Properties.Items = <
@@ -989,9 +417,11 @@ object VSDialogosFRM: TVSDialogosFRM
               TabOrder = 7
               Width = 79
             end
-            object cbxMeta: TcxImageComboBox
-              Left = 288
-              Top = 38
+            object cbxMeta: TcxDBImageComboBox
+              Left = 318
+              Top = 41
+              DataBinding.DataField = 'VerMeta'
+              DataBinding.DataSource = dsMaster
               Properties.ClearKey = 46
               Properties.ImmediatePost = True
               Properties.Items = <
@@ -1003,9 +433,11 @@ object VSDialogosFRM: TVSDialogosFRM
               TabOrder = 9
               Width = 95
             end
-            object cbxSiga: TcxImageComboBox
-              Left = 390
-              Top = 37
+            object cbxSiga: TcxDBImageComboBox
+              Left = 419
+              Top = 40
+              DataBinding.DataField = 'VerSiga'
+              DataBinding.DataSource = dsMaster
               Properties.ClearKey = 46
               Properties.ImmediatePost = True
               Properties.Items = <
@@ -1015,11 +447,13 @@ object VSDialogosFRM: TVSDialogosFRM
                   Value = '1'
                 end>
               TabOrder = 10
-              Width = 76
+              Width = 67
             end
-            object cbxScl: TcxImageComboBox
-              Left = 474
-              Top = 36
+            object cbxScl: TcxDBImageComboBox
+              Left = 490
+              Top = 39
+              DataBinding.DataField = 'VerScl'
+              DataBinding.DataSource = dsMaster
               Properties.ClearKey = 46
               Properties.ImmediatePost = True
               Properties.Items = <
@@ -1035,22 +469,143 @@ object VSDialogosFRM: TVSDialogosFRM
               TabOrder = 11
               Width = 74
             end
-            object ckbScl: TsCheckBox
-              Left = 475
+            object ckbDatasul: TcxDBCheckBox
+              Left = 3
               Top = 19
-              Width = 49
-              Height = 21
+              Caption = 'TOTVS(Datasul)'
+              DataBinding.DataField = 'GeraTotvsDatasul'
+              DataBinding.DataSource = dsMaster
+              ParentFont = False
+              Properties.DisplayChecked = 'S'
+              Properties.DisplayUnchecked = 'N'
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Style.Font.Charset = DEFAULT_CHARSET
+              Style.Font.Color = clWindowText
+              Style.Font.Height = -11
+              Style.Font.Name = 'MS Sans Serif'
+              Style.Font.Style = [fsBold]
+              Style.IsFontAssigned = True
+              TabOrder = 0
+              Transparent = True
+              Width = 116
+            end
+            object ckbRm: TcxDBCheckBox
+              Left = 118
+              Top = 19
+              Caption = 'TOTVS (RM)'
+              DataBinding.DataField = 'GeraTotvsRm'
+              DataBinding.DataSource = dsMaster
+              ParentFont = False
+              Properties.DisplayChecked = 'S'
+              Properties.DisplayUnchecked = 'N'
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Style.Font.Charset = DEFAULT_CHARSET
+              Style.Font.Color = clWindowText
+              Style.Font.Height = -11
+              Style.Font.Name = 'MS Sans Serif'
+              Style.Font.Style = [fsBold]
+              Style.IsFontAssigned = True
+              TabOrder = 1
+              Transparent = True
+              Width = 98
+            end
+            object ckbMagis: TcxDBCheckBox
+              Left = 216
+              Top = 19
+              Caption = 'Magistech'
+              DataBinding.DataField = 'GeraMagis'
+              DataBinding.DataSource = dsMaster
+              ParentFont = False
+              Properties.DisplayChecked = 'S'
+              Properties.DisplayUnchecked = 'N'
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Style.Font.Charset = DEFAULT_CHARSET
+              Style.Font.Color = clWindowText
+              Style.Font.Height = -11
+              Style.Font.Name = 'MS Sans Serif'
+              Style.Font.Style = [fsBold]
+              Style.IsFontAssigned = True
+              TabOrder = 2
+              Transparent = True
+              Width = 86
+            end
+            object ckbMeta: TcxDBCheckBox
+              Left = 315
+              Top = 19
+              Caption = 'WebMeta'
+              DataBinding.DataField = 'GeraMeta'
+              DataBinding.DataSource = dsMaster
+              ParentFont = False
+              Properties.DisplayChecked = 'S'
+              Properties.DisplayUnchecked = 'N'
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Style.Font.Charset = DEFAULT_CHARSET
+              Style.Font.Color = clWindowText
+              Style.Font.Height = -11
+              Style.Font.Name = 'MS Sans Serif'
+              Style.Font.Style = [fsBold]
+              Style.IsFontAssigned = True
+              TabOrder = 3
+              Transparent = True
+              Width = 82
+            end
+            object ckbSiga: TcxDBCheckBox
+              Left = 416
+              Top = 19
+              Caption = 'Siga'
+              DataBinding.DataField = 'GeraSiga'
+              DataBinding.DataSource = dsMaster
+              ParentFont = False
+              Properties.DisplayChecked = 'S'
+              Properties.DisplayUnchecked = 'N'
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Style.Font.Charset = DEFAULT_CHARSET
+              Style.Font.Color = clWindowText
+              Style.Font.Height = -11
+              Style.Font.Name = 'MS Sans Serif'
+              Style.Font.Style = [fsBold]
+              Style.IsFontAssigned = True
+              TabOrder = 4
+              Transparent = True
+              Width = 57
+            end
+            object cxDBCheckBox7: TcxDBCheckBox
+              Left = 488
+              Top = 19
               Caption = 'SCL'
+              DataBinding.DataField = 'GeraScl'
+              DataBinding.DataSource = dsMaster
+              ParentFont = False
+              Properties.DisplayChecked = 'S'
+              Properties.DisplayUnchecked = 'N'
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Style.Font.Charset = DEFAULT_CHARSET
+              Style.Font.Color = clWindowText
+              Style.Font.Height = -11
+              Style.Font.Name = 'MS Sans Serif'
+              Style.Font.Style = [fsBold]
+              Style.IsFontAssigned = True
               TabOrder = 5
-              SkinData.SkinSection = 'CHECKBOX'
-              ImgChecked = 0
-              ImgUnchecked = 0
+              Transparent = True
+              Width = 50
             end
           end
           object sGroupBox5: TsGroupBox
             Left = 0
-            Top = 311
-            Width = 630
+            Top = 302
+            Width = 576
             Height = 52
             Align = alTop
             Caption = '| Atesto |'
@@ -1064,52 +619,47 @@ object VSDialogosFRM: TVSDialogosFRM
               Caption = 'Percentual'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
             end
-            object edtDifAtesto: TsEdit
-              Left = 66
+            object ckbNotificaAtesto: TcxDBCheckBox
+              Left = 136
               Top = 18
-              Width = 77
-              Height = 21
-              Color = clWhite
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
+              Caption = 'Enviar Notificacao'
+              DataBinding.DataField = 'EnviarNotifAtesto'
+              DataBinding.DataSource = dsMaster
               ParentFont = False
+              Properties.DisplayChecked = 'S'
+              Properties.DisplayUnchecked = 'N'
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Style.Font.Charset = DEFAULT_CHARSET
+              Style.Font.Color = clWindowText
+              Style.Font.Height = -11
+              Style.Font.Name = 'MS Sans Serif'
+              Style.Font.Style = [fsBold]
+              Style.IsFontAssigned = True
               TabOrder = 0
-              SkinData.SkinSection = 'EDIT'
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
+              Transparent = True
+              Width = 130
             end
-            object chxEnviarNota: TsCheckBox
-              Left = 151
+            object edtDifAtesto: TcxDBCurrencyEdit
+              Left = 65
               Top = 18
-              Width = 117
-              Height = 21
-              Caption = 'Enviar Notifica'#231#227'o'
+              DataBinding.DataField = 'PercAtesto'
+              DataBinding.DataSource = dsMaster
               TabOrder = 1
-              SkinData.SkinSection = 'CHECKBOX'
-              ImgChecked = 0
-              ImgUnchecked = 0
+              Width = 65
             end
           end
           object sGroupBox6: TsGroupBox
             Left = 0
-            Top = 363
-            Width = 630
-            Height = 145
+            Top = 354
+            Width = 576
+            Height = 97
             Align = alClient
             Caption = '| Intervalos |'
             TabOrder = 4
@@ -1127,7 +677,7 @@ object VSDialogosFRM: TVSDialogosFRM
               ParentFont = False
               WordWrap = True
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
@@ -1140,7 +690,7 @@ object VSDialogosFRM: TVSDialogosFRM
               Caption = 'Data Inicial'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
@@ -1153,66 +703,50 @@ object VSDialogosFRM: TVSDialogosFRM
               Caption = #218'ltima Leitura'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
             end
-            object edtUltLeitura: TcxDateEdit
-              Left = 276
-              Top = 21
-              TabStop = False
-              Enabled = False
-              Properties.ClearKey = 46
-              Properties.SaveTime = False
-              Properties.ShowTime = False
-              StyleDisabled.TextColor = clWindowText
-              TabOrder = 2
-              Width = 109
-            end
-            object edtIniLeitura: TsDateEdit
-              Left = 76
-              Top = 21
-              Width = 113
-              Height = 21
-              AutoSize = False
-              Color = clWhite
-              EditMask = '!99/99/9999;1; '
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
-              Font.Height = -11
-              Font.Name = 'Tahoma'
-              Font.Style = []
-              MaxLength = 10
-              ParentFont = False
-              TabOrder = 0
-              Text = '  /  /    '
-              BoundLabel.Indent = 0
-              BoundLabel.Font.Charset = DEFAULT_CHARSET
-              BoundLabel.Font.Color = clWindowText
-              BoundLabel.Font.Height = -11
-              BoundLabel.Font.Name = 'MS Sans Serif'
-              BoundLabel.Font.Style = []
-              BoundLabel.Layout = sclLeft
-              BoundLabel.MaxWidth = 0
-              BoundLabel.UseSkinColor = True
-              SkinData.SkinSection = 'EDIT'
-              GlyphMode.Blend = 0
-              GlyphMode.Grayed = False
-            end
-            object chkhoje: TsCheckBox
-              Left = 399
+            object edtIniLeitura: TcxDBDateEdit
+              Left = 75
               Top = 22
-              Width = 107
-              Height = 21
-              Caption = 'Coletas de Hoje'
-              Alignment = taLeftJustify
-              Checked = True
-              State = cbChecked
+              DataBinding.DataField = 'DatIniLeituraDescargaWS'
+              DataBinding.DataSource = dsMaster
+              TabOrder = 0
+              Width = 119
+            end
+            object edtUltLeitura: TcxDBDateEdit
+              Left = 275
+              Top = 22
+              TabStop = False
+              DataBinding.DataField = 'DatUltLeituraDescargaWS'
+              DataBinding.DataSource = dsMaster
+              Enabled = False
+              TabOrder = 2
+              Width = 119
+            end
+            object cxDBCheckBox2: TcxDBCheckBox
+              Left = 414
+              Top = 23
+              Caption = 'Coletas Hoje'
+              DataBinding.DataField = 'ParColetasHoje'
+              DataBinding.DataSource = dsMaster
+              ParentFont = False
+              Properties.DisplayChecked = 'S'
+              Properties.DisplayUnchecked = 'N'
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Style.Font.Charset = DEFAULT_CHARSET
+              Style.Font.Color = clWindowText
+              Style.Font.Height = -11
+              Style.Font.Name = 'MS Sans Serif'
+              Style.Font.Style = [fsBold]
+              Style.IsFontAssigned = True
               TabOrder = 1
-              SkinData.SkinSection = 'CHECKBOX'
-              ImgChecked = 0
-              ImgUnchecked = 0
+              Transparent = True
+              Width = 107
             end
           end
         end
@@ -1223,7 +757,7 @@ object VSDialogosFRM: TVSDialogosFRM
           object sGroupBox7: TsGroupBox
             Left = 0
             Top = 0
-            Width = 622
+            Width = 576
             Height = 350
             Align = alTop
             Caption = '| Destino Arquivos Sa'#237'da |'
@@ -1237,7 +771,7 @@ object VSDialogosFRM: TVSDialogosFRM
               Caption = 'TOTVS (Datasul)'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
@@ -1250,7 +784,7 @@ object VSDialogosFRM: TVSDialogosFRM
               Caption = 'TOTVS (RM)'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
@@ -1263,7 +797,7 @@ object VSDialogosFRM: TVSDialogosFRM
               Caption = 'Magistech'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
@@ -1276,7 +810,7 @@ object VSDialogosFRM: TVSDialogosFRM
               Caption = 'WebMeta'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
@@ -1289,7 +823,7 @@ object VSDialogosFRM: TVSDialogosFRM
               Caption = 'SIGA'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
@@ -1302,7 +836,7 @@ object VSDialogosFRM: TVSDialogosFRM
               Caption = 'SCL'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
@@ -1317,7 +851,7 @@ object VSDialogosFRM: TVSDialogosFRM
                 'rga)'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
@@ -1417,8 +951,8 @@ object VSDialogosFRM: TVSDialogosFRM
           object sGroupBox8: TsGroupBox
             Left = 0
             Top = 350
-            Width = 622
-            Height = 130
+            Width = 576
+            Height = 101
             Align = alClient
             Caption = '| Diret'#243'rio Arquivos Carga |'
             TabOrder = 1
@@ -1433,7 +967,7 @@ object VSDialogosFRM: TVSDialogosFRM
                 'vidor SCLRota'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
@@ -1446,7 +980,7 @@ object VSDialogosFRM: TVSDialogosFRM
               Caption = 'Local de Gera'#231#227'o de Arquivos Consulta Base Carga - API SclRota'
               ParentFont = False
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
@@ -1486,8 +1020,8 @@ object VSDialogosFRM: TVSDialogosFRM
           object pgcLigacao: TsPageControl
             Left = 0
             Top = 52
-            Width = 630
-            Height = 423
+            Width = 576
+            Height = 366
             ActivePage = sTabSheet7
             Align = alClient
             Style = tsButtons
@@ -1500,8 +1034,8 @@ object VSDialogosFRM: TVSDialogosFRM
               object sGroupBox10: TsGroupBox
                 Left = 0
                 Top = 0
-                Width = 622
-                Height = 392
+                Width = 568
+                Height = 335
                 Align = alClient
                 Caption = '| Mapas Associadados |'
                 TabOrder = 0
@@ -1514,7 +1048,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'Linha'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1527,7 +1061,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'Produtores'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1540,7 +1074,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'Fazendas'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1553,7 +1087,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'Coletores'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1566,7 +1100,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'Itiner'#225'rios'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1579,7 +1113,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'Motivo Cancelamento'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1592,7 +1126,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'An'#225'lises'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1605,7 +1139,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'Extratos'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1618,7 +1152,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'Grupos de Rota'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1731,8 +1265,8 @@ object VSDialogosFRM: TVSDialogosFRM
               object sGroupBox9: TsGroupBox
                 Left = 0
                 Top = 0
-                Width = 546
-                Height = 336
+                Width = 568
+                Height = 335
                 Align = alClient
                 TabOrder = 0
                 SkinData.SkinSection = 'GROUPBOX'
@@ -1744,7 +1278,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'Ve'#237'culos'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1757,7 +1291,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'Tag (NFC)'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1770,7 +1304,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'Tanques Vinculados'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1783,7 +1317,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'Tanques'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1796,7 +1330,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'Rota'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1809,7 +1343,7 @@ object VSDialogosFRM: TVSDialogosFRM
                   Caption = 'T'#233'cnicos'
                   ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
-                  Font.Color = clBlack
+                  Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
@@ -1889,12 +1423,11 @@ object VSDialogosFRM: TVSDialogosFRM
               object memLog: TsMemo
                 Left = 0
                 Top = 0
-                Width = 622
-                Height = 392
+                Width = 568
+                Height = 335
                 Align = alClient
-                Color = clWhite
                 Font.Charset = DEFAULT_CHARSET
-                Font.Color = clBlack
+                Font.Color = clWindowText
                 Font.Height = -11
                 Font.Name = 'Tahoma'
                 Font.Style = []
@@ -1917,8 +1450,8 @@ object VSDialogosFRM: TVSDialogosFRM
           end
           object sPanel1: TsPanel
             Left = 0
-            Top = 475
-            Width = 630
+            Top = 418
+            Width = 576
             Height = 33
             Align = alBottom
             ParentShowHint = False
@@ -1968,7 +1501,6 @@ object VSDialogosFRM: TVSDialogosFRM
                 DCFFC8BAA7FFDFDDDCFFE5E4E2FFFFDE88FFE4AA45FFDD973419ECC681FFF0CA
                 82FFF4CA7DFFE8C788FFEFCF94FFEED192F1EDCF92FFEED092FFEED093FFF2D3
                 96FFF7D79BFFF6D69BFFE6C48AFFEBB552FFE19E351100000000}
-              OnClick = btnSalvarAssocClick
               SkinData.SkinSection = 'SPEEDBUTTON'
             end
             object btnExportar: TsSpeedButton
@@ -2013,75 +1545,175 @@ object VSDialogosFRM: TVSDialogosFRM
                 DDFFFBE5A5FFF5E1B8FFE7AE49C2000000000000000000000000000000000000
                 00000000000000000000E7AD4241F0D0907BF0D193EAEDBF5AFFEDBF5AFFF0D0
                 90EAF0D0909AE7AE424100000000000000000000000000000000}
-              OnClick = btnImporAllClick
               SkinData.SkinSection = 'SPEEDBUTTON'
             end
           end
           object rgCtaAtiva: TsRadioGroup
             Left = 0
             Top = 0
-            Width = 630
+            Width = 576
             Height = 52
             Align = alTop
             Caption = '| Ative Uma Conta |'
             ParentBackground = False
             TabOrder = 0
-            OnClick = rgCtaAtivaClick
             SkinData.SkinSection = 'GROUPBOX'
             Columns = 6
           end
         end
       end
     end
-    object tbsSobre: TsTabSheet
-      Caption = 'Sobre'
-      SkinData.CustomColor = False
-      SkinData.CustomFont = False
-      object sGroupBox11: TsGroupBox
-        Left = 0
-        Top = 0
-        Width = 638
-        Height = 71
-        Align = alTop
-        Caption = '| Vers'#227'o Aplicativo |'
-        TabOrder = 0
-        SkinData.SkinSection = 'GROUPBOX'
-        object edtVersaoAp: TsEdit
-          Left = 11
-          Top = 26
-          Width = 120
-          Height = 21
-          Color = clWhite
-          Enabled = False
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          TabOrder = 0
-          SkinData.SkinSection = 'EDIT'
-          BoundLabel.Indent = 0
-          BoundLabel.Font.Charset = DEFAULT_CHARSET
-          BoundLabel.Font.Color = clWindowText
-          BoundLabel.Font.Height = -11
-          BoundLabel.Font.Name = 'MS Sans Serif'
-          BoundLabel.Font.Style = []
-          BoundLabel.Layout = sclLeft
-          BoundLabel.MaxWidth = 0
-          BoundLabel.UseSkinColor = True
+    inherited tabsGrid: TcxTabSheet
+      inherited grdMaster: TcxGrid
+        Width = 584
+        Height = 482
+        inherited grdMasterView: TcxGridDBTableView
+          DataController.Filter.AutoDataSetFilter = False
+          DataController.KeyFieldNames = 'ContaId'
+          object grdMasterViewContaId: TcxGridDBColumn
+            DataBinding.FieldName = 'ContaId'
+            Width = 78
+          end
+          object grdMasterViewNomeEmpresa: TcxGridDBColumn
+            DataBinding.FieldName = 'NomeEmpresa'
+          end
+          object grdMasterViewKeyId: TcxGridDBColumn
+            DataBinding.FieldName = 'KeyId'
+          end
+          object grdMasterViewAtiva: TcxGridDBColumn
+            DataBinding.FieldName = 'Ativa'
+          end
+          object grdMasterViewDatUltLeituraDescargaWS: TcxGridDBColumn
+            DataBinding.FieldName = 'DatUltLeituraDescargaWS'
+          end
+          object grdMasterViewPathArqDescarga: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqDescarga'
+          end
+          object grdMasterViewPercAtesto: TcxGridDBColumn
+            DataBinding.FieldName = 'PercAtesto'
+          end
+          object grdMasterViewHostURL: TcxGridDBColumn
+            DataBinding.FieldName = 'HostURL'
+          end
+          object grdMasterViewLog: TcxGridDBColumn
+            DataBinding.FieldName = 'Log'
+          end
+          object grdMasterViewProxyHost: TcxGridDBColumn
+            DataBinding.FieldName = 'ProxyHost'
+          end
+          object grdMasterViewProxyPorta: TcxGridDBColumn
+            DataBinding.FieldName = 'ProxyPorta'
+          end
+          object grdMasterViewProxyUsuario: TcxGridDBColumn
+            DataBinding.FieldName = 'ProxyUsuario'
+          end
+          object grdMasterViewProxySenha: TcxGridDBColumn
+            DataBinding.FieldName = 'ProxySenha'
+          end
+          object grdMasterViewIntervalo: TcxGridDBColumn
+            DataBinding.FieldName = 'Intervalo'
+          end
+          object grdMasterViewProxyUsar: TcxGridDBColumn
+            DataBinding.FieldName = 'ProxyUsar'
+          end
+          object grdMasterViewEnviarNotifAtesto: TcxGridDBColumn
+            DataBinding.FieldName = 'EnviarNotifAtesto'
+          end
+          object grdMasterViewDatIniLeituraDescargaWS: TcxGridDBColumn
+            DataBinding.FieldName = 'DatIniLeituraDescargaWS'
+          end
+          object grdMasterViewGeraTotvsDatasul: TcxGridDBColumn
+            DataBinding.FieldName = 'GeraTotvsDatasul'
+          end
+          object grdMasterViewGeraTotvsRm: TcxGridDBColumn
+            DataBinding.FieldName = 'GeraTotvsRm'
+          end
+          object grdMasterViewGeraMagis: TcxGridDBColumn
+            DataBinding.FieldName = 'GeraMagis'
+          end
+          object grdMasterViewGeraMeta: TcxGridDBColumn
+            DataBinding.FieldName = 'GeraMeta'
+          end
+          object grdMasterViewGeraSiga: TcxGridDBColumn
+            DataBinding.FieldName = 'GeraSiga'
+          end
+          object grdMasterViewVerDatasul: TcxGridDBColumn
+            DataBinding.FieldName = 'VerDatasul'
+          end
+          object grdMasterViewVerRm: TcxGridDBColumn
+            DataBinding.FieldName = 'VerRm'
+          end
+          object grdMasterViewVerMagis: TcxGridDBColumn
+            DataBinding.FieldName = 'VerMagis'
+          end
+          object grdMasterViewVerMeta: TcxGridDBColumn
+            DataBinding.FieldName = 'VerMeta'
+          end
+          object grdMasterViewVerSiga: TcxGridDBColumn
+            DataBinding.FieldName = 'VerSiga'
+          end
+          object grdMasterViewGeraScl: TcxGridDBColumn
+            DataBinding.FieldName = 'GeraScl'
+          end
+          object grdMasterViewVerScl: TcxGridDBColumn
+            DataBinding.FieldName = 'VerScl'
+          end
+          object grdMasterViewPathArqDatasul: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqDatasul'
+          end
+          object grdMasterViewPathArqRm: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqRm'
+          end
+          object grdMasterViewPathArqMagis: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqMagis'
+          end
+          object grdMasterViewPathArqMeta: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqMeta'
+          end
+          object grdMasterViewPathArqSiga: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqSiga'
+          end
+          object grdMasterViewPathArqScl: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqScl'
+          end
+          object grdMasterViewParContaId1: TcxGridDBColumn
+            DataBinding.FieldName = 'ParContaId1'
+            Visible = False
+          end
+          object grdMasterViewPathArqCarga: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqCarga'
+          end
+          object grdMasterViewIntervaloCarga: TcxGridDBColumn
+            DataBinding.FieldName = 'IntervaloCarga'
+          end
+          object grdMasterViewCargaMultiEmpresa: TcxGridDBColumn
+            DataBinding.FieldName = 'CargaMultiEmpresa'
+          end
+          object grdMasterViewPathCargaApi: TcxGridDBColumn
+            DataBinding.FieldName = 'PathCargaApi'
+          end
+          object grdMasterViewDropTable: TcxGridDBColumn
+            DataBinding.FieldName = 'DropTable'
+          end
+          object grdMasterViewParColetasHoje: TcxGridDBColumn
+            DataBinding.FieldName = 'ParColetasHoje'
+          end
         end
       end
-      object sGroupBox12: TsGroupBox
-        Left = 0
-        Top = 71
-        Width = 638
-        Height = 468
-        Align = alClient
-        Caption = '| Agritech Mobile |'
-        TabOrder = 1
-        SkinData.SkinSection = 'GROUPBOX'
-      end
     end
+  end
+  inherited stsbManutencao: TStatusBar
+    Top = 579
+    Width = 584
+  end
+  inherited pnlCabecalho: TJvGradientHeaderPanel
+    Width = 584
+  end
+  inherited tbMaster: TJvToolBar
+    Width = 584
+    Height = 46
+  end
+  inherited dsMaster: TDataSource
+    DataSet = VSSCLSettingsDTM.cdsContas
   end
 end

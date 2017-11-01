@@ -94,7 +94,8 @@ type
     function dtm: TVSSCLRotaConsoleDTM;
     procedure ExibirHint(Mensagem, Assunto: string; Timer: Integer = 10);
   public
-    { Public declarations }
+    // Cria ou exibe formulario
+     procedure CriaFormNome(NomeForm : String; ExibeModal: Boolean);
   end;
 
 var
@@ -102,7 +103,7 @@ var
 
 implementation
 uses uRotinasComuns, uRotinasComunsUI, uVSSCLRotaComum, uJson, 
-  uVSSCLRotaDialogosFRM;
+  uVSSCLRotaDialogosFRM, uVSSCLRotaSettings;
 
 {$R *.dfm}
 
@@ -218,15 +219,26 @@ end;
 
 procedure TVSSCLRotaConsoleFRM.mniConfigClick(Sender: TObject);
 var
-  dlg: TVSDialogosFRM;
+  dlg: TVSDialogosFRM;                                                                 L
 begin
+
   dlg := TVSDialogosFRM.Create(nil);
+
   try
     if dlg.Autenticado then
     begin
       dtm.qryParametros.Close;
       dtm.qryParametros.Open;
       PopularDadosConta(dtm.qryParametros);
+      try
+        //Exibe o formulario de configuracao das contas
+        VSSCLRotaSettings := TVSSCLRotaSettings.Create(nil);
+        VSSCLRotaSettings.Visible := False;
+        VSSCLRotaSettings.ShowModal;
+      finally
+        VSSCLRotaSettings.Destroy;
+      end;
+      {
       if dlg.EditarConfiguracoes then
       begin
         dtm.tmrSync.Enabled := False;
@@ -237,9 +249,11 @@ begin
         Self.Release;
         Application.Terminate;
       end;
+      }
     end;
   finally
     dlg.Release;
+
   end;
 end;
 
@@ -336,8 +350,51 @@ end;
 
 procedure TVSSCLRotaConsoleFRM.FormShow(Sender: TObject);
 begin
-  // Mostra a versão da app na barra de titulos                                                 
+  // Mostra a versão da app na barra de titulos
   Self.Caption := self.Caption + '  :: Versão : ' + VersaoAplicativo('.\SclRotaIntegrador.exe');
 end;
+// Cria ou exibe formulario
+procedure TVSSCLRotaConsoleFRM.CriaFormNome(NomeForm: String;
+  ExibeModal: Boolean);
+var
+  Form : TForm;
+  frmClass: TFormClass;
+  i :integer;
+begin
+  frmClass := TFormClass(FindClass(NomeForm));
+  for i:= 0 to Screen.FormCount - 1 do
+  begin
+    if Screen.Forms[i].ClassName = frmClass.ClassName then
+    begin
+      Screen.Forms[i].WindowState := wsNormal;
+      Screen.Forms[i].BringToFront;
+      Exit;
+    end;
+  end;
+  // Cursor
+  Screen.Cursor := crHourGlass;
+  try
+    Form := FrmClass.Create(Self);
+    // Seta Estilo Child
+    if ExibeModal then
+    begin
+      if Form.FormStyle <> fsNormal then
+        Form.FormStyle := fsNormal;
+      Form.Visible := False;
+      Screen.Cursor := crDefault;
+      Form.ShowModal;
+    end
+    else
+    begin
+      if (not Form.Visible) then
+        Form.Visible := True;
+    end;
+  finally
+    Screen.Cursor := crDefault;
+  end;
 
+  // Organizar Janelas Verticalmente
+  if (Self.MDIChildCount > 1) then
+    Self.Cascade;
+end;
 end.

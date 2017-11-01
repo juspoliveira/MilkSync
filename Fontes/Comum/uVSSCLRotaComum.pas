@@ -174,6 +174,7 @@ function VersaoAplicativo(Executavel: string): string;
 // Liberar memoria
 procedure TrimAppMemorySize(pReinicia: Boolean; Programa:string);
 
+
 var
   DadosConta: TDadosConta;
   CargaMultiEmpresa : TMultiEmpresa;
@@ -1693,4 +1694,6 @@ begin
 
   end;
 end;
+
+
 end.
