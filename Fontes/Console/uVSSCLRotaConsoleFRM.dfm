@@ -1,6 +1,6 @@
 object VSSCLRotaConsoleFRM: TVSSCLRotaConsoleFRM
-  Left = 433
-  Top = 163
+  Left = 310
+  Top = 165
   BorderStyle = bsDialog
   Caption = 'Milk'#180's Rota Integrador'
   ClientHeight = 385

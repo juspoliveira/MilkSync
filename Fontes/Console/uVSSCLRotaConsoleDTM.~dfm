@@ -1,9 +1,8 @@
 object VSSCLRotaConsoleDTM: TVSSCLRotaConsoleDTM
   OldCreateOrder = False
   OnCreate = DataModuleCreate
-  Left = 711
-  Top = 24
-  Height = 592
+  Left = 634
+  Height = 567
   Width = 455
   object zcnnRota: TZConnection
     ControlsCodePage = cGET_ACP
@@ -11,7 +10,6 @@ object VSSCLRotaConsoleDTM: TVSSCLRotaConsoleDTM
     AutoEncodeStrings = False
     Properties.Strings = (
       'controls_cp=GET_ACP')
-    Connected = True
     Port = 0
     Database = 'C:\Desenvolvimento\tools\MilkSync\Deploy\VSSCLRota.db'
     Protocol = 'sqlite-3'

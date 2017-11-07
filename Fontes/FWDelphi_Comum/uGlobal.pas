@@ -5,7 +5,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Db, Grids, DBGrids, ComCtrls, ExtCtrls, IBQuery,DBXpress, XMLDoc, XMLIntf, WinInet;
+  Db, Grids, DBGrids, ComCtrls, ExtCtrls, IBQuery, XMLDoc, XMLIntf, WinInet;
 
 
 // Utilizado na Tradução dos Verbetes

@@ -1,21 +1,188 @@
 object VSSCLSettingsDTM: TVSSCLSettingsDTM
   OldCreateOrder = False
   OnCreate = DataModuleCreate
-  Left = 644
-  Top = 212
+  Left = 646
+  Top = 213
   Height = 403
   Width = 428
   object qryContas: TZQuery
     Connection = VSSCLRotaConsoleDTM.zcnnRota
     SQL.Strings = (
-      'Select * from Contas where 1=2 Order by Id')
+      'Select * from Contas where 1=2 Order by ContaId')
     Params = <>
     Left = 24
     Top = 24
+    object qryContasId: TIntegerField
+      FieldName = 'Id'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+    end
+    object qryContasNomeEmpresa: TStringField
+      FieldName = 'NomeEmpresa'
+      Size = 280
+    end
+    object qryContasContaId: TIntegerField
+      FieldName = 'ContaId'
+    end
+    object qryContasKeyId: TStringField
+      FieldName = 'KeyId'
+      Size = 60
+    end
+    object qryContasAtiva: TStringField
+      FieldName = 'Ativa'
+      Size = 4
+    end
+    object qryContasDatUltLeituraDescargaWS: TDateField
+      FieldName = 'DatUltLeituraDescargaWS'
+    end
+    object qryContasPathArqDescarga: TStringField
+      FieldName = 'PathArqDescarga'
+      Size = 1020
+    end
+    object qryContasPercAtesto: TFloatField
+      FieldName = 'PercAtesto'
+    end
+    object qryContasHostURL: TStringField
+      FieldName = 'HostURL'
+      Size = 2000
+    end
+    object qryContasLog: TStringField
+      FieldName = 'Log'
+      Size = 4
+    end
+    object qryContasProxyHost: TStringField
+      FieldName = 'ProxyHost'
+      Size = 80
+    end
+    object qryContasProxyPorta: TStringField
+      FieldName = 'ProxyPorta'
+      Size = 40
+    end
+    object qryContasProxyUsuario: TStringField
+      FieldName = 'ProxyUsuario'
+      Size = 80
+    end
+    object qryContasProxySenha: TStringField
+      FieldName = 'ProxySenha'
+      Size = 80
+    end
+    object qryContasIntervalo: TFloatField
+      FieldName = 'Intervalo'
+    end
+    object qryContasProxyUsar: TStringField
+      FieldName = 'ProxyUsar'
+      Size = 4
+    end
+    object qryContasEnviarNotifAtesto: TStringField
+      FieldName = 'EnviarNotifAtesto'
+      Size = 4
+    end
+    object qryContasDatIniLeituraDescargaWS: TDateField
+      FieldName = 'DatIniLeituraDescargaWS'
+    end
+    object qryContasGeraTotvsDatasul: TStringField
+      FieldName = 'GeraTotvsDatasul'
+      Size = 4
+    end
+    object qryContasGeraTotvsRm: TStringField
+      FieldName = 'GeraTotvsRm'
+      Size = 4
+    end
+    object qryContasGeraMagis: TStringField
+      FieldName = 'GeraMagis'
+      Size = 4
+    end
+    object qryContasGeraMeta: TStringField
+      FieldName = 'GeraMeta'
+      Size = 4
+    end
+    object qryContasGeraSiga: TStringField
+      FieldName = 'GeraSiga'
+      Size = 4
+    end
+    object qryContasVerDatasul: TStringField
+      FieldName = 'VerDatasul'
+      Size = 4
+    end
+    object qryContasVerRm: TStringField
+      FieldName = 'VerRm'
+      Size = 4
+    end
+    object qryContasVerMagis: TStringField
+      FieldName = 'VerMagis'
+      Size = 4
+    end
+    object qryContasVerMeta: TStringField
+      FieldName = 'VerMeta'
+      Size = 4
+    end
+    object qryContasVerSiga: TStringField
+      FieldName = 'VerSiga'
+      Size = 4
+    end
+    object qryContasGeraScl: TStringField
+      FieldName = 'GeraScl'
+      Size = 4
+    end
+    object qryContasVerScl: TStringField
+      FieldName = 'VerScl'
+      Size = 4
+    end
+    object qryContasPathArqDatasul: TStringField
+      FieldName = 'PathArqDatasul'
+      Size = 1020
+    end
+    object qryContasPathArqRm: TStringField
+      FieldName = 'PathArqRm'
+      Size = 1020
+    end
+    object qryContasPathArqMagis: TStringField
+      FieldName = 'PathArqMagis'
+      Size = 1020
+    end
+    object qryContasPathArqMeta: TStringField
+      FieldName = 'PathArqMeta'
+      Size = 1020
+    end
+    object qryContasPathArqSiga: TStringField
+      FieldName = 'PathArqSiga'
+      Size = 1020
+    end
+    object qryContasPathArqScl: TStringField
+      FieldName = 'PathArqScl'
+      Size = 1020
+    end
+    object qryContasParContaId1: TIntegerField
+      FieldName = 'ParContaId1'
+    end
+    object qryContasPathArqCarga: TStringField
+      FieldName = 'PathArqCarga'
+      Size = 1020
+    end
+    object qryContasIntervaloCarga: TFloatField
+      FieldName = 'IntervaloCarga'
+    end
+    object qryContasCargaMultiEmpresa: TStringField
+      FieldName = 'CargaMultiEmpresa'
+      Size = 4
+    end
+    object qryContasPathCargaApi: TStringField
+      FieldName = 'PathCargaApi'
+      Size = 1020
+    end
+    object qryContasDropTable: TStringField
+      FieldName = 'DropTable'
+      Size = 4
+    end
+    object qryContasParColetasHoje: TStringField
+      FieldName = 'ParColetasHoje'
+      Size = 4
+    end
   end
   object pvdContas: TDataSetProvider
     DataSet = qryContas
-    Options = [poAllowCommandText]
+    ResolveToDataSet = True
+    Options = [poCascadeUpdates, poAllowCommandText]
+    UpdateMode = upWhereKeyOnly
     Left = 80
     Top = 24
   end
@@ -29,6 +196,7 @@ object VSSCLSettingsDTM: TVSSCLSettingsDTM
     Params = <>
     ProviderName = 'pvdContas'
     BeforePost = cdsContasBeforePost
+    OnReconcileError = cdsContasReconcileError
     Left = 208
     Top = 24
     object cdsContasId: TIntegerField

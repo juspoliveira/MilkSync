@@ -4,7 +4,8 @@ interface
 
 uses
   SysUtils, Classes, DB, DBClient, uS2ZSQLDataSet, Provider,
-  ZAbstractRODataset, ZAbstractDataset, ZDataset, uGlobal, uConstantesComuns, Variants;
+  ZAbstractRODataset, ZAbstractDataset, ZDataset, uGlobal, uConstantesComuns, Variants,recerror,
+  ZSqlMonitor;
 
 type
   TVSSCLSettingsDTM = class(TDataModule)
@@ -55,10 +56,56 @@ type
     cdsContasDropTable: TStringField;
     cdsContasParColetasHoje: TStringField;
     cdsContasNomeEmpresa: TStringField;
+    qryContasId: TIntegerField;
+    qryContasNomeEmpresa: TStringField;
+    qryContasContaId: TIntegerField;
+    qryContasKeyId: TStringField;
+    qryContasAtiva: TStringField;
+    qryContasDatUltLeituraDescargaWS: TDateField;
+    qryContasPathArqDescarga: TStringField;
+    qryContasPercAtesto: TFloatField;
+    qryContasHostURL: TStringField;
+    qryContasLog: TStringField;
+    qryContasProxyHost: TStringField;
+    qryContasProxyPorta: TStringField;
+    qryContasProxyUsuario: TStringField;
+    qryContasProxySenha: TStringField;
+    qryContasIntervalo: TFloatField;
+    qryContasProxyUsar: TStringField;
+    qryContasEnviarNotifAtesto: TStringField;
+    qryContasDatIniLeituraDescargaWS: TDateField;
+    qryContasGeraTotvsDatasul: TStringField;
+    qryContasGeraTotvsRm: TStringField;
+    qryContasGeraMagis: TStringField;
+    qryContasGeraMeta: TStringField;
+    qryContasGeraSiga: TStringField;
+    qryContasVerDatasul: TStringField;
+    qryContasVerRm: TStringField;
+    qryContasVerMagis: TStringField;
+    qryContasVerMeta: TStringField;
+    qryContasVerSiga: TStringField;
+    qryContasGeraScl: TStringField;
+    qryContasVerScl: TStringField;
+    qryContasPathArqDatasul: TStringField;
+    qryContasPathArqRm: TStringField;
+    qryContasPathArqMagis: TStringField;
+    qryContasPathArqMeta: TStringField;
+    qryContasPathArqSiga: TStringField;
+    qryContasPathArqScl: TStringField;
+    qryContasParContaId1: TIntegerField;
+    qryContasPathArqCarga: TStringField;
+    qryContasIntervaloCarga: TFloatField;
+    qryContasCargaMultiEmpresa: TStringField;
+    qryContasPathCargaApi: TStringField;
+    qryContasDropTable: TStringField;
+    qryContasParColetasHoje: TStringField;
     procedure DataModuleCreate(Sender: TObject);
     procedure cdsContasBeforePost(DataSet: TDataSet);
 
     function IsCodigoInserted(Codigo: Integer): Boolean;
+    procedure cdsContasReconcileError(DataSet: TCustomClientDataSet;
+      E: EReconcileError; UpdateKind: TUpdateKind;
+      var Action: TReconcileAction);
   private
     { Private declarations }
   public
@@ -90,7 +137,8 @@ end;
 procedure TVSSCLSettingsDTM.SalvarContas;
 begin
   cdsContas.ApplyUpdates(-1);
-  cdsContas.Refresh;
+  cdsContas.Close;
+  cdsContas.Open;
 end;
 
 procedure TVSSCLSettingsDTM.DataModuleCreate(Sender: TObject);
@@ -103,10 +151,10 @@ begin
 
   if cdsContas.State in [dsInsert] then
   begin
-    if IsCodigoInserted(cdsContasContaId.Value) then
-      MostraMsgErro('Codigo da conta ja inserido no Banco de Dados !');
+   // if IsCodigoInserted(cdsContasContaId.Value) then
+   //   MostraMsgErro('Codigo da conta ja inserido no Banco de Dados !');
   end;
-  
+
   If (cdsContasHostURL.Value = EmptyStr) then
      MostraMsgErro('URI do Servidor e obrigatoria !');
   if (cdsContasContaId.Value <= 0) then
@@ -144,8 +192,19 @@ begin
     cdsContasIntervalo.Value := 45;
     cdsContasIntervaloCarga.Value := 180;
     cdsContasDatIniLeituraDescargaWS.Value := Date;
+    cdsContasDatUltLeituraDescargaWS.Value := Date;
     cdsContasParColetasHoje.Value := FlagSim;
+    cdsContasId.Value := 0;
   end;
 end;
 
+procedure TVSSCLSettingsDTM.cdsContasReconcileError(
+  DataSet: TCustomClientDataSet; E: EReconcileError;
+  UpdateKind: TUpdateKind; var Action: TReconcileAction);
+begin
+  Action := HandleReconcileError(DataSet, UpdateKind, E);
+end;
+
 end.
+
+

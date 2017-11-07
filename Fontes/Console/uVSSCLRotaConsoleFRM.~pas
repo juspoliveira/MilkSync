@@ -219,7 +219,7 @@ end;
 
 procedure TVSSCLRotaConsoleFRM.mniConfigClick(Sender: TObject);
 var
-  dlg: TVSDialogosFRM;                                                                 L
+  dlg: TVSDialogosFRM;                                                                 
 begin
 
   dlg := TVSDialogosFRM.Create(nil);

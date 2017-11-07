@@ -1,6 +1,6 @@
 object frmCadastroZeos: TfrmCadastroZeos
-  Left = 332
-  Top = 140
+  Left = 301
+  Top = 15
   BorderStyle = bsSingle
   Caption = 'frmCadastroZeos'
   ClientHeight = 511

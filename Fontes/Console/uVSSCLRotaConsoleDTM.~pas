@@ -634,9 +634,9 @@ begin
   tmrSync.Enabled := True;
   tmrSync.Interval := Trunc(DadosConta.TimerProcCadastro * 60000); // Minutos
   // Instancia da conexao do banco
-  ConexaoBanc
-
-end;
+  _Conec := TConexaoZeos.Create(zcnnRota);
+  ConexaoBanco := _Conec;
+ end;
 
 procedure TVSSCLRotaConsoleDTM.AtualizarDatLeituraParam(Data: TDateTime);
 begin

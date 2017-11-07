@@ -1,9 +1,9 @@
 inherited VSSCLRotaSettings: TVSSCLRotaSettings
-  Left = 527
-  Top = 180
+  Left = 373
+  Top = 0
   ActiveControl = pgcConfig
   Caption = 'Configuracao das Contas'
-  ClientHeight = 598
+  ClientHeight = 610
   ClientWidth = 584
   OldCreateOrder = True
   Position = poDesktopCenter
@@ -12,16 +12,16 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
   inherited pgcMaster: TcxPageControl
     Top = 78
     Width = 584
-    Height = 501
-    ClientRectBottom = 501
+    Height = 513
+    ClientRectBottom = 513
     ClientRectRight = 584
     inherited tabsRegistro: TcxTabSheet
       object pgcConfig: TsPageControl
         Left = 0
         Top = 0
         Width = 584
-        Height = 482
-        ActivePage = tsParametros
+        Height = 494
+        ActivePage = tsMapas
         Align = alClient
         Style = tsFlatButtons
         TabOrder = 0
@@ -39,83 +39,83 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
             Caption = '| Contas |'
             TabOrder = 0
             SkinData.SkinSection = 'GROUPBOX'
-            object cxLabel5: TsLabel
+            object cxLabel5: TLabel
               Left = 9
               Top = 36
               Width = 51
               Height = 13
               Caption = 'URL Host'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
+              ParentFont = False
             end
-            object cxLabel10: TsLabel
+            object cxLabel10: TLabel
               Left = 259
               Top = 80
               Width = 103
               Height = 13
               Caption = 'Gerar Arquivos (Min.)'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
+              ParentFont = False
             end
-            object cxLabel9: TsLabel
+            object cxLabel9: TLabel
               Left = 9
               Top = 80
               Width = 48
               Height = 13
               Caption = 'Id Conta'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
+              ParentFont = False
             end
-            object sLabel4: TsLabel
+            object sLabel4: TLabel
               Left = 371
               Top = 80
               Width = 113
               Height = 13
               Caption = 'Enviar Cadastros (Min.)'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
+              ParentFont = False
             end
-            object sLabel5: TsLabel
+            object sLabel5: TLabel
               Left = 145
               Top = 80
               Width = 53
               Height = 13
               Caption = 'Chave ERP'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
+              ParentFont = False
             end
-            object sLabel1: TsLabel
+            object sLabel1: TLabel
               Left = 9
               Top = 14
               Width = 49
               Height = 13
               Caption = 'Empresa'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
+              ParentFont = False
             end
             object edtServidor: TcxDBTextEdit
               Left = 8
@@ -242,57 +242,57 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
             Caption = '| Proxy |'
             TabOrder = 1
             SkinData.SkinSection = 'GROUPBOX'
-            object cxLabel4: TsLabel
+            object cxLabel4: TLabel
               Left = 101
               Top = 21
               Width = 19
               Height = 13
               Caption = 'URL'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
+              ParentFont = False
             end
-            object cxLabel6: TsLabel
+            object cxLabel6: TLabel
               Left = 84
               Top = 46
               Width = 36
               Height = 13
               Caption = 'Usu'#225'rio'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
+              ParentFont = False
             end
-            object cxLabel7: TsLabel
+            object cxLabel7: TLabel
               Left = 410
               Top = 21
               Width = 26
               Height = 13
               Caption = 'Porta'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
+              ParentFont = False
             end
-            object cxLabel8: TsLabel
+            object cxLabel8: TLabel
               Left = 367
               Top = 46
               Width = 30
               Height = 13
               Caption = 'Senha'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
+              ParentFont = False
             end
             object ckbProxy: TcxDBCheckBox
               Left = 7
@@ -611,18 +611,18 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
             Caption = '| Atesto |'
             TabOrder = 3
             SkinData.SkinSection = 'GROUPBOX'
-            object cxLabel11: TsLabel
+            object cxLabel11: TLabel
               Left = 7
               Top = 22
               Width = 51
               Height = 13
               Caption = 'Percentual'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
+              ParentFont = False
             end
             object ckbNotificaAtesto: TcxDBCheckBox
               Left = 136
@@ -659,12 +659,12 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
             Left = 0
             Top = 354
             Width = 576
-            Height = 97
+            Height = 109
             Align = alClient
             Caption = '| Intervalos |'
             TabOrder = 4
             SkinData.SkinSection = 'GROUPBOX'
-            object lbl6: TsLabel
+            object lbl6: TLabel
               Left = 10
               Top = 50
               Width = 541
@@ -674,39 +674,39 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
                 'Aten'#231#227'o. Ajustando a data para dias anteriores, arquivos j'#225' expo' +
                 'rtados e processados podem ser regerados. Isto pode afetar o con' +
                 'trole de estoque do seu ERP.'
-              ParentFont = False
-              WordWrap = True
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
+              ParentFont = False
+              WordWrap = True
             end
-            object cxLabel3: TsLabel
+            object cxLabel3: TLabel
               Left = 17
               Top = 25
               Width = 53
               Height = 13
               Caption = 'Data Inicial'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
+              ParentFont = False
             end
-            object cxLabel14: TsLabel
+            object cxLabel14: TLabel
               Left = 201
               Top = 25
               Width = 65
               Height = 13
               Caption = #218'ltima Leitura'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
+              ParentFont = False
             end
             object edtIniLeitura: TcxDBDateEdit
               Left = 75
@@ -763,85 +763,85 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
             Caption = '| Destino Arquivos Sa'#237'da |'
             TabOrder = 0
             SkinData.SkinSection = 'GROUPBOX'
-            object lbl17: TsLabel
+            object lbl17: TLabel
               Left = 16
               Top = 20
               Width = 92
               Height = 13
               Caption = 'TOTVS (Datasul)'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
+              ParentFont = False
             end
-            object lbl1: TsLabel
+            object lbl1: TLabel
               Left = 16
               Top = 59
               Width = 67
               Height = 13
               Caption = 'TOTVS (RM)'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
+              ParentFont = False
             end
-            object lbl2: TsLabel
+            object lbl2: TLabel
               Left = 16
               Top = 99
               Width = 58
               Height = 13
               Caption = 'Magistech'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
+              ParentFont = False
             end
-            object lbl3: TsLabel
+            object lbl3: TLabel
               Left = 16
               Top = 140
               Width = 54
               Height = 13
               Caption = 'WebMeta'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
+              ParentFont = False
             end
-            object lbl4: TsLabel
+            object lbl4: TLabel
               Left = 16
               Top = 184
               Width = 28
               Height = 13
               Caption = 'SIGA'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
+              ParentFont = False
             end
-            object lbl5: TsLabel
+            object lbl5: TLabel
               Left = 16
               Top = 227
               Width = 20
               Height = 13
               Caption = 'SCL'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
+              ParentFont = False
             end
-            object sLabel3: TsLabel
+            object sLabel3: TLabel
               Left = 14
               Top = 275
               Width = 402
@@ -849,12 +849,12 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
               Caption = 
                 'Diretorio de Arquivos de Atesto (Somente volume aferido na desca' +
                 'rga)'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
+              ParentFont = False
             end
             object deDatasul: TJvDirectoryEdit
               Left = 14
@@ -952,12 +952,12 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
             Left = 0
             Top = 350
             Width = 576
-            Height = 101
+            Height = 113
             Align = alClient
             Caption = '| Diret'#243'rio Arquivos Carga |'
             TabOrder = 1
             SkinData.SkinSection = 'GROUPBOX'
-            object lbl8: TsLabel
+            object lbl8: TLabel
               Left = 10
               Top = 20
               Width = 451
@@ -965,25 +965,25 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
               Caption = 
                 'Localiza'#231#227'o da Base de dados Exportada do ERP para envio ao  ser' +
                 'vidor SCLRota'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
+              ParentFont = False
             end
-            object sLabel6: TsLabel
+            object sLabel6: TLabel
               Left = 10
               Top = 58
               Width = 361
               Height = 13
               Caption = 'Local de Gera'#231#227'o de Arquivos Consulta Base Carga - API SclRota'
-              ParentFont = False
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = [fsBold]
+              ParentFont = False
             end
             object deBaseCarga: TJvDirectoryEdit
               Left = 11
@@ -1021,7 +1021,7 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
             Left = 0
             Top = 52
             Width = 576
-            Height = 366
+            Height = 378
             ActivePage = sTabSheet7
             Align = alClient
             Style = tsButtons
@@ -1035,127 +1035,127 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
                 Left = 0
                 Top = 0
                 Width = 568
-                Height = 335
+                Height = 347
                 Align = alClient
                 Caption = '| Mapas Associadados |'
                 TabOrder = 0
                 SkinData.SkinSection = 'GROUPBOX'
-                object lbl22: TsLabel
+                object lbl22: TLabel
                   Left = 6
                   Top = 173
                   Width = 30
                   Height = 13
                   Caption = 'Linha'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
-                object lbl23: TsLabel
+                object lbl23: TLabel
                   Left = 6
                   Top = 236
                   Width = 63
                   Height = 13
                   Caption = 'Produtores'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
-                object lbl9: TsLabel
+                object lbl9: TLabel
                   Left = 6
                   Top = 111
                   Width = 53
                   Height = 13
                   Caption = 'Fazendas'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
-                object lbl10: TsLabel
+                object lbl10: TLabel
                   Left = 6
                   Top = 49
                   Width = 54
                   Height = 13
                   Caption = 'Coletores'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
-                object lbl15: TsLabel
+                object lbl15: TLabel
                   Left = 6
                   Top = 142
                   Width = 60
                   Height = 13
                   Caption = 'Itiner'#225'rios'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
-                object lbl16: TsLabel
+                object lbl16: TLabel
                   Left = 6
                   Top = 205
                   Width = 123
                   Height = 13
                   Caption = 'Motivo Cancelamento'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
-                object lbl24: TsLabel
+                object lbl24: TLabel
                   Left = 6
                   Top = 18
                   Width = 47
                   Height = 13
                   Caption = 'An'#225'lises'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
-                object lbl18: TsLabel
+                object lbl18: TLabel
                   Left = 6
                   Top = 80
                   Width = 48
                   Height = 13
                   Caption = 'Extratos'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
-                object lbl19: TsLabel
+                object lbl19: TLabel
                   Left = 5
                   Top = 267
                   Width = 87
                   Height = 13
                   Caption = 'Grupos de Rota'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
                 object feAnalises: TJvFilenameEdit
                   Left = 6
@@ -1266,87 +1266,87 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
                 Left = 0
                 Top = 0
                 Width = 568
-                Height = 335
+                Height = 347
                 Align = alClient
                 TabOrder = 0
                 SkinData.SkinSection = 'GROUPBOX'
-                object lbl20: TsLabel
+                object lbl20: TLabel
                   Left = 6
                   Top = 97
                   Width = 46
                   Height = 13
                   Caption = 'Ve'#237'culos'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
-                object lbl14: TsLabel
+                object lbl14: TLabel
                   Left = 6
                   Top = 137
                   Width = 54
                   Height = 13
                   Caption = 'Tag (NFC)'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
-                object lbl11: TsLabel
+                object lbl11: TLabel
                   Left = 6
                   Top = 59
                   Width = 111
                   Height = 13
                   Caption = 'Tanques Vinculados'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
-                object lbl13: TsLabel
+                object lbl13: TLabel
                   Left = 7
                   Top = 19
                   Width = 48
                   Height = 13
                   Caption = 'Tanques'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
-                object lbl21: TsLabel
+                object lbl21: TLabel
                   Left = 11
                   Top = 174
                   Width = 27
                   Height = 13
                   Caption = 'Rota'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
-                object lbl12: TsLabel
+                object lbl12: TLabel
                   Left = 7
                   Top = 209
                   Width = 49
                   Height = 13
                   Caption = 'T'#233'cnicos'
-                  ParentFont = False
                   Font.Charset = DEFAULT_CHARSET
                   Font.Color = clWindowText
                   Font.Height = -11
                   Font.Name = 'Tahoma'
                   Font.Style = [fsBold]
+                  ParentFont = False
                 end
                 object feVeiculos: TJvFilenameEdit
                   Left = 6
@@ -1424,7 +1424,7 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
                 Left = 0
                 Top = 0
                 Width = 568
-                Height = 335
+                Height = 347
                 Align = alClient
                 Font.Charset = DEFAULT_CHARSET
                 Font.Color = clWindowText
@@ -1450,7 +1450,7 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
           end
           object sPanel1: TsPanel
             Left = 0
-            Top = 418
+            Top = 430
             Width = 576
             Height = 33
             Align = alBottom
@@ -1703,7 +1703,7 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
     end
   end
   inherited stsbManutencao: TStatusBar
-    Top = 579
+    Top = 591
     Width = 584
   end
   inherited pnlCabecalho: TJvGradientHeaderPanel
@@ -1712,8 +1712,5 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
   inherited tbMaster: TJvToolBar
     Width = 584
     Height = 46
-  end
-  inherited dsMaster: TDataSource
-    DataSet = VSSCLSettingsDTM.cdsContas
   end
 end
