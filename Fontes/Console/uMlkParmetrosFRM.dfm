@@ -1,30 +1,366 @@
 inherited MlkParmetrosFRM: TMlkParmetrosFRM
   Caption = 'Manutencao de Contas && Parametros '
-  ClientHeight = 615
+  ClientHeight = 622
   ClientWidth = 606
   Visible = False
   ExplicitWidth = 612
-  ExplicitHeight = 644
+  ExplicitHeight = 651
   PixelsPerInch = 96
   TextHeight = 13
+  object SpeedButton4: TSpeedButton [0]
+    Left = 555
+    Top = 249
+    Width = 23
+    Height = 22
+    Action = acFindFile
+    Flat = True
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object SpeedButton5: TSpeedButton [1]
+    Left = 552
+    Top = 281
+    Width = 23
+    Height = 22
+    Action = acFindFile
+    Flat = True
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object SpeedButton6: TSpeedButton [2]
+    Left = 555
+    Top = 312
+    Width = 23
+    Height = 22
+    Action = acFindFile
+    Flat = True
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object SpeedButton7: TSpeedButton [3]
+    Left = 554
+    Top = 345
+    Width = 23
+    Height = 22
+    Action = acFindFile
+    Flat = True
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object SpeedButton8: TSpeedButton [4]
+    Left = 555
+    Top = 378
+    Width = 23
+    Height = 22
+    Action = acFindFile
+    Flat = True
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object SpeedButton9: TSpeedButton [5]
+    Left = 554
+    Top = 410
+    Width = 23
+    Height = 22
+    Action = acFindFile
+    Flat = True
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object SpeedButton10: TSpeedButton [6]
+    Left = 555
+    Top = 443
+    Width = 23
+    Height = 22
+    Action = acFindFile
+    Flat = True
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object SpeedButton11: TSpeedButton [7]
+    Left = 553
+    Top = 472
+    Width = 23
+    Height = 22
+    Action = acFindFile
+    Flat = True
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object SpeedButton12: TSpeedButton [8]
+    Left = 554
+    Top = 507
+    Width = 23
+    Height = 22
+    Action = acFindFile
+    Flat = True
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
   inherited pgcManutencao: TPageControl
     Width = 606
-    Height = 531
-    ExplicitHeight = 531
+    Height = 538
+    ActivePage = tabsCadastro
+    ExplicitWidth = 606
+    ExplicitHeight = 538
     inherited tabsPesquisa: TTabSheet
+      ExplicitWidth = 598
+      ExplicitHeight = 510
       inherited grdMaster: TcxGrid
         Width = 598
-        Height = 503
+        Height = 510
+        ExplicitWidth = 598
+        ExplicitHeight = 510
+        inherited grdMasterView: TcxGridDBTableView
+          DataController.KeyFieldNames = 'Id'
+          object grdMasterViewNomeEmpresa: TcxGridDBColumn
+            DataBinding.FieldName = 'NomeEmpresa'
+            Width = 254
+          end
+          object grdMasterViewContaId: TcxGridDBColumn
+            DataBinding.FieldName = 'ContaId'
+          end
+          object grdMasterViewKeyId: TcxGridDBColumn
+            DataBinding.FieldName = 'KeyId'
+            Width = 67
+          end
+          object grdMasterViewAtiva: TcxGridDBColumn
+            DataBinding.FieldName = 'Ativa'
+            PropertiesClassName = 'TcxImageComboBoxProperties'
+            Properties.Items = <
+              item
+                Description = 'Sim'
+                ImageIndex = 0
+                Value = 'S'
+              end
+              item
+                Description = 'Nao'
+                Value = 'N'
+              end>
+            Width = 49
+          end
+          object grdMasterViewDatUltLeituraDescargaWS: TcxGridDBColumn
+            DataBinding.FieldName = 'DatUltLeituraDescargaWS'
+            Width = 76
+          end
+          object grdMasterViewSync: TcxGridDBColumn
+            DataBinding.FieldName = 'Sync'
+            PropertiesClassName = 'TcxImageComboBoxProperties'
+            Properties.Items = <
+              item
+                Description = 'Sim'
+                ImageIndex = 0
+                Value = 'S'
+              end
+              item
+                Description = 'Nao'
+                Value = 'N'
+              end>
+            Width = 54
+          end
+          object grdMasterViewPercAtesto: TcxGridDBColumn
+            DataBinding.FieldName = 'PercAtesto'
+          end
+          object grdMasterViewHostURL: TcxGridDBColumn
+            DataBinding.FieldName = 'HostURL'
+          end
+          object grdMasterViewLog: TcxGridDBColumn
+            DataBinding.FieldName = 'Log'
+          end
+          object grdMasterViewProxyHost: TcxGridDBColumn
+            DataBinding.FieldName = 'ProxyHost'
+          end
+          object grdMasterViewProxyPorta: TcxGridDBColumn
+            DataBinding.FieldName = 'ProxyPorta'
+          end
+          object grdMasterViewProxyUsuario: TcxGridDBColumn
+            DataBinding.FieldName = 'ProxyUsuario'
+          end
+          object grdMasterViewProxySenha: TcxGridDBColumn
+            DataBinding.FieldName = 'ProxySenha'
+          end
+          object grdMasterViewIntervalo: TcxGridDBColumn
+            DataBinding.FieldName = 'Intervalo'
+          end
+          object grdMasterViewProxyUsar: TcxGridDBColumn
+            DataBinding.FieldName = 'ProxyUsar'
+          end
+          object grdMasterViewDatIniLeituraDescargaWS: TcxGridDBColumn
+            DataBinding.FieldName = 'DatIniLeituraDescargaWS'
+          end
+          object grdMasterViewPathArqDescarga: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqDescarga'
+          end
+          object grdMasterViewEnviarNotifAtesto: TcxGridDBColumn
+            DataBinding.FieldName = 'EnviarNotifAtesto'
+          end
+          object grdMasterViewGeraTotvsDatasul: TcxGridDBColumn
+            DataBinding.FieldName = 'GeraTotvsDatasul'
+          end
+          object grdMasterViewGeraTotvsRm: TcxGridDBColumn
+            DataBinding.FieldName = 'GeraTotvsRm'
+          end
+          object grdMasterViewGeraMagis: TcxGridDBColumn
+            DataBinding.FieldName = 'GeraMagis'
+          end
+          object grdMasterViewGeraMeta: TcxGridDBColumn
+            DataBinding.FieldName = 'GeraMeta'
+          end
+          object grdMasterViewGeraSiga: TcxGridDBColumn
+            DataBinding.FieldName = 'GeraSiga'
+          end
+          object grdMasterViewVerDatasul: TcxGridDBColumn
+            DataBinding.FieldName = 'VerDatasul'
+          end
+          object grdMasterViewVerRm: TcxGridDBColumn
+            DataBinding.FieldName = 'VerRm'
+          end
+          object grdMasterViewVerMagis: TcxGridDBColumn
+            DataBinding.FieldName = 'VerMagis'
+          end
+          object grdMasterViewVerMeta: TcxGridDBColumn
+            DataBinding.FieldName = 'VerMeta'
+          end
+          object grdMasterViewVerSiga: TcxGridDBColumn
+            DataBinding.FieldName = 'VerSiga'
+          end
+          object grdMasterViewGeraScl: TcxGridDBColumn
+            DataBinding.FieldName = 'GeraScl'
+          end
+          object grdMasterViewVerScl: TcxGridDBColumn
+            DataBinding.FieldName = 'VerScl'
+          end
+          object grdMasterViewPathArqDatasul: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqDatasul'
+          end
+          object grdMasterViewPathArqRm: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqRm'
+          end
+          object grdMasterViewPathArqMagis: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqMagis'
+          end
+          object grdMasterViewPathArqMeta: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqMeta'
+          end
+          object grdMasterViewPathArqSiga: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqSiga'
+          end
+          object grdMasterViewPathArqScl: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqScl'
+          end
+          object grdMasterViewParContaId1: TcxGridDBColumn
+            DataBinding.FieldName = 'ParContaId1'
+          end
+          object grdMasterViewPathArqCarga: TcxGridDBColumn
+            DataBinding.FieldName = 'PathArqCarga'
+          end
+          object grdMasterViewIntervaloCarga: TcxGridDBColumn
+            DataBinding.FieldName = 'IntervaloCarga'
+          end
+          object grdMasterViewCargaMultiEmpresa: TcxGridDBColumn
+            DataBinding.FieldName = 'CargaMultiEmpresa'
+          end
+          object grdMasterViewPathCargaApi: TcxGridDBColumn
+            DataBinding.FieldName = 'PathCargaApi'
+          end
+          object grdMasterViewDropTable: TcxGridDBColumn
+            DataBinding.FieldName = 'DropTable'
+          end
+          object grdMasterViewParColetasHoje: TcxGridDBColumn
+            DataBinding.FieldName = 'ParColetasHoje'
+          end
+          object grdMasterViewPathMapRota: TcxGridDBColumn
+            DataBinding.FieldName = 'PathMapRota'
+          end
+          object grdMasterViewPatMapColetor: TcxGridDBColumn
+            DataBinding.FieldName = 'PatMapColetor'
+          end
+          object grdMasterViewPatMapAnalise: TcxGridDBColumn
+            DataBinding.FieldName = 'PatMapAnalise'
+          end
+          object grdMasterViewPatMapExtrato: TcxGridDBColumn
+            DataBinding.FieldName = 'PatMapExtrato'
+          end
+          object grdMasterViewPatMapFazenda: TcxGridDBColumn
+            DataBinding.FieldName = 'PatMapFazenda'
+          end
+          object grdMasterViewPatMapItinerario: TcxGridDBColumn
+            DataBinding.FieldName = 'PatMapItinerario'
+          end
+          object grdMasterViewPatMapLinha: TcxGridDBColumn
+            DataBinding.FieldName = 'PatMapLinha'
+          end
+          object grdMasterViewPatMapMotivo: TcxGridDBColumn
+            DataBinding.FieldName = 'PatMapMotivo'
+          end
+          object grdMasterViewPatMapProdutor: TcxGridDBColumn
+            DataBinding.FieldName = 'PatMapProdutor'
+          end
+          object grdMasterViewPatMapGrupoRota: TcxGridDBColumn
+            DataBinding.FieldName = 'PatMapGrupoRota'
+          end
+          object grdMasterViewPatMapTanque: TcxGridDBColumn
+            DataBinding.FieldName = 'PatMapTanque'
+          end
+          object grdMasterViewPatMapTag: TcxGridDBColumn
+            DataBinding.FieldName = 'PatMapTag'
+          end
+          object grdMasterViewPatMapTecnico: TcxGridDBColumn
+            DataBinding.FieldName = 'PatMapTecnico'
+          end
+          object grdMasterViewPatMapVinculado: TcxGridDBColumn
+            DataBinding.FieldName = 'PatMapVinculado'
+          end
+          object grdMasterViewPatMapVeiculo: TcxGridDBColumn
+            DataBinding.FieldName = 'PatMapVeiculo'
+          end
+        end
       end
     end
     inherited tabsCadastro: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 24
-      ExplicitWidth = 695
-      ExplicitHeight = 407
+      ExplicitWidth = 598
+      ExplicitHeight = 510
       inherited pnlMaster: TPanel
         Width = 598
-        Height = 503
+        Height = 510
+        ExplicitWidth = 598
+        ExplicitHeight = 510
         object GroupBox1: TGroupBox
           AlignWithMargins = True
           Left = 3
@@ -34,7 +370,6 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Align = alTop
           Caption = '| Conta |'
           TabOrder = 0
-          ExplicitWidth = 689
           object cxLabel5: TLabel
             Left = 4
             Top = 54
@@ -190,7 +525,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
             Transparent = True
             Width = 82
           end
-          object cxDBCheckBox1: TcxDBCheckBox
+          object ckbCtaAtiva: TcxDBCheckBox
             Left = 450
             Top = 143
             Caption = 'ATIVO'
@@ -238,7 +573,6 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Align = alTop
           Caption = '| Proxy |'
           TabOrder = 1
-          ExplicitWidth = 689
           object cxLabel4: TLabel
             Left = 101
             Top = 21
@@ -356,7 +690,6 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Align = alTop
           Caption = '| Formato Arquivos Saida |'
           TabOrder = 2
-          ExplicitWidth = 689
           object cbxMagis: TcxDBImageComboBox
             Left = 221
             Top = 42
@@ -609,9 +942,6 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Align = alTop
           Caption = '| Atesto |'
           TabOrder = 3
-          ExplicitLeft = 0
-          ExplicitTop = 345
-          ExplicitWidth = 695
           object cxLabel11: TLabel
             Left = 7
             Top = 22
@@ -661,12 +991,10 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Left = 3
           Top = 405
           Width = 592
-          Height = 95
+          Height = 102
           Align = alClient
           Caption = '| Intervalos |'
           TabOrder = 4
-          ExplicitWidth = 689
-          ExplicitHeight = 137
           object lbl6: TLabel
             Left = 10
             Top = 50
@@ -729,7 +1057,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
             TabOrder = 1
             Width = 119
           end
-          object cxDBCheckBox2: TcxDBCheckBox
+          object ckbColetaHoje: TcxDBCheckBox
             Left = 414
             Top = 23
             Caption = 'Coletas Hoje'
@@ -757,7 +1085,6 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
     object tabsArquivos: TTabSheet
       Caption = 'Arquivos'
       ImageIndex = 2
-      ExplicitWidth = 695
       object s: TGroupBox
         AlignWithMargins = True
         Left = 3
@@ -767,9 +1094,6 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
         Align = alTop
         Caption = '| Diretorio de Arquivos de Saida |'
         TabOrder = 0
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 695
         object lbl1: TLabel
           Left = 16
           Top = 59
@@ -863,79 +1187,72 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Style = [fsBold]
           ParentFont = False
         end
-        object cxDBShellComboBox1: TcxDBShellComboBox
+        object ckbPathDatasul: TcxDBShellComboBox
           Left = 16
           Top = 37
           DataBinding.DataField = 'PathArqDatasul'
           DataBinding.DataSource = dsMaster
           Properties.Root.BrowseFolder = bfCustomPath
-          Properties.Root.CustomPath = 'c:\'
           Properties.ShowFullPath = sfpAlways
           TabOrder = 0
           Width = 489
         end
-        object cxDBShellComboBox2: TcxDBShellComboBox
+        object ckbPathTotsRm: TcxDBShellComboBox
           Left = 16
           Top = 75
           DataBinding.DataField = 'PathArqRm'
           DataBinding.DataSource = dsMaster
           Properties.Root.BrowseFolder = bfCustomPath
-          Properties.Root.CustomPath = 'c:\'
           Properties.ShowFullPath = sfpAlways
           TabOrder = 1
           Width = 489
         end
-        object cxDBShellComboBox3: TcxDBShellComboBox
+        object ckbPathMagistech: TcxDBShellComboBox
           Left = 16
           Top = 118
           DataBinding.DataField = 'PathArqMagis'
           DataBinding.DataSource = dsMaster
           Properties.Root.BrowseFolder = bfCustomPath
-          Properties.Root.CustomPath = 'c:\'
           Properties.ShowFullPath = sfpAlways
           TabOrder = 2
           Width = 489
         end
-        object cxDBShellComboBox4: TcxDBShellComboBox
+        object ckbPathWebmeta: TcxDBShellComboBox
           Left = 16
           Top = 159
           DataBinding.DataField = 'PathArqMeta'
           DataBinding.DataSource = dsMaster
           Properties.Root.BrowseFolder = bfCustomPath
-          Properties.Root.CustomPath = 'c:\'
           Properties.ShowFullPath = sfpAlways
           TabOrder = 3
           Width = 489
         end
-        object cxDBShellComboBox5: TcxDBShellComboBox
+        object ckbPathSiga: TcxDBShellComboBox
           Left = 14
           Top = 202
           DataBinding.DataField = 'PathArqSiga'
           DataBinding.DataSource = dsMaster
           Properties.Root.BrowseFolder = bfCustomPath
-          Properties.Root.CustomPath = 'c:\'
           Properties.ShowFullPath = sfpAlways
           TabOrder = 4
           Width = 489
         end
-        object cxDBShellComboBox6: TcxDBShellComboBox
+        object ckbPathScl: TcxDBShellComboBox
           Left = 14
           Top = 248
           DataBinding.DataField = 'PathArqScl'
           DataBinding.DataSource = dsMaster
           Properties.Root.BrowseFolder = bfCustomPath
-          Properties.Root.CustomPath = 'c:\'
           Properties.ShowFullPath = sfpAlways
           TabOrder = 5
           Width = 489
         end
-        object cxDBShellComboBox7: TcxDBShellComboBox
+        object ckbPathAtesto: TcxDBShellComboBox
           Left = 16
           Top = 294
           DataBinding.DataField = 'PathArqDescarga'
           DataBinding.DataSource = dsMaster
           Properties.Root.BrowseFolder = bfCustomPath
-          Properties.Root.CustomPath = 'c:\'
           Properties.ShowFullPath = sfpAlways
           TabOrder = 6
           Width = 489
@@ -946,13 +1263,10 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
         Left = 3
         Top = 346
         Width = 592
-        Height = 154
+        Height = 161
         Align = alClient
         Caption = '| Diretorio de Arquivos de Carga |'
         TabOrder = 1
-        ExplicitTop = 343
-        ExplicitWidth = 185
-        ExplicitHeight = 105
         object sLabel6: TLabel
           Left = 10
           Top = 58
@@ -981,24 +1295,22 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Style = [fsBold]
           ParentFont = False
         end
-        object cxDBShellComboBox8: TcxDBShellComboBox
+        object ckbPathCarga: TcxDBShellComboBox
           Left = 16
           Top = 39
           DataBinding.DataField = 'PathArqCarga'
           DataBinding.DataSource = dsMaster
           Properties.Root.BrowseFolder = bfCustomPath
-          Properties.Root.CustomPath = 'c:\'
           Properties.ShowFullPath = sfpAlways
           TabOrder = 0
           Width = 489
         end
-        object cxDBShellComboBox9: TcxDBShellComboBox
+        object ckbpathDump: TcxDBShellComboBox
           Left = 14
           Top = 77
           DataBinding.DataField = 'PathCargaApi'
           DataBinding.DataSource = dsMaster
           Properties.Root.BrowseFolder = bfCustomPath
-          Properties.Root.CustomPath = 'c:\'
           Properties.ShowFullPath = sfpAlways
           TabOrder = 1
           Width = 489
@@ -1008,22 +1320,575 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
     object tabsCarga: TTabSheet
       Caption = 'Mapas Importacao (Carga)'
       ImageIndex = 3
-      ExplicitWidth = 695
+      object GroupBox7: TGroupBox
+        Left = 0
+        Top = 0
+        Width = 598
+        Height = 510
+        Align = alClient
+        Caption = '| Localizacao dos Mapas |'
+        TabOrder = 0
+        object lbl24: TLabel
+          Left = 6
+          Top = 18
+          Width = 47
+          Height = 13
+          Caption = 'An'#225'lises'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lbl10: TLabel
+          Left = 6
+          Top = 50
+          Width = 54
+          Height = 13
+          Caption = 'Coletores'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lbl18: TLabel
+          Left = 6
+          Top = 82
+          Width = 48
+          Height = 13
+          Caption = 'Extratos'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lbl9: TLabel
+          Left = 6
+          Top = 114
+          Width = 53
+          Height = 13
+          Caption = 'Fazendas'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lbl15: TLabel
+          Left = 6
+          Top = 146
+          Width = 60
+          Height = 13
+          Caption = 'Itiner'#225'rios'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lbl22: TLabel
+          Left = 6
+          Top = 179
+          Width = 30
+          Height = 13
+          Caption = 'Linha'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lbl16: TLabel
+          Left = 6
+          Top = 211
+          Width = 123
+          Height = 13
+          Caption = 'Motivo Cancelamento'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lbl23: TLabel
+          Left = 6
+          Top = 243
+          Width = 63
+          Height = 13
+          Caption = 'Produtores'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lbl19: TLabel
+          Left = 5
+          Top = 275
+          Width = 87
+          Height = 13
+          Caption = 'Grupos de Rota'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lbl13: TLabel
+          Left = 7
+          Top = 307
+          Width = 48
+          Height = 13
+          Caption = 'Tanques'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lbl11: TLabel
+          Left = 6
+          Top = 340
+          Width = 111
+          Height = 13
+          Caption = 'Tanques Vinculados'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lbl20: TLabel
+          Left = 6
+          Top = 372
+          Width = 46
+          Height = 13
+          Caption = 'Ve'#237'culos'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lbl14: TLabel
+          Left = 7
+          Top = 405
+          Width = 54
+          Height = 13
+          Caption = 'Tag (NFC)'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lbl21: TLabel
+          Left = 7
+          Top = 437
+          Width = 27
+          Height = 13
+          Caption = 'Rota'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lbl12: TLabel
+          Left = 7
+          Top = 469
+          Width = 49
+          Height = 13
+          Caption = 'T'#233'cnicos'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnMapRota: TSpeedButton
+          Left = 551
+          Top = 448
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnMapColetor: TSpeedButton
+          Left = 551
+          Top = 63
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnMapExtrato: TSpeedButton
+          Left = 551
+          Top = 95
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+          OnDblClick = btnMapExtratoClick
+        end
+        object btnMapFazenda: TSpeedButton
+          Left = 550
+          Top = 127
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnMapItinerario: TSpeedButton
+          Left = 551
+          Top = 160
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnMapLinha: TSpeedButton
+          Left = 551
+          Top = 192
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnMapMotivo: TSpeedButton
+          Left = 551
+          Top = 222
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnMapProdutor: TSpeedButton
+          Left = 551
+          Top = 256
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnMatGrupoRota: TSpeedButton
+          Left = 551
+          Top = 291
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnMapTanque: TSpeedButton
+          Left = 551
+          Top = 322
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnMapVinculado: TSpeedButton
+          Left = 551
+          Top = 355
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnMapVeiculo: TSpeedButton
+          Left = 548
+          Top = 384
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnMapTag: TSpeedButton
+          Left = 548
+          Top = 420
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnMapTecnico: TSpeedButton
+          Left = 553
+          Top = 483
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object btnMapAnalise: TSpeedButton
+          Left = 548
+          Top = 31
+          Width = 23
+          Height = 22
+          Action = acFindFile
+          Flat = True
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object edtMapColetor: TcxDBTextEdit
+          Left = 7
+          Top = 64
+          DataBinding.DataField = 'PatMapColetor'
+          DataBinding.DataSource = dsMaster
+          Properties.ClearKey = 46
+          TabOrder = 0
+          OnClick = btnMapColetorClick
+          Width = 541
+        end
+        object edtMapExtrato: TcxDBTextEdit
+          Left = 7
+          Top = 96
+          DataBinding.DataField = 'PatMapExtrato'
+          DataBinding.DataSource = dsMaster
+          TabOrder = 1
+          Width = 541
+        end
+        object edtMapRota: TcxDBTextEdit
+          Left = 4
+          Top = 449
+          DataBinding.DataField = 'PathMapRota'
+          DataBinding.DataSource = dsMaster
+          TabOrder = 2
+          OnClick = btnMatGrupoRotaClick
+          Width = 541
+        end
+        object edtMapTecnico: TcxDBTextEdit
+          Left = 6
+          Top = 484
+          DataBinding.DataField = 'PatMapTecnico'
+          DataBinding.DataSource = dsMaster
+          TabOrder = 3
+          OnClick = btnMapTecnicoClick
+          Width = 541
+        end
+        object edtMapFazenda: TcxDBTextEdit
+          Left = 6
+          Top = 128
+          DataBinding.DataField = 'PatMapFazenda'
+          DataBinding.DataSource = dsMaster
+          TabOrder = 4
+          Width = 541
+        end
+        object edtMapItinerario: TcxDBTextEdit
+          Left = 7
+          Top = 160
+          DataBinding.DataField = 'PatMapItinerario'
+          DataBinding.DataSource = dsMaster
+          TabOrder = 5
+          OnClick = btnMapItinerarioClick
+          Width = 541
+        end
+        object edtMapLInha: TcxDBTextEdit
+          Left = 6
+          Top = 193
+          DataBinding.DataField = 'PatMapLinha'
+          DataBinding.DataSource = dsMaster
+          TabOrder = 6
+          Width = 541
+        end
+        object edtMapMotivo: TcxDBTextEdit
+          Left = 7
+          Top = 224
+          DataBinding.DataField = 'PatMapMotivo'
+          DataBinding.DataSource = dsMaster
+          TabOrder = 7
+          OnClick = btnMapMotivoClick
+          Width = 541
+        end
+        object edtMapProdutor: TcxDBTextEdit
+          Left = 7
+          Top = 256
+          DataBinding.DataField = 'PatMapProdutor'
+          DataBinding.DataSource = dsMaster
+          TabOrder = 8
+          Width = 541
+        end
+        object edtMapGrupoRota: TcxDBTextEdit
+          Left = 7
+          Top = 288
+          DataBinding.DataField = 'PatMapGrupoRota'
+          DataBinding.DataSource = dsMaster
+          TabOrder = 9
+          OnClick = btnMatGrupoRotaClick
+          Width = 541
+        end
+        object edtMapTanque: TcxDBTextEdit
+          Left = 7
+          Top = 321
+          DataBinding.DataField = 'PatMapTanque'
+          DataBinding.DataSource = dsMaster
+          TabOrder = 10
+          Width = 541
+        end
+        object edtMapVinculado: TcxDBTextEdit
+          Left = 7
+          Top = 353
+          DataBinding.DataField = 'PatMapVinculado'
+          DataBinding.DataSource = dsMaster
+          TabOrder = 11
+          OnClick = btnMapVinculadoClick
+          Width = 541
+        end
+        object edtMapVeiculo: TcxDBTextEdit
+          Left = 7
+          Top = 385
+          DataBinding.DataField = 'PatMapVeiculo'
+          DataBinding.DataSource = dsMaster
+          TabOrder = 12
+          OnClick = btnMapVeiculoClick
+          Width = 541
+        end
+        object edtMapTag: TcxDBTextEdit
+          Left = 7
+          Top = 417
+          DataBinding.DataField = 'PatMapTag'
+          DataBinding.DataSource = dsMaster
+          TabOrder = 13
+          Width = 541
+        end
+        object edtMapAnalise: TcxDBTextEdit
+          Left = 4
+          Top = 32
+          DataBinding.DataField = 'PatMapAnalise'
+          DataBinding.DataSource = dsMaster
+          Properties.ClearKey = 46
+          TabOrder = 14
+          Width = 541
+        end
+      end
     end
   end
   inherited stsbManutencao: TStatusBar
-    Top = 596
+    Top = 603
     Width = 606
+    ExplicitTop = 603
+    ExplicitWidth = 606
   end
   inherited tbCadastro: TJvToolBar
     Width = 606
+    ExplicitWidth = 606
   end
   inherited pnlCabecalho: TJvGradientHeaderPanel
     Width = 606
+    ExplicitWidth = 606
   end
   inherited acManutencao: TActionList
     Left = 396
     Top = 3
+    object acFindFile: TAction [29]
+      Hint = 'Localizar o Arquivo'
+      ImageIndex = 4
+      OnExecute = acFindFileExecute
+    end
   end
   inherited dsMaster: TDataSource
     DataSet = MlkPrincipalDTM.cdsContas
@@ -1050,7 +1915,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
     Left = 496
     Top = 3
     Bitmap = {
-      494C01010D000E00140010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010D000E001C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000004000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000AC6A2BFFE1A53CFFE6C58FFFF2E0
@@ -1584,5 +2449,11 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
       C001000000000000C001000000000000C001000080018001C0070000C0038001
       C00F0000E007C003C01F0001F00FF00F00000000000000000000000000000000
       000000000000}
+  end
+  object opdFindFile: TOpenTextFileDialog
+    DefaultExt = '*.ini'
+    InitialDir = '..'
+    Options = [ofReadOnly, ofHideReadOnly, ofEnableSizing]
+    Left = 352
   end
 end

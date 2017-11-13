@@ -80,6 +80,7 @@ function GeraGUID:String;
 function LimpaGUID(GUID: string): string;
 function TrocaVirgPPto(Valor: string): String;
 function TrocaPtoPVirg(Valor: string): String;
+function arraystring(S: String;  separador: char): TStringList;
 
 implementation
 
@@ -740,6 +741,35 @@ begin
   if Pos(Valor[i], CPonto) <> 0 then
     Valor[i] := CVirugula;
   Result := Valor;
+end;
+
+// Devolve um array de strings
+function arraystring(S: String;
+  separador: char): TStringList;
+var
+  conta : integer; // variáveis auxiliares
+  resultado : TStringList; // variáveis auxiliares
+  Saux : string; // variáveis auxiliares
+begin
+    resultado := TStringList.Create; // inicializa variavel
+    conta := pos(separador,S); //pega posição do separador
+    if conta <> 0 then begin  // verifica se existe o separador caso contrario trata apenas //como uma única linha
+        while trim(S) <> '' do begin // enquanto S não for nulo executa
+            Saux := copy(S,1,conta-1); // Variável Saux recebe primeiro valor
+            delete(S,1,conta); //deleta primeiro valor
+            if conta = 0 then begin //se não ouver mais separador Saux equivale ao resto da //linha
+                Saux := S + '  ';
+                S := '';
+            end;
+        resultado.Add(Saux); // adiciona linhas na string lista
+        conta := pos(separador,S); //pega posição do separador
+        end;
+        end
+    else begin
+        Saux := S;
+        resultado.Add(Saux);
+    end;
+    Result := resultado; // retorna resultado como uma lista indexada
 end;
 
 end.

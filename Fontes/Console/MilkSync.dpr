@@ -8,7 +8,9 @@ uses
   ufrmCadastro in '..\FWDelphi_Comum\ufrmCadastro.pas' {frmCadastro},
   uMlkParmetrosFRM in 'uMlkParmetrosFRM.pas' {MlkParmetrosFRM},
   uGlobal in '..\FWDelphi_Comum\uGlobal.pas',
-  uConstantesComuns in '..\..\..\..\FWDelphiS2\Comum\uConstantesComuns.pas';
+  uConstantesComuns in '..\..\..\..\FWDelphiS2\Comum\uConstantesComuns.pas',
+  uVSSCLRotaComum in '..\Comum\uVSSCLRotaComum.pas',
+  uLkJSON in '..\Comum\uLkJSON.pas';
 
 {$R *.res}
 

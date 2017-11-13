@@ -5,7 +5,257 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP,uJSON,
   JvStrings, JvScheduledEvents, IdMultiPartFormData, IdSNTP, DBClient, variants, DB, IniFiles, Dialogs,
-  JvComponentBase, JvCSVBaseControls, JvCsvData, Controls, ShellAPI, Forms ;
+  JvComponentBase, JvCSVBaseControls, JvCsvData, Controls, ShellAPI, Forms, WebAdapt ;
+
+type
+  TViagem = class
+    Id: Integer;
+    Index: Integer;
+    DatUltColeta: TDateTime;
+    QtdeColetado: Integer;
+    QtdeArmazenado:   Integer;
+    QtdeDescargas: Integer;
+    RotaId: Integer;
+    RotaCodigo: string;
+    DatAbertura: TDateTime;
+    DatFechamento: TDateTime;
+    Liberada: Boolean;
+    GerouDatasul: string;
+    GerouRm: string;
+    GerouMagis: string;
+    GerouMeta: string;
+    GerouSiga: string;
+    GerouScl: string;
+    Registrada: Boolean;
+    Coletor: string;
+    Veiculo: string;
+    ComunitarioPendente: string;
+  end;
+
+  TListaViagem = class(TList)
+  end;
+type
+  TVisita = class
+    id: Integer;
+    viagem_id: Integer;
+    itinerario_id: Integer;
+    conta_id: Integer;
+    rota_id: Integer;
+    linha_id: Integer;
+    fazenda_id: Integer;
+    dt_push: TDateTime;
+    dt_inicio: TDateTime;
+    dt_fim: TDateTime;
+    motivo: string[255];
+    cancelado: string[1];
+    total_coleta: Integer;
+  end;
+  TListaVisita = class(TObjectList)
+    public
+      function getVisitaById(id: Integer): TVisita;
+  end;
+
+type
+  TColeta = class
+    Id: Integer;
+    dt_push: TDateTime;
+    parada_id: Integer;
+    viagem_id: Integer;
+    coletor_id: Integer;
+    tanque_id: Integer;
+    dt_coleta: TDateTime;
+    CodigoFazenda: string[15];
+    Fazenda: string[100];
+    CodigoProdutor: string[15];
+    Produtor: string[100];
+    tanque: string[45];
+    quantidade: Integer;
+    regua: Double;
+    alizarol: string[1];
+    amostra: string[15];
+    contraprova: string[45];
+    temperatura: Double;
+    coletada: string[1];
+    CodigoLinha: string[15];
+    NomeLinha: string[100];
+    CodigoRota: string[15];
+    Rota: string[100];
+    Veiculo: string[08];
+    CodigoMotorista: string[15];
+    NomeMotorista: string[100];
+    dt_edicao: TDateTime;
+    boca: string[5];
+    public
+      function toString(separator: Char; colNames: Boolean = True): string;
+  end;
+
+  TListaColeta = Class(TObjectList)
+    public
+    function getColetaById(id: Integer):TColeta;
+  end;
+
+type
+ TRota = class
+   id: Integer;
+   Codigo: string[15];
+   Nome: string[100];
+ end;
+type
+ TListaRota = class(TObjectList)
+   public
+   function getRotaByCodigo(Codigo: string):TRota;
+ end;
+type
+ TLinha = class
+   id: Integer;
+   Codigo: string[15];
+   Nome: string[100];
+   Distancia : integer;
+ end;
+ TListaLinha = class(TObjectList)
+   public
+   function getLinhaByCodigo(Codigo: string):TLinha;
+ end;
+type
+  TProdutor = class
+  id: Integer;
+  Codigo: string[15];
+  Nome: string[100];
+  Doc: String[15];
+ end;
+ TListaProdutor = class(TObjectList)
+   public
+   function getProdutorByCodigo(Codigo: string):TProdutor;
+ end;
+type
+  TFazenda = class
+  id: Integer;
+  Codigo: string[15];
+  Nome: string[100];
+  produtor: string[15];
+ end;
+ TListaFazenda = class(TObjectList)
+   public
+   function getFazendaByCodigo(Codigo: string):TFazenda;
+ end;
+ type
+  TColetor = class
+  id: Integer;
+  Codigo: string[15];
+  Nome: string[100];
+ end;
+ TListaColetor = class(TObjectList)
+   public
+   function getColetorByCodigo(Codigo: string):TColetor;
+
+ end;
+type
+  TVeiculo = class
+  id: Integer;
+  Codigo: string[15];
+  Placa: string[08];
+ end;
+ TListaVeiculo = class(TObjectList)
+   public
+   function getVeiculoByCodigo(Codigo: string):TVeiculo;
+ end;
+
+ type
+   TRegViagem = class
+     id: Integer;
+     index: Integer;
+     veiculo_id: Integer;
+     coletor_id: Integer;
+     linha_id: Integer;
+     rota_id: Integer;
+     conta_id: Integer;
+     tecnico_id: Integer;
+     dt_fechamento: TDateTime;
+     dt_push: TDateTime;
+     dt_abertura: TDateTime;
+     km_inicial: Integer;
+     km_final: Integer;
+     km_distancia: Integer;
+     km_justificativa : String;
+     descarrega: string[01];
+     dt_descarga: TDateTime;
+     liberada: string[1];
+     dt_liberacao: TDateTime;
+     Rota: string[15];
+     Coletor: string[15];
+     Linha: string[15];
+     Veiculo: string[15];
+     ComunitarioPendente: string;
+     bocas: string;
+   end;
+   TListaRegViagem = class(TObjectList)
+     public
+       function getViagemById(id: Integer): TRegViagem;
+   end;
+type
+  TSigaProdutor = class
+    idRegistro: string[01];
+    nomeProdutor: string;
+    codigoProdutor: string;
+    filiaProdutor: string;
+    status: string[01];
+    public
+      function toString(separador: Char):string;
+  end;
+type
+  TSigaTransportador = class
+    idRegistro: string[01];
+    codigoTransportador: string;
+    nomeTransportador: string;
+    public
+      function toString(separador: Char):string;
+  end;
+type
+  TSigaEquipamentos = class
+    idRegistro: string[01];
+    codigoEquipamento: string;
+    placaChassi: string;
+    tipo: string[30];
+    capacidade: Integer;
+    public
+     function toString(separador: Char):string;
+  end;
+type
+  TSigaColetaIndividual = class
+    idRegistro: string[01];
+    veiculo: string;
+    recepcao: TDateTime;
+    dtColeta: TDateTime;
+    fornecedor: string;
+    filial: string;
+    volume: Integer;
+    temperatura: Double;
+    amostra: string[01];
+    alizarol: string[01];
+    amostraRede: string[01];
+    public
+      function toString(separador: Char): string;
+  end;
+type
+  TSigaViagem = class
+    idRegistro : string[01];
+    rota: string;
+    ramal: string;
+    inicio: TDateTime;
+    final: TDateTime;
+    equipamento: string;
+    transportador: string;
+    volumecoleta: Integer;
+    dtRecepcao: TDateTime;
+    recebido: string;
+    motivo: string;
+    temperatura: Double;
+    volumeEfetivo: Integer;
+    alizarol: string;
+    fimDescarga: TDateTime;
+  public
+    function toString(Separador: Char): string;
+  end;
 
 type
 
@@ -21,23 +271,14 @@ type
     IdConta: string;
     ChaveContas: array [1..6] of string;
     ChaveERP : array [1..6] of string;
-    IdConta1: string;    // Chaves das contas no getMilk
-    IdConta2: string;
-    IdConta3: string;
-    IdConta4: string;
-    IdConta5: string;
-    IdConta6: string;
-    KeyId1 : string;   // Associação das chaves do getMilk com o ID do ERP cliente
-    KeyId2 : string;
-    KeyId3 : string;
-    KeyId4 : string;
-    KeyId5 : string;
-    KeyId6 : string;
+    KeyId  : string;   // Associação das chaves do getMilk com o ID do ERP cliente
+    Ativa : string[1];
+    Sync: string[1];
+    DropTable: string[1]; // Zera tabelas antes da sincronização ??
+    CargaMultiEmpresa: string[1];
     DatIniLeituraDescargaWS: TDateTime;
     DatUltLeituraDescargaWS: TDateTime;
     PathArqDatasul: string;
-    CargaMultiEmpresa: string[1];
-    DropTable: string[1]; // Zera tabelas antes da sincronização ??
     PathArqCarga: string;
     PathArqCargaApi: string; // Local da carga de conferencia  vinda da API
     PathArqRm: string;
@@ -46,6 +287,21 @@ type
     PathArqSiga: string;
     PathArqScl: string;
     PathArqDescarga: string;
+    PatMapColetor : string;
+    PatMapRota : string;
+    PatMapAnalise : string;
+    PatMapExtrato : string;
+    PatMapFazenda : string;
+    PatMapItinerario : string;
+    PatMapLinha : string;
+    PatMapMotivo : string;
+    PatMapProdutor : string;
+    PatMapGrupoRota : string;
+    PatMapTanque : string;
+    PatMapTag : string;
+    PatMapTecnico : string;
+    PatMapVinculado : string;
+    PatMapVeiculo : string;
     PercAtesto: Double;
     UsarProxy: Boolean;
     PathBase: string;
@@ -70,6 +326,7 @@ type
     VerSiga : string[1];
     VerScl : string[1];
     ColetasHoje: string[1];
+
   end;
 
   TDadosRetorno = record
@@ -125,8 +382,8 @@ function PostMetodoJSON(URL: string; Parametros: TStringList): TDadosRetorno;
 
 // Chamadas REST
 procedure AjustarHora;
-function readDescarga(DataInicio, DataTermino: string): TDadosRetorno;
-function readViagem(DataInicio, DataTermino: string): TDadosRetorno;
+function readDescarga(ContaId: Integer; DataInicio, DataTermino: string): TDadosRetorno;
+function readViagem(ContaId: Integer; DataInicio, DataTermino: string): TDadosRetorno;
 function sendNotificacaoRota(CodRota, Mensagem: string): TDadosRetorno;
 function MakeParConsulta(aContaId: string;aDataInicio, aDataFinal:TDateTime; aSync: string; metodo: string; aComunitario:string = '9'): TDadosRetorno;
 function xPostMetodoJSON(URL: string; Parametros: TStringList): TDadosRetorno;
@@ -174,6 +431,15 @@ function VersaoAplicativo(Executavel: string): string;
 // Liberar memoria
 procedure TrimAppMemorySize(pReinicia: Boolean; Programa:string);
 
+// Controle viagem, log e dataas
+procedure PersistirLogViagem(Viagem: TViagem);
+procedure GerarArquivoViagem(Viagem: TViagem);
+function GerarLinhaArquivo(ObjViagem: TViagem; TipoLinhaColeta: byte): string;
+procedure EnviarNotificacao(Viagem: TViagem; Mensagem: string);
+function GetData(Data: string): TDateTime;
+function GetDataHora(Data: string): TDateTime;
+function ValidaInt(Numero: string): Integer;
+
 
 var
   DadosConta: TDadosConta;
@@ -199,7 +465,7 @@ const
 
 implementation
 
-uses uRotinasComuns, Math, DateUtils, uLkJSON ;
+uses uRotinasComuns, Math, DateUtils, uLkJSON , uGlobal;
 
 function RetornoMetodoWSGET(URL: string): string;
 var
@@ -252,7 +518,7 @@ begin
   InserirMsgLog('PopularDadosConta');
   DadosConta.NomeUsuario := 'sclrota';
   DadosConta.SenhaUsuario := 'sclrota';
-
+ {
   // Chaves das contas no getMilk
   DadosConta.IdConta := cdsPar.FieldByName('ParContaId').AsString;
   DadosConta.IdConta1 := cdsPar.FieldByName('ParContaId1').AsString;
@@ -285,7 +551,7 @@ begin
   DadosConta.ChaveERP[4] := DadosConta.KeyId4;
   DadosConta.ChaveERP[5] := DadosConta.KeyId5;
   DadosConta.ChaveERP[6] := DadosConta.KeyId6;
-
+ }
   DadosConta.DatIniLeituraDescargaWS := cdsPar.FieldByName('ParDatIniLeituraDescargaWS').AsFloat;
   DadosConta.DatUltLeituraDescargaWS := cdsPar.FieldByName('ParDatUltLeituraDescargaWS').AsFloat;
   DadosConta.PathArqDescarga := cdsPar.FieldByName('ParPathArqDescarga').AsString;
@@ -430,7 +696,7 @@ begin
     AssignFile(ArqLog, NomeArqLog);
 
     try
-      if not ExisteArquivo(NomeArqLog) then
+      if not FileExists(NomeArqLog) then
         ReWrite(ArqLog);
       try
         Append(ArqLog);
@@ -452,19 +718,22 @@ begin
 end;
 
 
-function readDescarga(DataInicio, DataTermino: string): TDadosRetorno;
+function readDescarga(ContaId: Integer; DataInicio, DataTermino: string): TDadosRetorno;
 var
   memREST: TStringList;
+  xtoken: TTokenConta;
 begin
+  xtoken := GetToken(ContaId);
   Result.Metodo := 'readDescarga';
   Result.Excecao := False;
 
   memREST := TStringList.Create;
 
   try
-    memREST.Add('conta_id=' + DadosConta.IdConta);
+    memREST.Add('conta_id=' + IntToStr(ContaId));
     memREST.Add('dt_inicio=' + DataInicio);
     memREST.Add('dt_fim=' + DataTermino);
+    memREST.Add('Token=' + xtoken.Token);
     memREST.Add('sync=0');
 
     Result.Parametros := memREST.Text;
@@ -483,19 +752,22 @@ begin
   end;
 end;
 
-function readViagem(DataInicio, DataTermino: string): TDadosRetorno;
+function readViagem(ContaId: Integer;DataInicio, DataTermino: string): TDadosRetorno;
 var
   memREST: TStringList;
+  xToken: TTokenConta;
 begin
+  xToken := GetToken(ContaId);
   Result.Metodo := 'readViagem';
   Result.Excecao := False;
 
   memREST := TStringList.Create;
 
   try
-    memREST.Add('conta_id=' + DadosConta.IdConta);
+    memREST.Add('conta_id=' + IntToStr(ContaId));
     memREST.Add('dt_inicio=' + DataInicio);
     memREST.Add('dt_fim=' + DataTermino);
+    memREST.Add('token='+ xToken.Token);
     memREST.Add('sync=0');
 
     Result.Parametros := memREST.Text;
@@ -830,7 +1102,7 @@ function xPostMetodoJSON(URL: string; Parametros: TStringList): TDadosRetorno;
 var
   ValorJSON: TJSONObject;
 begin
-   ValorJSON := TJSONObject.Create(VRetornoMetodoWSPOST(URL, Parametros));
+   ValorJSON := TJSONObject.Create(RetornoMetodoWSPOST(URL, Parametros));
    Result.MsgWS := VRetornoMetodoWSPOST(URL, Parametros);
   // Retorno
   if ValorJSON.has('success') then
@@ -1687,6 +1959,11 @@ begin
       Result.Token := 'hg1209';
       Result.Doc := '66.301.334/0008-80';
     end;
+    20170:
+    begin
+      Result.Token := 'mi12-fg19-d154-4910'  ;
+      Result.Doc := '01.405.821/0001-70';
+    end;
     11132:
     Result.Token := 's0167r';
     82009:
@@ -1694,6 +1971,634 @@ begin
 
   end;
 end;
+// Funcoes das classes
+{ TListaVisita }
 
+function TListaVisita.getVisitaById(id: Integer): TVisita;
+var
+  _Index,i: Integer;
+  _objVisita: TVisita;
+begin
+  if Assigned(Self) then
+  begin
+    Self.First;
+    for i := 0 to Self.Count -1 do
+    begin
+      try
+        _objVisita := TVisita.Create;
+        Result := _objVisita;
+        _objVisita := Self.GetItem(i) as TVisita;
+        if _objVisita.Id = id then
+        begin
+          Result := _objVisita;
+          Break;
+        end
+      finally
+        ;
+      end;
+    end;
+  end;
+
+end;
+{ TColeta }
+function TColeta.toString( separator: Char;colNames: Boolean) : string;
+begin
+   Result := EmptyStr;
+   if colNames then
+   begin
+     Result :=
+     'id' + separator +
+     'dt_push' + separator +
+     'parada_id' + separator +
+     'coletor_id' + separator +
+     'tanque_id' + separator +
+     'dt_coleta' + separator +
+     'CodigoFazenda' + separator +
+     'Fazenda'+ separator +
+     'CodigoProdutor' + separator +
+     'Produtor' + separator +
+     'Tanque' + Separator +
+     'Quantidade' + separator +
+     'Regua' + separator +
+     'Alizarol' + separator +
+     'Amostra' + separator +
+     'Contraprova' + separator +
+     'Temperatura' + separator +
+     'Coletada' + Separator +
+     'CodigoLinha' + Separator +
+     'NomeLinha' + Separator +
+     'CodigoRota'+ separator +
+     'Rota' + separator +
+     'Veiculo' + separator +
+     'CodigoMotorista' + separator +
+     'NomeMotorista' + Separator +
+     'dt_edicao' +  #13+#10;
+   end;
+   Result := Result +
+    IntToStr(Self.Id) + separator +
+    FormatDateTime('dd/MM/yyy hh:mm:ss', Self.dt_push)+ separator +
+    IntToStr(Self.parada_id)+ separator +
+    IntToStr(Self.coletor_id) + separator +
+    IntToStr(Self.tanque_id) + separator +
+    FormatDateTime('dd/MM/yyy hh:mm:ss', Self.dt_coleta)+ separator +
+    Self.CodigoFazenda + separator +
+    Self.Fazenda + separator +
+    Self.CodigoProdutor + separator +
+    Self.Produtor + separator +
+    Self.tanque + separator +
+    IntToStr(Self.quantidade) + separator +
+    FormatFloat('###.##', Self.regua) + separator +
+    Self.alizarol + separator +
+    Self.amostra + separator +
+    Self.contraprova + Separator +
+    FormatFloat('##.##', Self.temperatura) + Separator +
+    Self.coletada + separator +
+    Self.CodigoLinha + separator +
+    Self.NomeLinha + Separator +
+    Self.CodigoRota + separator +
+    Self.Rota + Separator +
+    Self.Veiculo + Separator +
+    Self.CodigoMotorista + separator +
+    Self.NomeMotorista + separator +
+    FormatDateTime('dd/MM/yyy hh:mm:ss',Self.dt_edicao);
+end;
+{ TListaColeta }
+
+function TListaColeta.getColetaById(id: Integer): TColeta;
+var
+  _Index,i: Integer;
+  _objColeta: TColeta;
+begin
+  if Assigned(Self) then
+  begin
+    Self.First;
+    for i := 0 to Self.Count -1 do
+    begin
+      try
+        _objColeta := TColeta.Create;
+        Result := _objColeta;
+        _objColeta := Self.GetItem(i) as TColeta;
+        if _objColeta.Id = id then
+        begin
+          Result := _objColeta;
+          Break;
+        end
+      finally
+        ;
+      end;
+    end;
+
+  end;
+end;
+{ TListaRota }
+// Retorna o nome da rota
+function TListaRota.getRotaByCodigo(Codigo: string): TRota;
+var
+  _Index: Integer;
+  _objRota: TRota;
+  i: Integer;
+begin
+
+  if Assigned(Self) then
+  begin
+    Self.First;
+    for i := 0 to Self.Count -1 do
+    begin
+      try
+        _objRota := TRota.Create;
+        Result := _objRota;
+
+        _objRota := Self.GetItem(i) as TRota;
+
+        if _objRota.Codigo = Codigo then
+        begin
+          Result := _objRota;
+          Break;
+        end
+      finally
+        ;
+      end;
+    end;
+  end;
+end;
+{ TListaLinha }
+
+function TListaLinha.getLinhaByCodigo(Codigo: string): TLinha;
+var
+  _Index,i: Integer;
+  _objLinha: TLinha;
+begin
+  if Assigned(Self) then
+  begin
+    Self.First;
+    for i := 0 to Self.Count -1 do
+    begin
+      try
+        _objLinha := TLinha.Create;
+        Result := _objLinha;
+
+        _objLinha := Self.GetItem(i) as TLinha;
+
+        if _objLinha.Codigo = Codigo then
+        begin
+          Result := _objLinha;
+          Break;
+        end
+      finally
+        ;
+      end;
+    end;
+  end;
+end;
+
+{ TListaProdutor }
+
+function TListaProdutor.getProdutorByCodigo(Codigo: string): TProdutor;
+var
+  _Index,i: Integer;
+  _objProdutor: TProdutor;
+begin
+  if Assigned(Self) then
+  begin
+    Self.First;
+    for i := 0 to Self.Count -1 do
+    begin
+      try
+        _objProdutor := TProdutor.Create;
+        Result := _objProdutor;
+
+        _objProdutor := Self.GetItem(i) as TProdutor;
+
+        if _objProdutor.Codigo = Codigo then
+        begin
+          Result := _objProdutor;
+          Break;
+        end
+      finally
+        ;
+      end;
+    end;
+  end;
+
+end;
+
+{ TListaFazenda }
+function TListaFazenda.getFazendaByCodigo(Codigo: string): TFazenda;
+var
+  _Index,i: Integer;
+  _objFazenda: TFazenda;
+begin
+  if Assigned(Self) then
+  begin
+    Self.First;
+    for i := 0 to Self.Count -1 do
+    begin
+      try
+        _objFazenda := TFazenda.Create;
+        Result := _objFazenda;
+
+        _objFazenda := Self.GetItem(i) as TFazenda;
+
+        if _objFazenda.Codigo = Codigo then
+        begin
+          Result := _objFazenda;
+          Break;
+        end
+      finally
+        ;
+      end;
+    end;
+  end;
+end;
+
+{ TListaColetor }
+
+function TListaColetor.getColetorByCodigo(Codigo: string): TColetor;
+var
+  _Index,i: Integer;
+  _objColetor: TColetor;
+begin
+  if Assigned(Self) then
+  begin
+    Self.First;
+    for i := 0 to Self.Count -1 do
+    begin
+      try
+        _objColetor := TColetor.Create;
+        Result := _objColetor;
+
+        _objColetor := Self.GetItem(i) as TColetor;
+
+        if _objColetor.Codigo = Codigo then
+        begin
+          Result := _objColetor;
+          Break;
+        end
+      finally
+        ;
+      end;
+    end;
+  end;
+
+end;
+
+{ TListaVeiculo }
+
+function TListaVeiculo.getVeiculoByCodigo(Codigo: string): TVeiculo;
+var
+  _Index,i: Integer;
+  _objVeiculo: TVeiculo;
+begin
+  if Assigned(Self) then
+  begin
+    Self.First;
+    for i := 0 to Self.Count -1 do
+    begin
+      try
+        _objVeiculo := TVeiculo.Create;
+        Result := _objVeiculo;
+
+        _objVeiculo := Self.GetItem(i) as TVeiculo;
+
+        if _objVeiculo.Codigo = Codigo then
+        begin
+          Result := _objVeiculo;
+          Break;
+        end
+      finally
+        ;
+      end;
+    end;
+  end;
+
+end;
+{ TListaRegViagem }
+
+function TListaRegViagem.getViagemById(id: Integer): TRegViagem;
+var
+  _Index,i: Integer;
+  _objRegViagem: TRegViagem;
+begin
+  if Assigned(Self) then
+  begin
+    Self.First;
+    for i := 0 to Self.Count -1 do
+    begin
+      try
+        _objRegViagem := TRegViagem.Create;
+        Result := _objRegViagem;
+        _objRegViagem := Self.GetItem(i) as TRegViagem;
+        if _objRegViagem.id = id then
+        begin
+          Result := _objRegViagem;
+          Break;
+        end
+      finally
+        ;
+      end;
+    end;
+  end;
+end;
+{ TSigaProdutor }
+// Gera linha de dados com informações do cadastro de produtores SIGA
+function TSigaProdutor.toString(separador: Char): string;
+begin
+  Result :=
+    Self.idRegistro + separador +
+    Self.nomeProdutor + separador +
+    Self.codigoProdutor + separador +
+    Self.filiaProdutor + separador +
+    Self.status
+end;
+
+{ TSigaTransportador }
+// Gera linha de dados com cadastro dos transportadores SIGA
+function TSigaTransportador.toString(separador: Char): string;
+begin
+  Result :=
+    Self.idRegistro + separador +
+    Self.codigoTransportador + separador +
+    Self.nomeTransportador;
+end;
+{ TSigaEquipamentos }
+// Gera linha de dados dos registros dos equipamentos para o sistema SIGA
+function TSigaEquipamentos.toString(separador: Char): string;
+begin
+  Result :=
+    Self.idRegistro + separador +
+    Self.codigoEquipamento + separador +
+    Self.placaChassi + separador +
+    Self.tipo ;
+end;
+{ TSigaColetaIndividual }
+// Gera linha de dados com informações da coleta para o sistema SIGA
+function TSigaColetaIndividual.toString(separador: Char): string;
+begin
+  Result :=
+    Self.idRegistro + separador +
+    Self.veiculo + separador +
+    FormatDateTime('dd/MM/yyy hh:mm',Self.recepcao) + separador +
+    FormatDateTime('dd/MM/yyy hh:mm',Self.dtColeta) + separador +
+    Self.fornecedor + separador +
+    Self.filial + separador +
+    IntToStr(Self.volume) + separador +
+    FloatToStr(Self.temperatura) + separador +
+    Self.amostra + separador +
+    Self.alizarol + separador +
+    Self.amostraRede
+end;
+{ TSigaViagem }
+
+function TSigaViagem.toString(Separador: Char): string;
+begin
+  Result := Self.idRegistro + Separador +
+
+            Self.rota + Separador  +
+            Self.ramal + Separador +
+            FormatDateTime('dd/MM/yyy hh:mm',Self.inicio) + separador +
+            FormatDateTime('dd/MM/yyy hh:mm',Self.final) + separador +
+            Self.equipamento + Separador +
+            Self.transportador + Separador +
+            IntToStr(Self.volumecoleta) + separador +
+            FormatDateTime('dd/MM/yyy hh:mm',Self.dtRecepcao) + separador +
+            Self.recebido + Separador +
+            Self.motivo + Separador +
+            FloatToStr(Self.temperatura) + separador +
+            IntToStr(Self.volumeEfetivo) + separador +
+            Self.alizarol + Separador +
+            FormatDateTime('dd/MM/yyy hh:mm',Self.fimDescarga);
+end;
+
+// Auxiliares
+
+procedure PersistirLogViagem(Viagem: TViagem);
+var
+  FlgEnviarNotificacao: Boolean;
+  ViagemCadastrada : Boolean;
+
+  function NotificaDifAtesto(Viagem: TViagem): Boolean;
+  var
+    PercDif: Double;
+  begin
+    if Viagem.QtdeArmazenado > 0 then
+      PercDif := Abs((Viagem.QtdeArmazenado - Viagem.QtdeColetado)/Viagem.QtdeArmazenado)
+    else
+      PercDif := Abs((Viagem.QtdeArmazenado - Viagem.QtdeColetado));
+
+   // Result := (PercDif > qryParametrosParPercAtesto.AsFloat) and
+    //  (Abs(PercDif - qryParametrosParPercAtesto.AsFloat) > 0.0001);
+  end;
+
+begin
+ {
+  // Verifica se a viagem já esta cadastrada no log
+  qrySQL.SQL.Clear;
+  qrySQL.SQL.Text := 'Select LovViagemId from LogViagem Where LovViagemId = :LovViagemId';
+  qrySQL.ParamByName('LovViagemId').Value := Viagem.Id;
+  qrySQL.Open;
+  ViagemCadastrada := not qrySQL.IsEmpty ;
+  qrySQL.SQL.Clear;
+
+  FlgEnviarNotificacao := NotificaDifAtesto(Viagem);
+  // Persistir Log
+  if ViagemCadastrada then
+  begin
+    qrySQL.SQL.Text := 'UPDATE LogViagem Set LovGerDatasul = :LovGerDatasul, LovGerRm = :LovGerRm , LovGerMagis = :LovGerMagis, ' +
+                       ' LovGerMeta = :LovGerMeta , LovGerSiga = :LovGerSiga , '+
+                       ' LovGerScl = :LovGerScl Where LovViagemId = :LovViagemId ' ;
+    qrySQL.ParamByName('LovGerDatasul').Value := Viagem.GerouDatasul;
+    qrySQL.ParamByName('LovGerRm').Value :=  Viagem.GerouRm;
+    qrySQL.ParamByName('LovGerMagis').Value := Viagem.GerouMagis;
+    qrySQL.ParamByName('LovGerMeta').Value := Viagem.GerouMeta;
+    qrySQL.ParamByName('LovGerSiga').Value := Viagem.GerouSiga;
+    qrySQL.ParamByName('LovGerScl').Value := Viagem.GerouScl;
+    qrySQL.ParamByName('LovViagemId').Value := Viagem.Id;
+
+    qrySQL.ExecSQL;
+
+  end
+  else
+  begin
+    qrySQL.SQL.Text := 'INSERT INTO LogViagem (LovRotaCod, LovRotaId, LovEnviaNotif, LovDataProc, LovDifColeta, ' +
+      'LovQtdeDescarga, LovViagemId, LovGerDatasul, LovGerRm, LovGerMagis, LovGerMeta, LovGerSiga, '+
+      'LovGerScl,  LovColetor, LovVeiculo, LovDataViagem, LovIndex) ' +
+      'VALUES (:LovRotaCod, :LovRotaId, :LovEnviaNotif, :LovDataProc, :LovDifColeta, :LovQtdeDescarga,' +
+      ' :LovViagemId, :LovGerDatasul, :LovGerRm, :LovGerMagis, :LovGerMeta, :LovGerSiga, :LovGerScl, :LovColetor, ' +
+      ' :LovVeiculo, :LovDataViagem, :LovIndex)';
+    qrySQL.ParamByName('LovRotaCod').Value := Viagem.RotaCodigo;
+    qrySQL.ParamByName('LovRotaId').Value := Viagem.RotaId;
+    qrySQL.ParamByName('LovDataProc').Value := Now;
+    qrySQL.ParamByName('LovDifColeta').Value := (Viagem.QtdeArmazenado - Viagem.QtdeColetado);
+    qrySQL.ParamByName('LovQtdeDescarga').Value := Viagem.QtdeDescargas;
+    qrySQL.ParamByName('LovViagemId').Value := Viagem.Id;
+    qrySQL.ParamByName('LovEnviaNotif').Value := BooleanToStr(FlgEnviarNotificacao);
+    qrySQL.ParamByName('LovGerDatasul').Value := Viagem.GerouDatasul;
+    qrySQL.ParamByName('LovGerRm').Value :=  Viagem.GerouRm;
+    qrySQL.ParamByName('LovGerMagis').Value := Viagem.GerouMagis;
+    qrySQL.ParamByName('LovGerMeta').Value := Viagem.GerouMeta;
+    qrySQL.ParamByName('LovGerSiga').Value := Viagem.GerouSiga;
+    qrySQL.ParamByName('LovGerScl').Value := Viagem.GerouScl;
+    qrySQL.ParamByName('LovColetor').Value := Viagem.Coletor;
+    qrySQL.ParamByName('LovVeiculo').Value := Viagem.Veiculo;
+    qrySQL.ParamByName('LovDataViagem').Value :=  GetData( FormatDateTime('yyyy-MM-dd',Viagem.DatAbertura));
+    qrySQL.ParamByName('LovIndex').Value := Viagem.Index;
+
+
+
+    qrySQL.ExecSQL;
+  end;
+
+
+  // Envia Mensagem
+  if FlgEnviarNotificacao and (qryParametrosParEnviarNotifAtesto.AsString = 'S') then
+    EnviarNotificacao(Viagem, Format('Descarga da Viagem %d excedeu o percentual de atesto permitido.', [Viagem.Id]));
+ }
+end;
+procedure GerarArquivoViagem(Viagem: TViagem);
+var
+  ArquivoDados: TStringList;
+  NomeArqViagem: string;
+  NomePasta: string;
+begin
+  ArquivoDados := TStringList.Create;
+  try
+    ArquivoDados.Add(GerarLinhaArquivo(Viagem, 1));
+    ArquivoDados.Add(GerarLinhaArquivo(Viagem, 2));
+    //79120 = nº identificador da viagem 211015 = data do dia do arquivo 145559 = hr/min/seg
+    NomePasta := IncludeTrailingBackslash(DadosConta.PathArqDescarga) + DadosConta.IdConta + '\' + 'atesto\'+
+    FormatDateTime('yyyyMM',Date()) + '\' ;
+    NomeArqViagem :=  NomePasta + IntToStr(Viagem.id) + '_' + FormatDateTime('ddMMyy_hhmmss', Viagem.DatAbertura) + '.txt';
+    if not DirectoryExists(NomePasta) then
+    begin
+      ForceDirectories(NomePasta);
+    end;
+
+    ArquivoDados.SaveToFile(NomeArqViagem);
+    InserirMsgLog('Arquivo Gerado ' + NomeArqViagem);
+  finally
+    ArquivoDados.Free;
+  end;
+end;
+function GerarLinhaArquivo(ObjViagem: TViagem; TipoLinhaColeta: byte): string;
+var
+  CodigoItem, CodigoDeposito, Conta: string;
+  DescColeta: string;
+  Linha: string;
+  DataAux: string;
+  Quantidade: Double;
+  TipoTransacao: string;
+begin
+  CodigoDeposito := 'CQ';
+  CodigoItem := '01.001.0001';
+
+  if TipoLinhaColeta = 1 then
+  begin
+    // Tipo COLETA
+    Conta := '90000013';
+    DescColeta := PreencheEspacoDireita('COLETA', 16);
+    Quantidade := ObjViagem.QtdeColetado;
+    TipoTransacao := '1';
+  end
+  else
+  begin
+    // Tipo COLETA
+    Conta := '42010102';
+    DescColeta := PreencheEspacoDireita('COLETA-A', 16);
+    // Dif. Atesto
+    Quantidade := (ObjViagem.QtdeArmazenado - ObjViagem.QtdeColetado);
+    if Quantidade >= 0 then
+      TipoTransacao := '1'
+    else
+      TipoTransacao := '2';
+  end;
+  Linha := CodigoItem;
+  Linha := Linha + ';' + StringOfChar(' ', 3);
+  Linha := Linha + ';' + CodigoDeposito;
+  Linha := Linha + ';' + StringOfChar(' ', 10);
+  Linha := Linha + ';' + IntToStr(ObjViagem.id);
+  Linha := Linha + ';' + FormatDateTime('MM/dd/YYYY', ObjViagem.DatAbertura + 3);
+  Linha := Linha + ';' + StringOfChar(' ', 10);
+  Linha := Linha + ';' + StringOfChar(' ', 11);
+  Linha := Linha + ';' + Conta;
+  Linha := Linha + ';' + StringOfChar('0', 9);
+  Linha := Linha + ';' + StringOfChar(' ', 5);
+  Linha := Linha + ';' + DescColeta;
+  Linha := Linha + ';' + TipoTransacao;
+  Linha := Linha + ';' + StringReplace(FloatToStrF(Abs(Quantidade), ffFixed, 12, 4), '.', ',', []);
+  Linha := Linha + ';' + 'LT';
+  Linha := Linha + ';' + '0,01';
+  Linha := Linha + ';' + '0,00';
+  Linha := Linha + ';' + '0,00';
+  Linha := Linha + ';' + '0,00';
+  Linha := Linha + ';' + '0,00';
+  Linha := Linha + ';' + '0,00';
+  Linha := Linha + ';' + '0,00';
+  Linha := Linha + ';' + '0,00';
+  Linha := Linha + ';' + '0,00';
+  Linha := Linha + ';' + StringOfChar(' ', 8);
+  Linha := Linha + ';' + StringOfChar(' ', 20);
+  Linha := Linha + ';' + StringOfChar(' ', 20);
+  Linha := Linha + ';' + 'N';
+  Linha := Linha + ';' + '0';
+  // Mes/Dia/Ano
+  DataAux := FormatDateTime('MM/dd/YYYY', ObjViagem.DatAbertura);
+  Linha := Linha + ';' + DataAux;
+  Linha := Linha + ';' + 'PL';
+  Linha := Linha + ';' + StringOfChar(' ', 3);
+  Linha := Linha + ';' + '101';
+  Linha := Linha + ';' + StringOfChar(' ', 5);
+  Linha := Linha + ';';
+  Result := Linha;
+end;
+
+procedure EnviarNotificacao(Viagem: TViagem; Mensagem: string);
+var
+  DadosRetorno: TDadosRetorno;
+begin
+  DadosRetorno := sendNotificacaoRota(Viagem.RotaCodigo, Mensagem);
+  if not DadosRetorno.Sucesso then
+    raise Exception.Create('Erro Enviar Notificação Rota:' + DadosRetorno.Mensagem);
+end;
+
+function GetData(Data: string): TDateTime; //2015-09-29
+var
+  Ano, Mes, Dia: Integer;
+begin
+  if (Data <> EmptyStr) and (Data <> 'null') then
+  begin
+    Ano := StrToIntDef(Copy(Data, 1, 4), 1);
+    Mes := StrToIntDef(Copy(Data, 6, 2), 1);
+    Dia := StrToIntDef(Copy(Data, 9, 2), 2000);
+    if (Ano > 0) and (Mes > 0) and (Dia > 0) then
+      Result := EncodeDate(Ano, Mes, Dia);
+  end;
+end;
+function GetDataHora(Data: string): TDateTime; // 2016-12-05 16:43:55
+var
+  Ano, Mes, Dia: Integer;
+  Hora, Minuto, Segundo, ms: Word;
+begin
+  if (Data <> EmptyStr) and (Data <> 'null') then
+  begin
+    Ano := StrToIntDef(Copy(Data, 1, 4), 1);
+    Mes := StrToIntDef(Copy(Data, 6, 2), 1);
+    Dia := StrToIntDef(Copy(Data, 9, 2), 2000);
+    hora := StrToIntDef(Copy(Data, 12, 2), 1);
+    Minuto := StrToIntDef(Copy(Data, 15, 2), 1);
+    Segundo := StrToIntDef(Copy(Data, 18, 2), 1);
+    ms := 0;
+    if (Ano > 0) and (Mes > 0) and (Dia > 0) then
+      Result := EncodeDateTime(Ano, Mes, Dia,Hora,Minuto,Segundo,ms) ;
+  end;
+end;
+function ValidaInt(Numero: string): Integer;
+var
+  _Saida: Integer;
+begin
+  if TryStrToInt(numero,_Saida) then
+    Result := _Saida
+  else
+    Result := 0;
+end;
 
 end.

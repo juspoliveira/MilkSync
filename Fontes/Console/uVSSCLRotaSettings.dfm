@@ -1501,6 +1501,7 @@ inherited VSSCLRotaSettings: TVSSCLRotaSettings
                 DCFFC8BAA7FFDFDDDCFFE5E4E2FFFFDE88FFE4AA45FFDD973419ECC681FFF0CA
                 82FFF4CA7DFFE8C788FFEFCF94FFEED192F1EDCF92FFEED092FFEED093FFF2D3
                 96FFF7D79BFFF6D69BFFE6C48AFFEBB552FFE19E351100000000}
+              OnClick = btnSalvarAssocClick
               SkinData.SkinSection = 'SPEEDBUTTON'
             end
             object btnExportar: TsSpeedButton

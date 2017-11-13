@@ -61,6 +61,8 @@
 			</DCCReference>
 			<DCCReference Include="..\FWDelphi_Comum\uGlobal.pas"/>
 			<DCCReference Include="..\..\..\..\FWDelphiS2\Comum\uConstantesComuns.pas"/>
+			<DCCReference Include="..\Comum\uVSSCLRotaComum.pas"/>
+			<DCCReference Include="..\Comum\uLkJSON.pas"/>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

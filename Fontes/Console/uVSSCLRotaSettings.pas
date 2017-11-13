@@ -184,6 +184,7 @@ type
     grdMasterViewParColetasHoje: TcxGridDBColumn;
     procedure FormCreate(Sender: TObject);
     procedure acInsertExecute(Sender: TObject);
+    procedure btnSalvarAssocClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -215,6 +216,12 @@ begin
   inherited;
   VSSCLSettingsDTM.InserirValoresDefault;
   edtNomeEmpresa.SetFocus;
+end;
+
+procedure TVSSCLRotaSettings.btnSalvarAssocClick(Sender: TObject);
+begin
+  inherited;
+
 end;
 
 end.

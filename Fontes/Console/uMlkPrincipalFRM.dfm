@@ -16,6 +16,7 @@ object MksPrincipalFRM: TMksPrincipalFRM
   Position = poDesktopCenter
   OnClose = FormClose
   OnCreate = FormCreate
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object pgcMaster: TPageControl
@@ -30,9 +31,10 @@ object MksPrincipalFRM: TMksPrincipalFRM
     object tabsHome: TTabSheet
       Caption = 'Controle'
       object grpControle: TGroupBox
-        Left = 0
-        Top = 0
-        Width = 726
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 720
         Height = 81
         Align = alTop
         TabOrder = 0
@@ -872,7 +874,7 @@ object MksPrincipalFRM: TMksPrincipalFRM
         end
         object btnExit: TSpeedButton
           Left = 646
-          Top = 14
+          Top = 16
           Width = 65
           Height = 59
           Action = acHide
@@ -888,16 +890,114 @@ object MksPrincipalFRM: TMksPrincipalFRM
         end
       end
       object memLog: TMemo
-        Left = 0
-        Top = 81
-        Width = 726
-        Height = 388
+        AlignWithMargins = True
+        Left = 3
+        Top = 151
+        Width = 720
+        Height = 296
         Align = alClient
         Lines.Strings = (
           '')
         ReadOnly = True
         ScrollBars = ssVertical
         TabOrder = 1
+        ExplicitHeight = 290
+      end
+      object GroupBox1: TGroupBox
+        AlignWithMargins = True
+        Left = 3
+        Top = 90
+        Width = 720
+        Height = 55
+        Align = alTop
+        Caption = '| Tempo de Sincronizacao |'
+        TabOrder = 2
+        object btnSaveTimer: TSpeedButton
+          Left = 617
+          Top = 20
+          Width = 94
+          Height = 22
+          Action = acSalvar
+          Flat = True
+        end
+        object sLabel4: TLabel
+          Left = 305
+          Top = 23
+          Width = 200
+          Height = 16
+          Caption = 'Enviar Cadastros a Cada (Min.)'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object cxLabel10: TLabel
+          Left = 16
+          Top = 23
+          Width = 188
+          Height = 16
+          Caption = 'Gerar Arquivos a Cada (Min.)'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object edtTempo: TcxDBSpinEdit
+          Left = 210
+          Top = 21
+          DataBinding.DataField = 'Intervalo'
+          DataBinding.DataSource = dsControle
+          Properties.MinValue = 15.000000000000000000
+          TabOrder = 0
+          Width = 80
+        end
+        object edtCad: TcxDBSpinEdit
+          Left = 512
+          Top = 23
+          DataBinding.DataField = 'Intervalocarga'
+          DataBinding.DataSource = dsControle
+          Properties.MinValue = 60.000000000000000000
+          TabOrder = 1
+          Width = 80
+        end
+      end
+      object stbMaster: TStatusBar
+        Left = 0
+        Top = 450
+        Width = 726
+        Height = 19
+        Color = clWhite
+        Panels = <
+          item
+            Text = 'Status - Sinc. Arquivos:'
+            Width = 160
+          end
+          item
+            Alignment = taCenter
+            Text = 'Ativo'
+            Width = 100
+          end
+          item
+            Text = '00:00:00'
+            Width = 60
+          end
+          item
+            Text = 'Status Sinc. Cadastros: '
+            Width = 160
+          end
+          item
+            Alignment = taCenter
+            Text = 'Inativo'
+            Width = 100
+          end
+          item
+            Text = '00:00:00'
+            Width = 50
+          end>
       end
     end
     object tabsContas: TTabSheet
@@ -910,10 +1010,6 @@ object MksPrincipalFRM: TMksPrincipalFRM
         Height = 469
         Align = alClient
         TabOrder = 0
-        ExplicitLeft = 240
-        ExplicitTop = 136
-        ExplicitWidth = 250
-        ExplicitHeight = 200
         object grdContasView: TcxGridDBTableView
           NavigatorButtons.ConfirmDelete = False
           DataController.DataSource = dsContas
@@ -926,6 +1022,7 @@ object MksPrincipalFRM: TMksPrincipalFRM
           OptionsData.Inserting = False
           OptionsView.NoDataToDisplayInfoText = '<Nenhum Registro Selecionado>'
           object grdContasViewContaId: TcxGridDBColumn
+            Caption = 'ID. Conta'
             DataBinding.FieldName = 'ContaId'
             Width = 88
           end
@@ -933,16 +1030,47 @@ object MksPrincipalFRM: TMksPrincipalFRM
             DataBinding.FieldName = 'KeyId'
           end
           object grdContasViewNomeEmpresa: TcxGridDBColumn
+            Caption = 'Nome da Empresa'
             DataBinding.FieldName = 'NomeEmpresa'
-            Width = 370
+            Width = 329
           end
           object grdContasViewAtiva: TcxGridDBColumn
             DataBinding.FieldName = 'Ativa'
+            PropertiesClassName = 'TcxImageComboBoxProperties'
+            Properties.Items = <
+              item
+                Description = 'Sim'
+                ImageIndex = 0
+                Value = 'S'
+              end
+              item
+                Description = 'Nao'
+                Value = 'N'
+              end>
             Width = 44
           end
           object grdContasViewDatUltLeituraDescargaWS: TcxGridDBColumn
+            Caption = 'Ult. Sincronizacao'
             DataBinding.FieldName = 'DatUltLeituraDescargaWS'
             Width = 94
+          end
+          object grdContasViewSync: TcxGridDBColumn
+            Caption = 'Sync.'
+            DataBinding.FieldName = 'Sync'
+            PropertiesClassName = 'TcxImageComboBoxProperties'
+            Properties.Images = imgMaster
+            Properties.Items = <
+              item
+                Description = 'Sim'
+                ImageIndex = 12
+                Value = 'S'
+              end
+              item
+                Description = 'Nao'
+                ImageIndex = 11
+                Value = 'N'
+              end>
+            Width = 67
           end
         end
         object grdContasLevel: TcxGridLevel
@@ -1039,12 +1167,13 @@ object MksPrincipalFRM: TMksPrincipalFRM
       0000000000008001000080010000C0030000F00F0000}
     PopupMenu = pmnManster
     OnClick = acOpenExecute
-    Left = 680
-    Top = 248
+    Left = 656
+    Top = 266
   end
   object pmnManster: TPopupMenu
-    Left = 680
-    Top = 96
+    Images = imgMaster
+    Left = 544
+    Top = 184
     object Abrir1: TMenuItem
       Action = acOpen
     end
@@ -1057,8 +1186,8 @@ object MksPrincipalFRM: TMksPrincipalFRM
   end
   object aclMaster: TActionList
     Images = imgMaster
-    Left = 592
-    Top = 112
+    Left = 477
+    Top = 185
     object acOpen: TAction
       Caption = 'Abrir'
       Hint = 'Abrir'
@@ -1111,20 +1240,27 @@ object MksPrincipalFRM: TMksPrincipalFRM
       ImageIndex = 3
       OnExecute = AcConfigExecute
     end
+    object acSalvar: TAction
+      Category = 'Controle'
+      Caption = '&Salvar'
+      Hint = 'Salva Temporizadores'
+      ImageIndex = 12
+      OnExecute = acSalvarExecute
+    end
   end
   object AppEvenMaster: TApplicationEvents
-    Left = 680
-    Top = 160
+    Left = 656
+    Top = 178
   end
   object IdAntiFreeMaster: TIdAntiFreeze
-    Left = 680
-    Top = 328
+    Left = 656
+    Top = 346
   end
   object imgMaster: TImageList
-    Left = 680
-    Top = 400
+    Left = 656
+    Top = 418
     Bitmap = {
-      494C010113001800200010001000FFFFFFFFFF00FFFFFFFFFFFFFFFF424D3600
+      494C010113001800280010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1788,19 +1924,17 @@ object MksPrincipalFRM: TMksPrincipalFRM
       F81FC003E0078001F81FC003C0030000F81F0000C00300000000000080018001
       000000008001018000000000800103C000000000800103C00000000080010180
       00008001C0038001F81FC003C0030000F81F000080010000F81F000080018001
-      F81F00008001F00FF81FC183C3C3F00F}
+      F81F00008001F00FF81FC183C3C3F00F00000000000000000000000000000000
+      000000000000}
   end
   object dsContas: TDataSource
     DataSet = MlkPrincipalDTM.cdsContas
     Left = 592
-    Top = 168
+    Top = 179
   end
-  object tmrSync: TTimer
-    Left = 584
-    Top = 224
-  end
-  object tmrFiles: TTimer
-    Left = 584
-    Top = 288
+  object dsControle: TDataSource
+    DataSet = MlkPrincipalDTM.cdsControle
+    Left = 408
+    Top = 184
   end
 end
