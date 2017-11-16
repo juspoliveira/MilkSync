@@ -2,41 +2,39 @@ unit uVSSCLRCnExport;
 
 interface
 uses
-  SysUtils;
+  SysUtils, Classes;
 
 type
-
-  // Movimento RM
-  TMovimentoRM = class
-    tipoLinha : string[01];
+  TMovimentoRM = class   // // Movimento RM
+    tipoLinha : string; // [01]
     codFilial : Integer;
-    codDepartamento: string[30];
-    codLocal: string[15];
-    codLocalEntrega: string[15];
-    codLocalDestino: string[15];
-    codClienteFornecedor: string[25];
-    codClienteFornecedorFluxus: string[25];
-    numeroMovimento: string[35];
-    serie: string[08];
-    codTipoMovimento: string[10];
-    tipo: string[1];
-    status: string[1];
+    codDepartamento: string; //[30];
+    codLocal: string; //[15];
+    codLocalEntrega: string; //[15];
+    codLocalDestino: string; //[15];
+    codClienteFornecedor: string; //[25];
+    codClienteFornecedorFluxus: string; //[25];
+    numeroMovimento: string; //[35];
+    serie: string;//[08];
+    codTipoMovimento: string; //[10];
+    tipo: string;//[1];
+    status: string; //[1];
     movImpressao: Byte;
     docImpressao: Byte;
     faturaImpressao: Byte;
-    dataEmissao: string[10];
-    dataSaida: string[10];
-    dataExtra1: string[10];
-    dataExtra2: string[10];
-    codRepresentante: string[15];
+    dataEmissao: string; //[10];
+    dataSaida: string; //[10];
+    dataExtra1: string;//[10];
+    dataExtra2: string; //[10];
+    codRepresentante: string; //[15];
     comissaoRepresentante: Double;
-    numeroOrdem: string[20];
-    codCondPagamento: string[05];
+    numeroOrdem: string; //[20];
+    codCondPagamento: string; //[05];
     numeroTributos: Integer;
     valorBruto: Double;
     valorLiquido: Double;
     valorOutros: Double;
-    observacao: string[60];
+    observacao: string; //[60];
     percentualFrete: Double;
     valorFrete: Double;
     percentualSeguro: Double;
@@ -49,104 +47,104 @@ type
     valorExtra1: Double;
     percentualExtra2: Double;
     valorExtra2: Double;
-    codFuncionario1: string[16];
+    codFuncionario1: string; //[16];
     percComisFuncionario: Double;
-    codMensagem: string[05];
-    codMensagem2: string[05];
-    viaTransporte: string[15];
-    placa: string[10];
-    codEstadoPlaca: string[02];
+    codMensagem: string; //[05];
+    codMensagem2: string; //[05];
+    viaTransporte: string; //[15];
+    placa: string; //[10];
+    codEstadoPlaca: string; //[02];
     pesoLiquido: Double;
     pesoBruto: Double;
-    marca: string[10];
+    marca: string; //[10];
     numero: Integer;
     quantidade: Double;
-    especie: string[15];
-    codTabelaEstoque1: string[10];
-    codTabelaEstoque2: string[10];
-    codTabelaEstoque3: string[10];
-    codTabelaEstoque4: string[10];
-    codTabelaEstoque5: string[10];
-    codTabelaFaturamento1: string[25];
-    codTabelaFaturamento2: string[25];
-    codTabelaFaturamento3: string[25];
-    codTabelaFaturamento4: string[25];
-    codTabelaFaturamento5: string[25];
-    campoLivre1: string[100];
-    campoLivre2: string[100];
-    campoLivre3: string[100];
-    codMoeda: string[10];
-    dataBaseMovimento: string[10];
-    dataMovimento: string[10];
+    especie: string; //[15];
+    codTabelaEstoque1: string; //[10];
+    codTabelaEstoque2: string; //[10];
+    codTabelaEstoque3: string; //[10];
+    codTabelaEstoque4: string; //[10];
+    codTabelaEstoque5: string; //[10];
+    codTabelaFaturamento1: string; //[25];
+    codTabelaFaturamento2: string; //[25];
+    codTabelaFaturamento3: string; //[25];
+    codTabelaFaturamento4: string; //[25];
+    codTabelaFaturamento5: string; //[25];
+    campoLivre1: string; //[100];
+    campoLivre2: string; //[100];
+    campoLivre3: string; //[100];
+    codMoeda: string; //[10];
+    dataBaseMovimento: string; //[10];
+    dataMovimento: string; //[10];
     numeroLancamentoGerado: Integer;
     gerouFatura: Integer;
     numeroLancamentoAberto: Integer;
-    codFuncionario2: string[16];
-    codUsuario: string[20];
+    codFuncionario2: string; //[16];
+    codUsuario: string; //[20];
     flagExportacao: Integer;
-    emiteBoleta: string[1];
-    codMensagemDesconto: string[05];
-    codMensagemDespesa: string[05];
-    codMensagemFrete: string[05];
+    emiteBoleta: string; //[1];
+    codMensagemDesconto: string; //[05];
+    codMensagemDespesa: string; //[05];
+    codMensagemFrete: string; //[05];
     freteCifFob: Integer;
     usaDespesasFinanceiras: Integer;
     identificadorNatureza: Integer;
     flagExportacaoFisc: Integer;
     flagExportacaoSecFazenda: Integer;
-    codFuncionario3: string[16];
-    codFuncionario4: string[16];
+    codFuncionario3: string; //[16];
+    codFuncionario4: string; //[16];
     percComisFuncionario2: Double;
     identificadorNatureza2: Integer;
     valorAdiantamento: Double;
-    codTransportadora: string[05];
-    codTransportadora2: string[05];
+    codTransportadora: string; //[05];
+    codTransportadora2: string; //[05];
     statusLiberacao: Integer;
     itensAgrupados: Integer;
-    flagImpressaoFaturamento: string[1];
-    dataCancelamentoMovimento: string[10];
+    flagImpressaoFaturamento: string; //[1];
+    dataCancelamentoMovimento: string; //[10];
     segundoNumeto: Integer;
-    codCentroCusto: string[25];
+    codCentroCusto: string; //[25];
     codColigadaCtaCaixa: Integer;
-    codCtaCaixa: string[10];
+    codCtaCaixa: string; //[10];
     codFilialDestino: Integer;
-    codCentroCustoDestino: string[25];
+    codCentroCustoDestino: string; //[25];
     codColigadaClienteFornecedor: Integer;
     coligadaCFNatureza: Integer;
     idMovLancamentoFluxus: Integer;
-    dataEntrega: string[10];
+    dataEntrega: string; //[10];
     numeroCaixa: Integer;
     numeroCupom: Integer;
-    horaEmissaoMovimento: string[20];
+    horaEmissaoMovimento: string; //[20];
     codFilialEntregaSaida: Integer;
-    codnatureza: string[20];
-    codnatureza2: string[20];
-    campoCnpj: string[20];
-    dataContabilizacao: string[10];
+    codnatureza: string; //[20];
+    codnatureza2: string; //[20];
+    campoCnpj: string; //[20];
+    dataContabilizacao: string; //[10];
     codServico: Integer;
     municipioPrestacaoServico: Integer;
     codEstadoMunicipio: Integer;
-    pontoVenda: string[10];
+    pontoVenda: string; //[10];
     codEvento: Integer;
-    codTipoDocumento: string[10];
-    codRetencaoIrrf: string[10];
+    codTipoDocumento: string; //[10];
+    codRetencaoIrrf: string; //[10];
     percDeducaoIrrf: Double;
     percBaseInssEmpregado: Double;
     percBaseGeracaoInss: Double;
-    codigoProjeto: string[24];
+    codigoProjeto: string; //[24];
     revisao: Integer;
-    subSerie: string[08];
-    contatoEntrega: string[10];
+    subSerie: string; //[08];
+    contatoEntrega: string; //[10];
     valorInssOutrasEmpresas: Double;
-    apropMovRmSolum: string[05];
-    datalancamento: string[10];
+    apropMovRmSolum: string; //[05];
+    datalancamento: string; //[10];
     contadorReinicioOperacao: Integer;
     coo: Integer;
     numeroReducaoZ: Integer;
-    horarioEntradaSaidaMov: string[20];
-    tipoEntrega: string[15];
+    horarioEntradaSaidaMov: string; //[20];
+    tipoEntrega: string; //[15];
     statusRecibo: Integer;
     tipoRecibo: Integer;
-    situacaoRecibo: string[1];
+    situacaoRecibo: string; //[1];
     numeroAutorizacao: Integer;
     private
 
@@ -154,14 +152,15 @@ type
       procedure setValoresDefault;
       function toString:string;
   end;
+ type
 
   // Itens do Movimento RM
 
   TItensMovimentoRM = class
-    tipoLinha : string[1];
-    codigoProduto: string[30];
+    tipoLinha : string; //[1];
+    codigoProduto: string; //[30];
     numeroSequencial: Integer;
-    codTipoProduto: string[10];
+    codTipoProduto: string; //[10];
     quantidade: Double;
     precoUnitario: Double;
     precoTabela: Double;
@@ -169,52 +168,52 @@ type
     valorDesconto: Double;
     percDespesa: Double;
     valorDespesa: Double;
-    dataEmissao: string[10];
-    codMensagem: string[05];
+    dataEmissao: string; //[10];
+    codMensagem: string; //[05];
     numeroTributos: Integer;
-    codTabelaEstoque1: string[10];
-    codTabelaEstoque2: string[10];
-    codTabelaEstoque3: string[10];
-    codTabelaEstoque4: string[10];
-    codTabelaEstoque5: string[10];
-    codTabelaFaturamento1: string[25];
-    codTabelaFaturamento2: string[25];
-    codTabelaFaturamento3: string[25];
-    codTabelaFaturamento4: string[25];
-    codTabelaFaturamento5: string[25];
-    campoLivre: string[15];
-    codUnidade: string[05];
+    codTabelaEstoque1: string; //[10];
+    codTabelaEstoque2: string; //[10];
+    codTabelaEstoque3: string; //[10];
+    codTabelaEstoque4: string; //[10];
+    codTabelaEstoque5: string; //[10];
+    codTabelaFaturamento1: string; //[25];
+    codTabelaFaturamento2: string; //[25];
+    codTabelaFaturamento3: string ;//[25];
+    codTabelaFaturamento4: string; //[25];
+    codTabelaFaturamento5: string; //[25];
+    campoLivre: string; //[15];
+    codUnidade: string; //[05];
     quantidadeReceber: Double;
     identificacaoNatureza: Integer;
-    codCondicaoPagamento: string[05];
-    dataEntrega: string[10];
-    prateleira: string[15];
+    codCondicaoPagamento: string; //[05];
+    dataEntrega: string; //[10];
+    prateleira: string; //[15];
     identificadorContrato: Integer;
     seqItemContrato: Integer;
     valorTotalItem: Double;
-    centroCusto: string[25];
-    codigoNatureza: string[20];
-    representante: string[15];
-    codigoProduto1: string[30];
-    codigoDepartamento: string[25];
-    tributacaoEcf: string[10];
-    valorEscrituracao: string[20];
+    centroCusto: string; //[25];
+    codigoNatureza: string; //[20];
+    representante: string; //[15];
+    codigoProduto1: string; //[30];
+    codigoDepartamento: string; //[25];
+    tributacaoEcf: string; //[10];
+    valorEscrituracao: string; //[20];
     valorCodigoProduto: Double;
-    tipoCodigoProduto: string[05];
+    tipoCodigoProduto: string; //[05];
     codigoSituacaoTributaria: Integer;
-    codigoTarefa: string[60];
-    codTabNatOrcamento: string[10];
+    codigoTarefa: string; //[60];
+    codTabNatOrcamento: string; //[10];
     valorOpcionalFormula1: Double;
     valorOpcionalFormula2: Double;
-    cancelado: string[1];
+    cancelado: string; //[1];
     valorUnitarioMovimento: Double;
     valorOrcamento: Double;
     percComisRepresentante: Integer;
     qtdeUnidadePedido: Integer;
     codFilial: Integer;
-    codLocalEstoque: string[15];
+    codLocalEstoque: string; //[15];
     valorLiquidoItem: Double;
-    codFuncionario: string[16];
+    codFuncionario: string; //[16];
     comisFuncionarioItem: Double;
 
     private
@@ -224,64 +223,66 @@ type
       function toString:string;
   end;
 // Registros de Mapa de coleta TOTVS - Datasul
-
+type
 { Dados da Viagem}
   TCargaRural = class
     CodigoRegistro : Integer;
-    Carga : string[15];
-    Estabelecimento: string[5];
-    Rota: string[12];
-    NomeMotorista : string[50];
+    Carga : string; //[15];
+    Estabelecimento: string; //[5];
+    Rota: string; //[12];
+    NomeMotorista : string; //[50];
     CodigoTransportador : Integer;
-    CodigoVeiculo: string[15];
-    Placa: string[10];
-    UfPlaca: string[2];
+    CodigoVeiculo: string; //[15];
+    Placa: string; //[10];
+    UfPlaca: string; //[2];
     HodometroInicial: Double;
     HodometroFinal: Double;
-    Item: string[15];
-    Referencia: string[8];
+    Item: string; //[15];
+    Referencia: string; //[8];
     PesoBruto: Double;
     Densidade: Double;
-    DataTransacao: string[10];
+    DataTransacao: string; //[10];
     QtdeCompartimentos: Integer;
+
     public
-      procedure setValoresDefaul;
-      function toString: string;
+     procedure setValoresDefaul;
+     function toString: string;
     private
 
   end;
 
+ type
 {Registros de Coletas}
   TProdutorCarga = class
     CodigoRegistro: Integer;
-    Carga: string[15];
-    Produtor: string[20];
-    PontoColeta: string[12];
+    Carga: string; //[15];
+    Produtor: string; //[20];
+    PontoColeta: string; //[12];
     QtdeColetada: Double;
     Compartimento: Integer;
     Temperatura: Double;
-    Observacoes: String[150];
+    Observacoes: string; //[150];
     Repostiorio: Integer;
-    Amostra: string[20];
-    Lacre: string[20];
-    Propriedade: string[30];
-    MotivoNaoColeta: string[20];
+    Amostra: string; //[20];
+    Lacre: string; //[20];
+    Propriedade: string; //[30];
+    MotivoNaoColeta: string; //[20];
     Regua: Double;
-    DataColeta: string[10];
-    HoraColeta: string[6];
+    DataColeta: string; //[10];
+    HoraColeta: string; //[6]
     public
       procedure setValoresDefault;
       function toString: string;
+
     private
   end;
-
-
 
 implementation
 
 uses uGlobal;
 
 { TMovimentoRM }
+
 
 procedure TMovimentoRM.setValoresDefault;
 begin
@@ -573,6 +574,7 @@ end;
 
 { TItensMovimentoRM }
 
+
 procedure TItensMovimentoRM.setValoresDefault;
 begin
   Self.tipoLinha := 'I';
@@ -700,6 +702,8 @@ end;
 
 { TCargaRural }
 
+
+
 procedure TCargaRural.setValoresDefaul;
 begin
   Self.CodigoRegistro := 1;
@@ -734,6 +738,7 @@ begin
 end;
 
 { TProdutorCarga }
+
 
 procedure TProdutorCarga.setValoresDefault;
 begin

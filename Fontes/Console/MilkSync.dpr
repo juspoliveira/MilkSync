@@ -10,7 +10,8 @@ uses
   uGlobal in '..\FWDelphi_Comum\uGlobal.pas',
   uConstantesComuns in '..\..\..\..\FWDelphiS2\Comum\uConstantesComuns.pas',
   uVSSCLRotaComum in '..\Comum\uVSSCLRotaComum.pas',
-  uLkJSON in '..\Comum\uLkJSON.pas';
+  uLkJSON in '..\Comum\uLkJSON.pas',
+  uVSSCLRCnExport in '..\Comum\uVSSCLRCnExport.pas';
 
 {$R *.res}
 

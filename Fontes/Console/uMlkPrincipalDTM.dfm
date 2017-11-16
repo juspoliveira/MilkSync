@@ -529,4 +529,504 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
       FieldName = 'Intervalocarga'
     end
   end
+  object cdsColetas: TClientDataSet
+    Aggregates = <>
+    Params = <>
+    ProviderName = 'dspColetas'
+    Left = 312
+    Top = 200
+    object cdsColetasid: TIntegerField
+      FieldName = 'id'
+      ProviderFlags = [pfInWhere]
+      Visible = False
+    end
+    object cdsColetasdt_push: TDateTimeField
+      FieldName = 'dt_push'
+      ProviderFlags = [pfInWhere]
+      Visible = False
+    end
+    object cdsColetasparada_id: TIntegerField
+      DisplayLabel = 'Fazenda'
+      FieldName = 'parada_id'
+      Required = True
+      Visible = False
+    end
+    object cdsColetascoletor_id: TIntegerField
+      DisplayLabel = 'Coletor'
+      FieldName = 'coletor_id'
+      Required = True
+      Visible = False
+    end
+    object cdsColetastanque_id: TIntegerField
+      DisplayLabel = 'Tanque'
+      FieldName = 'tanque_id'
+      Required = True
+      Visible = False
+    end
+    object cdsColetasviagem_id: TIntegerField
+      FieldName = 'viagem_id'
+    end
+    object cdsColetasdt_coleta: TDateTimeField
+      DisplayLabel = 'Data Coleta'
+      FieldName = 'dt_coleta'
+    end
+    object cdsColetasCodigoFazenda: TWideStringField
+      Tag = 1
+      DisplayLabel = 'Cod. Fazenda'
+      FieldName = 'CodigoFazenda'
+      Size = 15
+    end
+    object cdsColetasFazenda: TWideStringField
+      Tag = 1
+      FieldName = 'Fazenda'
+      ProviderFlags = []
+      Size = 100
+    end
+    object cdsColetasCodigoProdutor: TWideStringField
+      DisplayLabel = 'Cod.  Produtor'
+      FieldName = 'CodigoProdutor'
+      ProviderFlags = [pfInWhere]
+      Size = 15
+    end
+    object cdsColetasProdutor: TWideStringField
+      Tag = 1
+      FieldName = 'Produtor'
+      ProviderFlags = [pfInWhere]
+      Size = 100
+    end
+    object cdsColetastanque: TWideStringField
+      Tag = 1
+      DisplayLabel = 'Tanque'
+      FieldName = 'tanque'
+      Size = 45
+    end
+    object cdsColetasquantidade: TIntegerField
+      FieldName = 'quantidade'
+    end
+    object cdsColetasregua: TFloatField
+      DisplayLabel = 'Medida da R'#233'gua'
+      FieldName = 'regua'
+    end
+    object cdsColetasalizarol: TWideStringField
+      DisplayLabel = 'Alizarol'
+      FieldName = 'alizarol'
+      ProviderFlags = [pfInWhere]
+      Size = 1
+    end
+    object cdsColetasamostra: TWideStringField
+      DisplayLabel = 'N'#186' Amostra'
+      FieldName = 'amostra'
+      Size = 15
+    end
+    object cdsColetascontraprova: TWideStringField
+      DisplayLabel = 'N'#186' Lacre'
+      FieldName = 'contraprova'
+      Size = 45
+    end
+    object cdsColetastemperatura: TFloatField
+      DisplayLabel = 'Temperatura'
+      FieldName = 'temperatura'
+    end
+    object cdsColetasBoca: TStringField
+      FieldName = 'boca'
+      Size = 5
+    end
+    object cdsColetascoletada: TWideStringField
+      DisplayLabel = 'Status'
+      FieldName = 'coletada'
+      ProviderFlags = [pfInWhere]
+      Size = 1
+    end
+    object cdsColetasCodigoLinha: TWideStringField
+      DisplayLabel = 'Cod. Linha'
+      FieldName = 'CodigoLinha'
+      ProviderFlags = [pfInWhere]
+    end
+    object cdsColetasNomeLinha: TWideStringField
+      DisplayLabel = 'Linha'
+      FieldName = 'NomeLinha'
+      ProviderFlags = [pfInWhere]
+      Size = 50
+    end
+    object cdsColetasCodigoRota: TWideStringField
+      DisplayLabel = 'Cod. Rota'
+      FieldName = 'CodigoRota'
+      ProviderFlags = [pfInWhere]
+    end
+    object cdsColetasRota: TWideStringField
+      FieldName = 'Rota'
+      ProviderFlags = [pfInWhere]
+      Size = 50
+    end
+    object cdsColetasVeiculo: TWideStringField
+      Tag = 1
+      FieldName = 'Veiculo'
+      ProviderFlags = [pfInWhere]
+      Size = 8
+    end
+    object cdsColetasCodigoMotorista: TWideStringField
+      Tag = 1
+      DisplayLabel = 'Cod. Coletor'
+      FieldName = 'CodigoMotorista'
+      ProviderFlags = [pfInWhere]
+      Size = 15
+    end
+    object cdsColetasNomeMotorista: TWideStringField
+      Tag = 1
+      DisplayLabel = 'Coletor'
+      FieldName = 'NomeMotorista'
+      ProviderFlags = [pfInWhere]
+      Size = 100
+    end
+    object cdsColetasdt_edicao: TDateTimeField
+      Tag = 1
+      DisplayLabel = 'Dt. Edi'#231#227'o'
+      FieldName = 'dt_edicao'
+    end
+  end
+  object cdsRota: TClientDataSet
+    Aggregates = <>
+    Params = <>
+    Left = 383
+    Top = 200
+    object cdsRotaCodigo: TStringField
+      FieldName = 'codigo'
+    end
+    object cdsRotaNome: TStringField
+      FieldName = 'nome'
+      Size = 50
+    end
+    object cdsRotatipo_descarga: TStringField
+      DisplayLabel = 'Tipo Descarga'
+      FieldName = 'tipo_descarga'
+      Size = 2
+    end
+    object cdsRotagruporota: TStringField
+      FieldName = 'grupo_rota'
+      Size = 1
+    end
+  end
+  object cdsLinha: TClientDataSet
+    Aggregates = <>
+    Params = <>
+    Left = 454
+    Top = 200
+    object cdsLinhaCodigo: TStringField
+      FieldName = 'codigo'
+    end
+    object cdsLinhaNome: TStringField
+      FieldName = 'nome'
+      Size = 50
+    end
+    object cdsLinhaRota: TStringField
+      FieldName = 'rota'
+      Origin = 'fk'
+    end
+    object cdsLinhadistancia: TIntegerField
+      FieldName = 'distancia'
+    end
+  end
+  object cdsProdutor: TClientDataSet
+    Aggregates = <>
+    Params = <>
+    Left = 520
+    Top = 200
+    object cdsProdutorInscricao: TStringField
+      Tag = 1
+      FieldName = 'inscricao'
+      Size = 15
+    end
+    object cdsProdutorUltimaColeta: TStringField
+      Tag = 1
+      FieldName = 'ultimacoleta'
+      Size = 10
+    end
+    object cdsProdutorQtdColeta: TFloatField
+      Tag = 1
+      FieldName = 'qtdcoleta'
+    end
+    object cdsProdutorLinha: TStringField
+      Tag = 1
+      FieldName = 'linha'
+      Size = 5
+    end
+    object cdsProdutorCodigo: TStringField
+      FieldName = 'codigo'
+      Size = 15
+    end
+    object cdsProdutorNome: TStringField
+      FieldName = 'nome'
+      Size = 100
+    end
+    object cdsProdutordoc: TStringField
+      DisplayLabel = 'Documento'
+      FieldName = 'doc'
+    end
+    object cdsProdutorLogradouro: TStringField
+      FieldName = 'logradouro'
+      Size = 100
+    end
+    object cdsProdutorNumero: TStringField
+      FieldName = 'numero'
+      Size = 10
+    end
+    object cdsProdutorBairro: TStringField
+      FieldName = 'bairro'
+      Size = 60
+    end
+    object cdsProdutorCidade: TStringField
+      FieldName = 'cidade'
+      Size = 60
+    end
+    object cdsProdutorUf: TStringField
+      FieldName = 'uf'
+      Size = 2
+    end
+    object cdsProdutorCep: TStringField
+      FieldName = 'cep'
+      Size = 10
+    end
+  end
+  object cdsColetor: TClientDataSet
+    Aggregates = <>
+    Params = <>
+    Left = 604
+    Top = 200
+    object cdsColetorCodigo: TStringField
+      FieldName = 'codigo'
+    end
+    object cdsColetorNome: TStringField
+      FieldName = 'nome'
+      Size = 50
+    end
+    object cdsColetorcpf: TStringField
+      FieldName = 'cpf'
+      Size = 15
+    end
+    object cdsColetorrg: TStringField
+      FieldName = 'rg'
+      Size = 15
+    end
+    object cdsColetorcnh: TStringField
+      FieldName = 'cnh'
+    end
+  end
+  object cdsVeiculos: TClientDataSet
+    Aggregates = <>
+    Params = <>
+    Left = 381
+    Top = 271
+    object cdsVeiculosid: TIntegerField
+      FieldKind = fkCalculated
+      FieldName = 'id'
+      Calculated = True
+    end
+    object cdsVeiculosuf: TStringField
+      Tag = 1
+      FieldName = 'uf'
+      Size = 2
+    end
+    object cdsVeiculosrntc: TStringField
+      Tag = 1
+      FieldName = 'rntc'
+    end
+    object cdsVeiculoscodigo: TStringField
+      FieldName = 'codigo'
+    end
+    object cdsVeiculosplaca: TStringField
+      FieldName = 'placa'
+      Size = 8
+    end
+    object cdsVeiculostipo: TStringField
+      FieldName = 'tipo'
+      Size = 1
+    end
+    object cdsVeiculospesobruto: TFloatField
+      FieldName = 'pesobruto'
+    end
+    object cdsVeiculospesoliquido: TFloatField
+      FieldName = 'pesoliquido'
+    end
+    object cdsVeiculoscapacidade: TFloatField
+      FieldName = 'capacidade'
+    end
+  end
+  object cdsFazendas: TClientDataSet
+    Aggregates = <>
+    Params = <>
+    Left = 465
+    Top = 271
+    object cdsFazendascodigo: TStringField
+      FieldName = 'codigo'
+      Size = 15
+    end
+    object cdsFazendasnome: TStringField
+      FieldName = 'nome'
+      Size = 80
+    end
+    object cdsFazendaslogradouro: TStringField
+      FieldName = 'logradouro'
+      Size = 60
+    end
+    object cdsFazendasnumero: TStringField
+      FieldName = 'numero'
+      Size = 10
+    end
+    object cdsFazendasbairro: TStringField
+      FieldName = 'bairro'
+      Size = 60
+    end
+    object cdsFazendasmunicipio: TStringField
+      FieldName = 'municipio'
+      Size = 60
+    end
+    object cdsFazendasuf: TStringField
+      FieldName = 'uf'
+      Size = 2
+    end
+    object cdsFazendascep: TStringField
+      FieldName = 'cep'
+      Size = 10
+    end
+    object cdsFazendasproducao: TFloatField
+      FieldName = 'producao'
+    end
+    object cdsFazendaslatitude: TStringField
+      FieldName = 'latitude'
+    end
+    object cdsFazendaslongitude: TStringField
+      FieldName = 'longitude'
+    end
+    object cdsFazendasprodutor: TStringField
+      FieldName = 'produtor'
+      Size = 15
+    end
+  end
+  object cdsViagens: TClientDataSet
+    Aggregates = <>
+    Params = <>
+    Left = 312
+    Top = 272
+    object cdsViagensid: TIntegerField
+      FieldName = 'id'
+    end
+    object cdsViagensveiculo_id: TIntegerField
+      DisplayLabel = 'Ve'#237'culo'
+      FieldName = 'veiculo_id'
+      Required = True
+      Visible = False
+    end
+    object cdsViagenscoletor_id: TIntegerField
+      DisplayLabel = 'Coletor'
+      FieldName = 'coletor_id'
+      Required = True
+      Visible = False
+    end
+    object cdsViagenslinha_id: TIntegerField
+      DisplayLabel = 'Linha'
+      FieldName = 'linha_id'
+      Required = True
+      Visible = False
+    end
+    object cdsViagensrota_id: TIntegerField
+      DisplayLabel = 'Rota'
+      FieldName = 'rota_id'
+      Required = True
+      Visible = False
+    end
+    object cdsViagensdt_push: TDateTimeField
+      FieldName = 'dt_push'
+      Visible = False
+    end
+    object cdsViagensNumeroViagem: TIntegerField
+      FieldName = 'NumeroViagem'
+    end
+    object cdsViagensdt_abertura: TDateTimeField
+      DisplayLabel = 'Dt. Abertura'
+      FieldName = 'dt_abertura'
+    end
+    object cdsViagensdt_fechamento: TDateTimeField
+      DisplayLabel = 'Dt. Fechamento'
+      FieldName = 'dt_fechamento'
+    end
+    object cdsViagenskm_inicial: TFloatField
+      DisplayLabel = 'km Incial'
+      FieldName = 'km_inicial'
+    end
+    object cdsViagenskm_final: TFloatField
+      DisplayLabel = 'km Final'
+      FieldName = 'km_final'
+    end
+    object cdsViagensdt_liberacao: TDateTimeField
+      DisplayLabel = 'Data Libera'#231#227'o'
+      FieldName = 'dt_liberacao'
+    end
+    object cdsViagenskm_distancia: TIntegerField
+      DisplayLabel = 'Dist'#226'ncia Percorrida'
+      FieldName = 'km_distancia'
+    end
+    object cdsViagenskm_padrao: TIntegerField
+      DisplayLabel = 'Dist'#226'ncia Prevista'
+      FieldName = 'km_padrao'
+    end
+    object cdsViagenskm_real: TIntegerField
+      DisplayLabel = 'Dist'#226'ncia Assumida'
+      FieldName = 'km_real'
+    end
+    object cdsViagenskm_justificativa: TWideStringField
+      DisplayLabel = 'Observa'#231#245'es'
+      FieldName = 'km_justificativa'
+      Size = 300
+    end
+    object cdsViagensrota: TWideStringField
+      FieldName = 'rota'
+      Size = 15
+    end
+    object cdsViagenscoletor: TWideStringField
+      FieldName = 'coletor'
+      Size = 15
+    end
+    object cdsViagenslinha: TWideStringField
+      FieldName = 'linha'
+      Size = 15
+    end
+    object cdsViagensveiculo: TWideStringField
+      FieldName = 'veiculo'
+      Size = 15
+    end
+    object cdsViagensPlacaVeiculo: TStringField
+      FieldName = 'PlacaVeiculo'
+      Size = 8
+    end
+    object cdsViagensNomeLinha: TStringField
+      FieldName = 'NomeLinha'
+      Size = 100
+    end
+    object cdsViagensNomeRota: TStringField
+      FieldName = 'NomeRota'
+      Size = 100
+    end
+    object cdsViagensNomeColetor: TStringField
+      FieldName = 'NomeColetor'
+      Size = 100
+    end
+    object cdsViagenscomunitario_pendente: TStringField
+      FieldName = 'comunitario_pendente'
+    end
+    object cdsViagensbocas: TStringField
+      FieldName = 'bocas'
+    end
+  end
+  object qryAux: TADOQuery
+    Connection = cnnMaster
+    Parameters = <>
+    Left = 440
+    Top = 112
+  end
+  object qryApoio: TADOQuery
+    Connection = cnnMaster
+    Parameters = <>
+    Left = 504
+    Top = 112
+  end
 end

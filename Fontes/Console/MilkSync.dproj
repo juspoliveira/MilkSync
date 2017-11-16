@@ -30,6 +30,8 @@
 			<DCC_ExeOutput>.\$(Config)\$(Platform)</DCC_ExeOutput>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_Hints>false</DCC_Hints>
+			<DCC_Warnings>false</DCC_Warnings>
 			<DCC_ExeOutput>C:\Desenvolvimento\tools\MilkSync\Deploy\</DCC_ExeOutput>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
@@ -63,6 +65,7 @@
 			<DCCReference Include="..\..\..\..\FWDelphiS2\Comum\uConstantesComuns.pas"/>
 			<DCCReference Include="..\Comum\uVSSCLRotaComum.pas"/>
 			<DCCReference Include="..\Comum\uLkJSON.pas"/>
+			<DCCReference Include="..\Comum\uVSSCLRCnExport.pas"/>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
