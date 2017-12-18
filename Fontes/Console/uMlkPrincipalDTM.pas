@@ -6,7 +6,7 @@ uses
   SysUtils, Classes, DB, ADODB,Forms,uConexao, Messages, Dialogs, Provider,
   uS2SQLDataSet, DBClient, uConstantesComuns, Variants, JvScheduledEvents,
   ExtCtrls, JvAppInst, uVSSCLRotaComum, uJSON, uSCLRCnExport, FMTBcd, SqlExpr,
-  DateUtils;
+  DateUtils, ImgList, Controls;
 
 
 type
@@ -97,7 +97,6 @@ type
     cdsViagemLovGerSiga: TStringField;
     cdsViagemLovColetor: TStringField;
     cdsViagemLovVeiculo: TStringField;
-    cdsViagemLovDataViagem: TWideStringField;
     cdsViagemLovGerScl: TStringField;
     cdsViagemLovIndex: TIntegerField;
     cdsDescargaLodId: TAutoIncField;
@@ -228,6 +227,10 @@ type
     cdsViagensbocas: TStringField;
     qryAux: TADOQuery;
     qryApoio: TADOQuery;
+    cdsControleultimaiteracao: TDateTimeField;
+    cdsViagemContaId: TIntegerField;
+    cdsViagemLovDataViagem: TDateTimeField;
+    ImageList1: TImageList;
     procedure DataModuleCreate(Sender: TObject);
     procedure cdsContasBeforePost(DataSet: TDataSet);
     procedure tmrConsoleTimer(Sender: TObject);
@@ -251,15 +254,28 @@ type
     procedure SalvarConta;
     procedure InserirVlrDefaultConta;
 
+    // Associacao dos mapas de carga
+    function ValidarArquivoMapa(aContaId:Integer;aFile,aTabela: string): Boolean;
+    function ValidarAssociacao:Boolean;
+    function lodMapInformation(Contaid: Integer): TMapasCarga;
+
+
+
+    procedure SetStatusLog(contaId: Integer; DataInicial: TDateTime);
+
+    procedure SetLastIteration;
+
+
     procedure SalvarControle;
 
     procedure SelectAllRecordsConta;
     procedure ExportarDescargas(ContaId: Integer; DataProcIni, DataProcFim : TDateTime;PersistirLog: Boolean = True);
     function GetDescargas(ContaId: Integer; DataInicio, DataTermino: TDateTime; FlgAtualizaUltDataLeitura: Boolean = False; PersistirLog: Boolean = True): string;
+    procedure PersistirLogViagem(Viagem: TViagem);
 
     procedure ExportarColetas(Layout: string; DataProcIni, DataProcFim : TDateTime);
 
-    procedure AtualizarDatLeituraParam(Data: TDateTime);
+    procedure AtualizarDatLeituraParam(ContaId: Integer; Data: TDateTime;Sync: string);
 
     // Gerar Coletas
     function GetColetas(DataInicio, DataTermino: TDateTime; Sync:string; Comunitario: string = '9'; FlgAtualizaUltDataLeitura: Boolean = False; Layout: string = 'Magis'): String;
@@ -338,12 +354,14 @@ uses
 {$R *.dfm}
 // Valida digitacao dados da conta
 
-procedure TMlkPrincipalDTM.AtualizarDatLeituraParam(Data: TDateTime);
+procedure TMlkPrincipalDTM.AtualizarDatLeituraParam(ContaId: Integer;Data: TDateTime; Sync: string);
 begin
-  qrySQL.SQL.Text := 'update Parametros set ParDatIniLeituraDescargaWS = :ParDatIniLeituraDescargaWS, '+
-  'ParDatUltLeituraDescargaWS = :ParDatUltLeituraDescargaWS';
-  qrySQL.Parameters.ParamByName('ParDatIniLeituraDescargaWS').Value := Data;
-  qrySQL.Parameters.ParamByName('ParDatUltLeituraDescargaWS').Value := Data;
+  qrySQL.SQL.Text := 'update Contas set DatIniLeituraDescargaWS = :DatIniLeituraDescargaWS, '+
+  'DatUltLeituraDescargaWS = :DatUltLeituraDescargaWS, Sync = :Sync Where ContaId = :ContaId';
+  qrySQL.Parameters.ParamByName('DatIniLeituraDescargaWS').Value :=  Data;
+  qrySQL.Parameters.ParamByName('DatUltLeituraDescargaWS').Value :=  Data;
+  qrySQL.Parameters.ParamByName('Sync').Value := Sync;
+  qrySQL.Parameters.ParamByName('Contaid').Value := ContaId;
   qrySQL.ExecSQL;
 
 end;
@@ -375,6 +393,9 @@ begin
     if (cdsContasProxySenha.Value = EmptyStr) then
       MostraMsgErro('Informe a senha de acesso ao servidor Proxy');
   end;
+  // Validar associacao dos mapas de integracao
+  if (not ValidarAssociacao) then
+    MostraMsgErro('Falha na associacao dos mapas de integracao, verifique !');
 end;
 
 function TMlkPrincipalDTM.coletasToString(cds: TClientDataSet; separator: Char;
@@ -616,11 +637,11 @@ begin
     FConexaoBD := TConexao.Create(FStrConexao);
 
     // Seta timers de sincronizacao e geracao de arquivos
-    tmrSync.Interval := (cdsControleIntervalocarga.AsInteger * 1000);
-    tmrConsole.Interval := (cdsControleIntervalo.AsInteger * 1000);
+    tmrSync.Interval := (cdsControleIntervalocarga.AsInteger * 60000);
+    tmrConsole.Interval := (cdsControleIntervalo.AsInteger * 60000);
     tmrSync.Enabled := True;
-    tmrConsole.Enabled := True;
-    FStatusTmrSync := TmrHabilitado;
+    tmrConsole.Enabled := False;
+    FStatusTmrSync := TmrInativo;
     FStatusTmrConsole := TmrHabilitado;
 
     if Assigned(ShowStatusTmr) then
@@ -637,7 +658,7 @@ procedure TMlkPrincipalDTM.ExportarColetas(Layout: string;DataProcIni, DataProcF
 begin
   InserirMsgLog('Início Get Coletas.');
   try
-    GetColetas(DataProcIni, DataProcFim, '0',EmptyStr, False, Layout);
+    GetColetas(DataProcIni, DataProcFim, '0',EmptyStr, True, Layout);
     InserirMsgLog('Término Get Coletas');
   except on E:Exception do
     InserirMsgLog('ERRO : ' + E.Message);
@@ -670,7 +691,7 @@ var
   FArqSaveLog: string;
   _RegistroMovimento : TMovimentoRM;
   _ItemRegistro : TItensMovimentoRM;
-  _DocProdutor, _LinhaDados, _Separador : string;
+  _DocProdutor, _LinhaDados, _Separador, _Sincronizou : string;
   CplNome : string;  // Complemento do nome do arquivo de saida (Gerado com Random)
 
 
@@ -814,7 +835,7 @@ begin
 
     PopulaAtoresColeta(DataInicio,DataTerminoAux, Sync, Comunitario);
 
-
+    _Sincronizou := FlagNao;
     // Arquivo com dados coleta formatado
     _ArqSaida := TStringList.Create;
 
@@ -906,6 +927,7 @@ begin
           // Cria objeto viagem para persistencia no log
           ObjViagem := ViagemJahRegistrada(cdsViagensid.Value);
           ObjViagem.Id := cdsViagensid.Value;
+          ObjViagem.ContaId := StrToInt(DadosConta.IdConta);
           ObjViagem.RotaId := cdsViagensrota_id.Value;
           ObjViagem.RotaCodigo := cdsViagensrota.Value;
           ObjViagem.DatAbertura := cdsViagensdt_abertura.Value;
@@ -1276,6 +1298,7 @@ begin
                    ArqRename :=  's:\leite\mobile\'+  CplNome +'.tx_';
                  end;
                end
+
              end
              else
              begin
@@ -1302,6 +1325,8 @@ begin
 
              // Registra a geração do arquivo no log de atividades
              FArqLog.Append('Arquivo de saida gerado:  |<><>| Viagem ' + IntToStr(cdsViagensid.Value) + ' |<><>| ' + arqTexto + ' |<><>| data: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now) );
+
+
            end;
            if Layout = 'Datasul' then
            begin
@@ -1313,6 +1338,7 @@ begin
              _RegistroMovimento.Destroy;
              _ItemRegistro.Destroy;
            end;
+
         end;
 
          // Persistir log viagem
@@ -1324,6 +1350,7 @@ begin
          end;
 
          cdsViagens.Next;
+
       end;
 
       // Salva Arquivo de saida Único do RM
@@ -1332,24 +1359,28 @@ begin
         _ArqSaida.SaveToFile(arqTexto);
       end;
 
+      // Avaliou todos os registros, considera sincronizada
+      _Sincronizou := FlagSim;
+
+
       //Atualizar Parâmetros
       if FlgAtualizaUltDataLeitura then
-      AtualizarDatLeituraParam(DataTermino);
+      AtualizarDatLeituraParam(StrToInt(DadosConta.IdConta),DataTermino,_Sincronizou );
 
       // Fecha e salva registro de log
       FArqLog.Append('Milk´s Rota :: Fim Geração Arquivos - ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
       FArqLog.Append('*******************************************');
 
 
-      if DirectoryExists(FolderSaida) then
+      if DirectoryExists(FolderSaida + '\Logs') then
       begin
-        FArqSaveLog := FolderSaida +  '\'+ 'Log_' + DadosConta.IdConta +'_' + FormatDateTime('dd_MM_yyyy_hh_mm_ss',Now) + '.txt';
+        FArqSaveLog := FolderSaida + '\Logs' + '\'+ 'Log_' + DadosConta.IdConta +'_' + FormatDateTime('dd_MM_yyyy_hh_mm_ss',Now) + '.txt';
         FArqLog.SaveToFile(FArqSaveLog);
       end
       else
       begin
-        ForceDirectories(FolderSaida);
-        FArqSaveLog := FolderSaida +  '\'+ 'Log_' + DadosConta.IdConta +'_' + FormatDateTime('dd_MM_yyyy_hh_mm_ss',Now) + '.txt';
+        ForceDirectories(FolderSaida+ '\Logs');
+        FArqSaveLog := FolderSaida +  '\Logs' +  '\'+ 'Log_' + DadosConta.IdConta +'_' + FormatDateTime('dd_MM_yyyy_hh_mm_ss',Now) + '.txt';
         FArqLog.SaveToFile(FArqSaveLog);
       end;
 
@@ -1703,7 +1734,7 @@ begin
 
       //Atualizar Parâmetros
       if FlgAtualizaUltDataLeitura then
-      AtualizarDatLeituraParam(DataTermino);
+     // AtualizarDatLeituraParam(DataTermino);
     finally
       cdsColetas.EmptyDataSet;
       cdsViagens.EmptyDataSet;
@@ -1737,7 +1768,7 @@ var
   FlgGerarArq: Boolean;
   FlgExisteDescarga: Boolean;
   ArquivoDados: TStringList;
-  DataInicioStr, DataTerminoStr: string;
+  DataInicioStr, DataTerminoStr, Sync: string;
   ObjViagem: TViagem;
   ListaViagem: TListaViagem;
   DatAultColeta: TDateTime;
@@ -1841,8 +1872,10 @@ begin
           // Nova Instância
           // ObjViagem := TViagem.Create;
           ObjViagem := ViagemJahRegistrada(Viagem.getInt('id'));
+
           try
             ObjViagem.Id := Viagem.getInt('id');
+            ObjViagem.ContaId := ContaId;
             ObjViagem.Liberada := (Viagem.getInt('liberada') = 1);
             for j := 0 to ColecaoDescarga.Length - 1 do
             begin
@@ -1874,6 +1907,8 @@ begin
                 PersistirLogViagem(ObjViagem);
               // Arquivo
               GerarArquivoViagem(ObjViagem);
+              // Sinaliza que sincronizou a conta
+              Sync := FlagSim;
               // Empilha Viagem
               ListaViagem.Add(ObjViagem);
             end;
@@ -1882,13 +1917,9 @@ begin
           end;
         end; //Loop Dados Viagem
 
-        (*
-          ATUALIAR A ULTIMA DATA DE LEITURA NO CDSCONTA AQUI....
-        *)
-
         //Atualizar Parâmetros
         if FlgAtualizaUltDataLeitura then
-       //   AtualizarDatLeituraParam(DataTermino);
+           AtualizarDatLeituraParam(ContaId, DataTermino, Sync);
       end; //DadosRetornoDescarga.Sucesso
     finally
       while ListaViagem.Count > 0 do
@@ -1949,13 +1980,23 @@ begin
       DadosConta.PathArqDatasul := cdsContasPathArqDatasul.Value;
       DadosConta.PathArqCarga := cdsContasPathArqCarga.Value;
       DadosConta.PathArqDescarga := cdsContasPathArqDescarga.Value;
+      DadosConta.PathArqMagis := cdsContasPathArqMagis.Value;
+      DadosConta.PathArqRm := cdsContasPathArqRm.Value;
+      DadosConta.PathArqMeta := cdsContasPathArqMeta.Value;
+      DadosConta.PathArqScl := cdsContasPathArqScl.Value;
       DadosConta.ColetasHoje := cdsContasParColetasHoje.Value;
+      DadosConta.VerDatasul :=  cdsContasVerDatasul.Value;
+      DadosConta.VerRm := cdsContasVerRm.Value;
+      DadosConta.VerMagis := cdsContasVerMagis.Value;
+      DadosConta.VerScl := cdsContasVerScl.Value;
+      DadosConta.VerSiga := cdsContasVerSiga.Value;
+      dadosconta.VerMeta := cdsContasVerMeta.Value;
 
 
       // Totvs Datasul
       if (cdsContasGeraTotvsDatasul.AsString = FlagSim) then
       begin
-       // ExportarDescargas(cdsContasContaId.Value,dtInicio, dtFim);
+        ExportarDescargas(cdsContasContaId.Value,dtInicio, dtFim);
         ExportarColetas('Datasul',dtInicio,dtFim);
       end;
       // Totvs Rm
@@ -2009,6 +2050,88 @@ begin
   FResultado := FConexaoBD.ExecutarValor(FSQL, [Codigo]);
   Result := not VarIsNull(FResultado);
 end;
+function TMlkPrincipalDTM.lodMapInformation(Contaid: Integer): TMapasCarga;
+begin
+  Result.ContaId := Contaid;
+
+  Result.Mapas[1]      := cdsContasPatMapGrupoRota.Value;
+  Result.Metodos[1]     := 'writeGrupoRota';
+  Result.MetodosRead[1] := 'readGrupoRota';
+  Result.NomeArqSaida[1] := 'SclGrpRota.txt';
+
+  Result.Mapas[2] := cdsContasPathMapRota.Value;
+  Result.Metodos[2] := 'writeRota';
+  Result.MetodosRead[2] := 'readRota';
+  Result.NomeArqSaida[2] := 'SclRota.txt';
+
+
+  Result.Mapas[3] := cdsContasPatMapLinha.Value;
+  Result.Metodos[3] := 'writeLinha';
+  Result.MetodosRead[3] := 'readLinha';
+  Result.NomeArqSaida[3] := 'ScLinha.txt';
+
+  Result.Mapas[4] := cdsContasPatMapProdutor.Value;
+  Result.Metodos[4] := 'writeProdutor';
+  Result.MetodosRead[4] := 'readProdutor';
+  Result.NomeArqSaida[4] := 'SclProd.txt';
+
+  Result.Mapas[5] := cdsContasPatMapFazenda.Value;
+  Result.Metodos[5] := 'writeFazenda';
+  Result.MetodosRead[5] := 'readFazenda';
+  Result.NomeArqSaida[5] := 'SclFaz.txt';
+
+  Result.Mapas[6] := cdsContasPatMapVeiculo.Value;
+  Result.Metodos[6] := 'writeVeiculo';
+  Result.MetodosRead[6] := 'readVeiculo';
+  Result.NomeArqSaida[6] := 'SclVeic.txt';
+
+  Result.Mapas[7] := cdsContasPatMapTanque.Value;
+  Result.Metodos[7] := 'writeTanque';
+  Result.MetodosRead[7] := 'readTanque';
+  Result.NomeArqSaida[7] := 'SclTaq.txt';
+
+  Result.Mapas[8] := cdsContasPatMapVinculado.Value;
+  Result.Metodos[8] := 'writeVinculado';
+  Result.MetodosRead[8] := 'readVinculado';
+  Result.NomeArqSaida[8] := 'SclVincu.txt';
+
+  Result.Mapas[9] := cdsContasPatMapColetor.Value;
+  Result.Metodos[9] := 'writeColetor';
+  Result.MetodosRead[9] := 'readColetor';
+  Result.NomeArqSaida[9] := 'SclCol.txt';
+
+  Result.Mapas[10] := cdsContasPatMapTecnico.Value;
+  Result.Metodos[10] := 'writeTecnico';
+  Result.MetodosRead[10] := 'readTecnico';
+  Result.NomeArqSaida[10] := 'SclTec.txt';
+
+  Result.Mapas[11] := cdsContasPatMapTag.Value;
+  Result.Metodos[11] := 'writeTag';
+  Result.MetodosRead[11] := 'readTag';
+  Result.NomeArqSaida[11] := 'SclTag.txt';
+
+  Result.Mapas[12] := cdsContasPatMapItinerario.Value;
+  Result.Metodos[12] := 'writeItinerario';
+  Result.MetodosRead[12] := 'readItinerario';
+  Result.NomeArqSaida[12] := 'SclItiner.txt';
+
+  Result.Mapas[13] := cdsContasPatMapAnalise.Value;
+  Result.Metodos[13] := 'writeAnalise';
+  Result.MetodosRead[13] := 'readAnalise';
+  Result.NomeArqSaida[13] := 'SclAna.txt';
+
+  Result.Mapas[14] := cdsContasPatMapExtrato.Value;
+  Result.Metodos[14] := 'writeExtrato';
+  Result.MetodosRead[14] := 'readExtrato';
+  Result.NomeArqSaida[14] := 'SclExt.txt';
+
+  Result.Mapas[15] := cdsContasPatMapMotivo.Value;
+  Result.Metodos[15] := 'writeMotivo';
+  Result.MetodosRead[15] := 'readMotivo';
+  Result.NomeArqSaida[15] := 'SclJust.txt';
+end;
+
+// Carrega informacoes do mapa de exportacao
 
 function TMlkPrincipalDTM.OrdenaCrescente(Par01, Par02: Pointer): Integer;
 var
@@ -2022,6 +2145,92 @@ begin
     Result := -1
   else
     Result := 0;
+end;
+// Persiste dados da viagem processada
+procedure TMlkPrincipalDTM.PersistirLogViagem(Viagem: TViagem);
+var
+  FlgEnviarNotificacao: Boolean;
+  ViagemCadastrada : Boolean;
+
+  function NotificaDifAtesto(Viagem: TViagem): Boolean;
+  var
+    PercDif: Double;
+  begin
+    if Viagem.QtdeArmazenado > 0 then
+      PercDif := Abs((Viagem.QtdeArmazenado - Viagem.QtdeColetado)/Viagem.QtdeArmazenado)
+    else
+      PercDif := Abs((Viagem.QtdeArmazenado - Viagem.QtdeColetado));
+
+   // Result := (PercDif > qryParametrosParPercAtesto.AsFloat) and
+    //  (Abs(PercDif - qryParametrosParPercAtesto.AsFloat) > 0.0001);
+  end;
+
+begin
+
+  // Verifica se a viagem já esta cadastrada no log
+  qrySQL.SQL.Clear;
+  qrySQL.SQL.Text := 'Select LovViagemId from LogViagem Where LovViagemId = :LovViagemId';
+  qrySQL.Parameters.ParamByName('LovViagemId').Value := Viagem.Id;
+  qrySQL.Open;
+  ViagemCadastrada := not qrySQL.IsEmpty ;
+  qrySQL.SQL.Clear;
+
+  FlgEnviarNotificacao := NotificaDifAtesto(Viagem);
+  // Persistir Log
+  if ViagemCadastrada then
+  begin
+    qrySQL.SQL.Text := 'UPDATE LogViagem Set LovGerDatasul = :LovGerDatasul, LovGerRm = :LovGerRm , LovGerMagis = :LovGerMagis, ' +
+                       ' LovGerMeta = :LovGerMeta , LovGerSiga = :LovGerSiga , '+
+                       ' LovGerScl = :LovGerScl, ContaId = :ContaId Where LovViagemId = :LovViagemId ' ;
+    qrySQL.Parameters.ParamByName('LovGerDatasul').Value := Viagem.GerouDatasul;
+    qrySQL.Parameters.ParamByName('LovGerRm').Value :=  Viagem.GerouRm;
+    qrySQL.Parameters.ParamByName('LovGerMagis').Value := Viagem.GerouMagis;
+    qrySQL.Parameters.ParamByName('LovGerMeta').Value := Viagem.GerouMeta;
+    qrySQL.Parameters.ParamByName('LovGerSiga').Value := Viagem.GerouSiga;
+    qrySQL.Parameters.ParamByName('LovGerScl').Value := Viagem.GerouScl;
+    qrySQL.Parameters.ParamByName('LovViagemId').Value := Viagem.Id;
+    qrySQL.Parameters.ParamByName('ContaId').Value := Viagem.ContaId;
+
+
+    qrySQL.ExecSQL;
+
+  end
+  else
+  begin
+    qrySQL.SQL.Text := 'INSERT INTO LogViagem (LovRotaCod, LovRotaId, LovEnviaNotif, LovDataProc, LovDifColeta, ' +
+      'LovQtdeDescarga, LovViagemId, LovGerDatasul, LovGerRm, LovGerMagis, LovGerMeta, LovGerSiga, '+
+      'LovGerScl,  LovColetor, LovVeiculo, LovDataViagem, LovIndex, ContaId) ' +
+      'VALUES (:LovRotaCod, :LovRotaId, :LovEnviaNotif, :LovDataProc, :LovDifColeta, :LovQtdeDescarga,' +
+      ' :LovViagemId, :LovGerDatasul, :LovGerRm, :LovGerMagis, :LovGerMeta, :LovGerSiga, :LovGerScl, :LovColetor, ' +
+      ' :LovVeiculo, :LovDataViagem, :LovIndex, :ContaId)';
+    qrySQL.Parameters.ParamByName('LovRotaCod').Value := Viagem.RotaCodigo;
+    qrySQL.Parameters.ParamByName('LovRotaId').Value := Viagem.RotaId;
+    qrySQL.Parameters.ParamByName('LovDataProc').Value := Date();
+    qrySQL.Parameters.ParamByName('LovDifColeta').Value := (Viagem.QtdeArmazenado - Viagem.QtdeColetado);
+    qrySQL.Parameters.ParamByName('LovQtdeDescarga').Value := Viagem.QtdeDescargas;
+    qrySQL.Parameters.ParamByName('LovViagemId').Value := Viagem.Id;
+    qrySQL.Parameters.ParamByName('LovEnviaNotif').Value := BooleanToStr(FlgEnviarNotificacao);
+    qrySQL.Parameters.ParamByName('LovGerDatasul').Value := Viagem.GerouDatasul;
+    qrySQL.Parameters.ParamByName('LovGerRm').Value :=  Viagem.GerouRm;
+    qrySQL.Parameters.ParamByName('LovGerMagis').Value := Viagem.GerouMagis;
+    qrySQL.Parameters.ParamByName('LovGerMeta').Value := Viagem.GerouMeta;
+    qrySQL.Parameters.ParamByName('LovGerSiga').Value := Viagem.GerouSiga;
+    qrySQL.Parameters.ParamByName('LovGerScl').Value := Viagem.GerouScl;
+    qrySQL.Parameters.ParamByName('LovColetor').Value := Viagem.Coletor;
+    qrySQL.Parameters.ParamByName('LovVeiculo').Value := Viagem.Veiculo;
+    qrySQL.Parameters.ParamByName('LovDataViagem').Value :=  GetData( FormatDateTime('yyyy-MM-dd hh:mm:ss',Viagem.DatAbertura));
+    qrySQL.Parameters.ParamByName('LovIndex').Value := Viagem.Index;
+    qrySQL.Parameters.ParamByName('ContaId').Value := Viagem.ContaId;
+
+    qrySQL.ExecSQL;
+  end;
+
+ {
+  // Envia Mensagem
+  if FlgEnviarNotificacao and (qryParametrosParEnviarNotifAtesto.AsString = 'S') then
+    EnviarNotificacao(Viagem, Format('Descarga da Viagem %d excedeu o percentual de atesto permitido.', [Viagem.Id]));
+ }
+
 end;
 
 procedure TMlkPrincipalDTM.PesquisarConta(Filtro: string);
@@ -2581,6 +2790,11 @@ procedure TMlkPrincipalDTM.SalvarConta;
 begin
    cdsContas.ApplyUpdates(-1);
    cdsContas.Refresh;
+  // Reseta log de viagens caso a data de leitura inicial da conta seja retroagida
+  if cdsContasDatIniLeituraDescargaWS.Value < cdsContasDatUltLeituraDescargaWS.Value then
+  begin
+    SetStatusLog(cdsContasContaId.Value,cdsContasDatIniLeituraDescargaWS.Value);
+  end;
 end;
 // Salvar Controle
 procedure TMlkPrincipalDTM.SalvarControle;
@@ -2592,11 +2806,53 @@ end;
 procedure TMlkPrincipalDTM.SelectAllRecordsConta;
 begin
   FResultado := '1=2';
-  FSQL := StringReplace(sqlContas.SQL.Text, FResultado, '1=1', []);
+  qryContas.Close;
+  FSQL := 'Select * from Contas Where 1=1';  //StringReplace(qryContas.SQL.Text, FResultado, '1=1', []);
   qryContas.SQL.Clear;
   qryContas.SQL.Add(FSQL);
   qryContas.Open;
   cdsContas.Refresh;
+end;
+
+// Seta data e hora da ultima iteracao de sincronizacao
+procedure TMlkPrincipalDTM.SetLastIteration;
+begin
+  FSQL := 'UPDATE Controle SET UltimaIteracao = :p1';
+  try
+     FConexaoBD.ExecutarComando(FSQL,[Now]);
+     cdsControle.Refresh;
+     Application.ProcessMessages;
+  except on E: Exception do
+    MostraMsgInfo(e.Message);
+  end;
+end;
+// Ajusta log de viagens caso o data inicial de leitura seja alterada.
+procedure TMlkPrincipalDTM.SetStatusLog(contaId: Integer;
+  DataInicial: TDateTime);
+begin
+    // Atualizar o arquivo de contas
+  FSQL := 'Update contas set DatIniLeituraDescargaWS = :p1 where ContaId = :p2';
+  try
+    FConexaoBD.ExecutarComando(FSQL,[DataInicial,contaId]);
+  except
+   raise Exception.Create('Falha ao atualizar os dados da conta: ' + IntToStr(contaId));
+  end;
+  // Atualiza arquivo de log de viagens
+  FSQL := 'Update Logviagem set ' +
+          ' LovGerDatasul = :p1, ' +
+          ' LovGerRm = :p2, ' +
+          ' LovGerMagis = :p3, ' +
+          ' LovGerMeta = :p4, ' +
+          ' LovGerSiga = :p5, ' +
+          ' LovGerScl = :p6 ' +
+          ' WHERE LovDataProc >= :LovDataProc AND ContaId = :contaId';
+
+  try
+    FConexaoBD.ExecutarComando(FSQL,[FlagNao,FlagNao, FlagNao,
+                                     FlagNao,FlagNao,FlagNao,DataInicial,contaId]);
+  except
+   raise Exception.Create('Falha ao atualizar Log da conta: ' + IntToStr(contaId));
+  end;
 end;
 
 // Gera Arquivos
@@ -2604,12 +2860,323 @@ procedure TMlkPrincipalDTM.tmrConsoleTimer(Sender: TObject);
 var
   dtInicio, dtFim : TDateTime;
 begin
- // getServerData();
+  FStatusTmrConsole := TmrAtivo;
+  FStatusTmrSync := TmrInabilitado;
+  try
+    tmrSync.OnTimer := nil;
+    tmrSync.Enabled := False;
+    if Assigned(ShowStatusTmr) then
+      ShowStatusTmr;
+    while not tmrSync.Enabled do
+    begin
+      getServerData();
+    end;
+  finally
+    // reabilita evento timer de console
+    tmrSync.OnTimer := tmrSyncTimer;
+    tmrSync.Enabled := True;
+    FStatusTmrSync := TmrInativo;
+    FStatusTmrConsole := TmrInativo;
+    if Assigned(ShowStatusTmr) then
+      ShowStatusTmr;
+
+  end;
+end;
+// Timer para sincronizacao da carga nas tabelas de cadastro
+procedure TMlkPrincipalDTM.tmrSyncTimer(Sender: TObject);
+var
+  x: Integer;
+  FLogAtu : TStringList;
+  FNomeArqLog : string;
+  dtInicio, dtFim : TDateTime;
+begin
+  try
+    try
+      // Desabilita envento do timer de geracao de arquivos
+      tmrConsole.OnTimer := nil;
+      while not tmrConsole.Enabled do
+      begin
+        tmrConsole.Enabled := False;
+        sheConsole.StopAll;
+
+        // Inicia log de envio de dados ao servidor
+        FLogAtu := TStringList.Create;
+        FLogAtu.Append('Milk´s Rota :: Log Envio de Arquivos API Milk´s Rota - Início Operação: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
+        FLogAtu.Append('*******************************************');
+
+        // Seta status
+        FStatusTmrSync := TmrAtivo;
+        FStatusTmrConsole := TmrInabilitado;
+        if Assigned(ShowStatusTmr) then
+          ShowStatusTmr;
+
+        // Reseta status de sincronizacaode todas as contas
+        if not ResetSync then
+          Abort;
+        // Seleciona todas as contas cadastradas
+        SelectAllRecordsConta;
+        cdsContas.First;
+
+        // gera os arquivos de cada conta
+        while not (cdsContas.Eof) do
+        begin
+          // Nao gerar arquivos se a conta estiver inativa
+          if (cdsContasAtiva.AsString = FlagNao) then
+          begin
+            cdsContas.Next;
+            Continue;
+          end;
+
+          // Periodo de geracao dos arquivos
+          dtInicio := cdsContasDatIniLeituraDescargaWS.Value;;
+          if (cdsContasParColetasHoje.Value = FlagSim) then
+            dtFim := Date()
+          else
+            dtFim := (Date() -1);
+
+           // Popula dados da conta
+           DadosConta.HostURL := cdsContasHostURL.Value;
+           DadosConta.IdConta := IntToStr(cdsContasContaId.Value);
+           DadosConta.Log := (cdsContasLog.Value = FlagSim);
+           DadosConta.CargaMultiEmpresa := cdsContasCargaMultiEmpresa.Value;
+           DadosConta.PathArqDatasul := cdsContasPathArqDatasul.Value;
+           DadosConta.PathArqCarga := cdsContasPathArqCarga.Value;
+           DadosConta.PathArqDescarga := cdsContasPathArqDescarga.Value;
+           DadosConta.PathArqMagis := cdsContasPathArqMagis.Value;
+           DadosConta.PathArqRm := cdsContasPathArqRm.Value;
+           DadosConta.PathArqMeta := cdsContasPathArqMeta.Value;
+           DadosConta.PathArqScl := cdsContasPathArqScl.Value;
+           DadosConta.ColetasHoje := cdsContasParColetasHoje.Value;
+           DadosConta.VerDatasul :=  cdsContasVerDatasul.Value;
+           DadosConta.VerRm := cdsContasVerRm.Value;
+           DadosConta.VerMagis := cdsContasVerMagis.Value;
+           DadosConta.VerScl := cdsContasVerScl.Value;
+           DadosConta.VerSiga := cdsContasVerSiga.Value;
+           dadosconta.VerMeta := cdsContasVerMeta.Value;
+
+
+           // Gerencia envio de dados com arquivos gerados para multiplas empresas ou filiais
+           if (DadosConta.CargaMultiEmpresa = FlagSim) then
+           begin
+             CargaMultiEmpresa.IdConta := StrToInt(DadosConta.IdConta);
+             CargaMultiEmpresa.CodigoERP := DadosConta.ChaveERP[x] ;
+             CargaMultiEmpresa.NomeAtributo := 'rota';
+             CargaMultiEmpresa.CargaMultipla := True;
+           end;
+
+           // Log
+           FLogAtu.Append('Conta: ' + DadosConta.IdConta );
+
+           // Se não houver numero de conta, pula para proxima posição
+           if DadosConta.IdConta = EmptyStr then
+              Continue;
+
+           // Carrega dados do mapa;
+           _MapasCarga :=  lodMapInformation(cdsContasContaId.Value);
+           // Atualiza Tabelas no servidor MilkRota
+           FLogAtu.Append('Atualizando dados da conta na API Milk´s Rota ... |<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss',Now));
+           AtualizaTabelasWs(_MapasCarga);
+           FLogAtu.Append('Fim Atualização dados da conta na API Milk´s Rota ...|<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
+           // Gera arquivos para conferencia com dados baixados do servidor e grava no local espeficico
+           FLogAtu.Append('Inicio Consulta de arquivos para conferência ...|<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
+           ExportDataWs(_MapasCarga);
+           FLogAtu.Append('Fim Consulta de arquivos para conferência ...|<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
+        end;
+      end;
+     except
+       on E: Exception do
+         FLogAtu.Append('Falha ao enviar arquivos: Msg. Erro: ' +  E.Message);
+    end;
+   finally
+    // Fecha e salva registro de log
+    FLogAtu.Append('Milk´s Rota :: Fim Envio de Arquivos - ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
+    FLogAtu.Append('*******************************************');
+
+
+    if DirectoryExists( DadosConta.PathArqCarga + '\Log') then
+    begin
+      FNomeArqLog := DadosConta.PathArqCarga + '\Log' +  '\'+ 'LogEnv_' + FormatDateTime('dd_MM_yyyy_hh_mm_ss',Now) + '.txt';
+      FLogAtu.SaveToFile(FNomeArqLog);
+    end
+    else
+    begin
+      ForceDirectories(DadosConta.PathArqCarga + '\Log');
+      FNomeArqLog := DadosConta.PathArqCarga + '\Log' +  '\'+ 'LogEnv_' + FormatDateTime('dd_MM_yyyy_hh_mm_ss',Now) + '.txt';
+      FLogAtu.SaveToFile(FNomeArqLog);
+    end;
+
+    FLogAtu.Destroy;
+    FStatusTmrConsole := TmrInativo;
+    FStatusTmrSync := TmrInativo;
+    if Assigned(ShowStatusTmr) then
+      ShowStatusTmr;
+    tmrConsole.OnTimer := tmrConsoleTimer;
+    tmrConsole.Enabled := True;
+    sheConsole.StartAll;
+   end;
+end;
+// Valida arquivos de mapa de carga
+function TMlkPrincipalDTM.ValidarArquivoMapa(aContaId: Integer; aFile,
+  aTabela: string): Boolean;
+var
+  _ArqOrgem, _TabelaDestino, _Separador, _TipoArquivo, _ChaveObrigatoria, _ChaveConta : string;
+begin
+  try
+    Result := True;
+    if FileExists(aFile) then
+    begin
+      LeIni(_TabelaDestino,aFile,'DESTINO','Tabela');
+      LeIni(_ChaveConta,aFile,'CONTA','ChaveConta');
+
+      if (  IntToStr(aContaId) <> _ChaveConta) then
+      begin
+        ShowMessage('Arquivo carregado da tabela [ '+ aTabela +' ], não pertence a conta ativa : Conta Arquivo( '+ _ChaveConta + ' )' +
+        ' Conta Ativa : ( ' + InttoStr(aContaId)+ ' )');
+        Result := False;
+      end;
+      if _TabelaDestino <> aTabela then
+      begin
+         ShowMessage('Arquivo carregado não é da tabela : ' + aTabela);
+        Result := False;
+      end;
+    end
+    else
+      ShowMessage('Arquivo associado à tabela : '+ aTabela + ' - ' + aFile + ', não localizado, verifique !');
+  finally
+    ;
+  end;
+
 end;
 
-procedure TMlkPrincipalDTM.tmrSyncTimer(Sender: TObject);
+function TMlkPrincipalDTM.ValidarAssociacao: Boolean;
+var
+  _Conta : Integer;
 begin
-   FStatusTmrSync := TmrAtivo;
+  if Assigned(cdsContas) then
+  begin
+    _Conta := cdsContasContaId.Value;
+    Result := True;
+     if (cdsContasPatMapAnalise.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapAnalise.Value, 'Analise') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+    if (cdsContasPatMapColetor.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapColetor.Value, 'Coletor') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+    if (cdsContasPatMapExtrato.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapExtrato.Value, 'Extrato') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+    if (cdsContasPatMapFazenda.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapFazenda.Value, 'Fazenda') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+    if (cdsContasPatMapItinerario.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapItinerario.Value, 'Itinerario') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+    if (cdsContasPatMapLinha.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapLinha.Value, 'Linha') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+    if (cdsContasPatMapMotivo.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapMotivo.Value, 'MotivoClto') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+    if (cdsContasPatMapProdutor.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapProdutor.Value, 'Produtor') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+    if (cdsContasPatMapGrupoRota.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapGrupoRota.Value, 'grupo_rota') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+    if (cdsContasPathMapRota.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPathMapRota.Value, 'Rota') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+    if (cdsContasPatMapTecnico.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapTecnico.Value, 'Tecnico') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+    if (cdsContasPatMapTanque.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapTanque.Value, 'Tanque') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+    if (cdsContasPatMapVinculado.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapVinculado.Value, 'tanque_vinculado') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+    if (cdsContasPatMapTag.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapTag.Value, 'Tag') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+    if (cdsContasPatMapVeiculo.Value <> EmptyStr) then
+    begin
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapVeiculo.Value, 'Veiculo') then
+      begin
+        Result := False;
+        Abort;
+      end;
+    end;
+  end;
 end;
 
 end.

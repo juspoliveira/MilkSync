@@ -397,6 +397,9 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
       FieldName = 'LovId'
       ReadOnly = True
     end
+    object cdsViagemContaId: TIntegerField
+      FieldName = 'ContaId'
+    end
     object cdsViagemLovRotaId: TIntegerField
       FieldName = 'LovRotaId'
     end
@@ -406,6 +409,9 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     object cdsViagemLovEnviaNotif: TStringField
       FieldName = 'LovEnviaNotif'
       Size = 1
+    end
+    object cdsViagemLovDataViagem: TDateTimeField
+      FieldName = 'LovDataViagem'
     end
     object cdsViagemLovDataProc: TWideStringField
       FieldName = 'LovDataProc'
@@ -447,10 +453,6 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     object cdsViagemLovVeiculo: TStringField
       FieldName = 'LovVeiculo'
       Size = 15
-    end
-    object cdsViagemLovDataViagem: TWideStringField
-      FieldName = 'LovDataViagem'
-      Size = 10
     end
     object cdsViagemLovGerScl: TStringField
       FieldName = 'LovGerScl'
@@ -527,6 +529,9 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     end
     object cdsControleIntervalocarga: TIntegerField
       FieldName = 'Intervalocarga'
+    end
+    object cdsControleultimaiteracao: TDateTimeField
+      FieldName = 'ultimaiteracao'
     end
   end
   object cdsColetas: TClientDataSet
@@ -1028,5 +1033,9 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     Parameters = <>
     Left = 504
     Top = 112
+  end
+  object ImageList1: TImageList
+    Left = 312
+    Top = 104
   end
 end

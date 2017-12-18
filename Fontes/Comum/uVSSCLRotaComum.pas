@@ -11,6 +11,7 @@ type
   TViagem = class
     Id: Integer;
     Index: Integer;
+    ContaId: Integer;
     DatUltColeta: TDateTime;
     QtdeColetado: Integer;
     QtdeArmazenado:   Integer;
@@ -432,7 +433,7 @@ function VersaoAplicativo(Executavel: string): string;
 procedure TrimAppMemorySize(pReinicia: Boolean; Programa:string);
 
 // Controle viagem, log e dataas
-procedure PersistirLogViagem(Viagem: TViagem);
+
 procedure GerarArquivoViagem(Viagem: TViagem);
 function GerarLinhaArquivo(ObjViagem: TViagem; TipoLinhaColeta: byte): string;
 procedure EnviarNotificacao(Viagem: TViagem; Mensagem: string);
@@ -1180,9 +1181,9 @@ begin
   // Pega localização dos arquivos de dados
   LeIni(_ArquivoMapa,MasterMap,'Dados','GRUPO_ROTA');
   Result.Mapas[1] := _ArquivoMapa;
-  Result.Metodos[1] := 'writeGrupoRota';
+  Result.Metodos[1]     := 'writeGrupoRota';
   Result.MetodosRead[1] := 'readGrupoRota';
-  Result.NomeArqSaida[1] := 'SclGrpRota.txt';
+  Result.NomeArqSaida[1]:= 'SclGrpRota.txt';
 
   LeIni(_ArquivoMapa,MasterMap,'Dados','ROTA');
   Result.Mapas[2] := _ArquivoMapa;
@@ -2371,89 +2372,6 @@ end;
 
 // Auxiliares
 
-procedure PersistirLogViagem(Viagem: TViagem);
-var
-  FlgEnviarNotificacao: Boolean;
-  ViagemCadastrada : Boolean;
-
-  function NotificaDifAtesto(Viagem: TViagem): Boolean;
-  var
-    PercDif: Double;
-  begin
-    if Viagem.QtdeArmazenado > 0 then
-      PercDif := Abs((Viagem.QtdeArmazenado - Viagem.QtdeColetado)/Viagem.QtdeArmazenado)
-    else
-      PercDif := Abs((Viagem.QtdeArmazenado - Viagem.QtdeColetado));
-
-   // Result := (PercDif > qryParametrosParPercAtesto.AsFloat) and
-    //  (Abs(PercDif - qryParametrosParPercAtesto.AsFloat) > 0.0001);
-  end;
-
-begin
- {
-  // Verifica se a viagem já esta cadastrada no log
-  qrySQL.SQL.Clear;
-  qrySQL.SQL.Text := 'Select LovViagemId from LogViagem Where LovViagemId = :LovViagemId';
-  qrySQL.ParamByName('LovViagemId').Value := Viagem.Id;
-  qrySQL.Open;
-  ViagemCadastrada := not qrySQL.IsEmpty ;
-  qrySQL.SQL.Clear;
-
-  FlgEnviarNotificacao := NotificaDifAtesto(Viagem);
-  // Persistir Log
-  if ViagemCadastrada then
-  begin
-    qrySQL.SQL.Text := 'UPDATE LogViagem Set LovGerDatasul = :LovGerDatasul, LovGerRm = :LovGerRm , LovGerMagis = :LovGerMagis, ' +
-                       ' LovGerMeta = :LovGerMeta , LovGerSiga = :LovGerSiga , '+
-                       ' LovGerScl = :LovGerScl Where LovViagemId = :LovViagemId ' ;
-    qrySQL.ParamByName('LovGerDatasul').Value := Viagem.GerouDatasul;
-    qrySQL.ParamByName('LovGerRm').Value :=  Viagem.GerouRm;
-    qrySQL.ParamByName('LovGerMagis').Value := Viagem.GerouMagis;
-    qrySQL.ParamByName('LovGerMeta').Value := Viagem.GerouMeta;
-    qrySQL.ParamByName('LovGerSiga').Value := Viagem.GerouSiga;
-    qrySQL.ParamByName('LovGerScl').Value := Viagem.GerouScl;
-    qrySQL.ParamByName('LovViagemId').Value := Viagem.Id;
-
-    qrySQL.ExecSQL;
-
-  end
-  else
-  begin
-    qrySQL.SQL.Text := 'INSERT INTO LogViagem (LovRotaCod, LovRotaId, LovEnviaNotif, LovDataProc, LovDifColeta, ' +
-      'LovQtdeDescarga, LovViagemId, LovGerDatasul, LovGerRm, LovGerMagis, LovGerMeta, LovGerSiga, '+
-      'LovGerScl,  LovColetor, LovVeiculo, LovDataViagem, LovIndex) ' +
-      'VALUES (:LovRotaCod, :LovRotaId, :LovEnviaNotif, :LovDataProc, :LovDifColeta, :LovQtdeDescarga,' +
-      ' :LovViagemId, :LovGerDatasul, :LovGerRm, :LovGerMagis, :LovGerMeta, :LovGerSiga, :LovGerScl, :LovColetor, ' +
-      ' :LovVeiculo, :LovDataViagem, :LovIndex)';
-    qrySQL.ParamByName('LovRotaCod').Value := Viagem.RotaCodigo;
-    qrySQL.ParamByName('LovRotaId').Value := Viagem.RotaId;
-    qrySQL.ParamByName('LovDataProc').Value := Now;
-    qrySQL.ParamByName('LovDifColeta').Value := (Viagem.QtdeArmazenado - Viagem.QtdeColetado);
-    qrySQL.ParamByName('LovQtdeDescarga').Value := Viagem.QtdeDescargas;
-    qrySQL.ParamByName('LovViagemId').Value := Viagem.Id;
-    qrySQL.ParamByName('LovEnviaNotif').Value := BooleanToStr(FlgEnviarNotificacao);
-    qrySQL.ParamByName('LovGerDatasul').Value := Viagem.GerouDatasul;
-    qrySQL.ParamByName('LovGerRm').Value :=  Viagem.GerouRm;
-    qrySQL.ParamByName('LovGerMagis').Value := Viagem.GerouMagis;
-    qrySQL.ParamByName('LovGerMeta').Value := Viagem.GerouMeta;
-    qrySQL.ParamByName('LovGerSiga').Value := Viagem.GerouSiga;
-    qrySQL.ParamByName('LovGerScl').Value := Viagem.GerouScl;
-    qrySQL.ParamByName('LovColetor').Value := Viagem.Coletor;
-    qrySQL.ParamByName('LovVeiculo').Value := Viagem.Veiculo;
-    qrySQL.ParamByName('LovDataViagem').Value :=  GetData( FormatDateTime('yyyy-MM-dd',Viagem.DatAbertura));
-    qrySQL.ParamByName('LovIndex').Value := Viagem.Index;
-
-
-
-    qrySQL.ExecSQL;
-  end;
-
-
-  // Envia Mensagem
-  if FlgEnviarNotificacao and (qryParametrosParEnviarNotifAtesto.AsString = 'S') then
-    EnviarNotificacao(Viagem, Format('Descarga da Viagem %d excedeu o percentual de atesto permitido.', [Viagem.Id]));
- }
-end;
 procedure GerarArquivoViagem(Viagem: TViagem);
 var
   ArquivoDados: TStringList;

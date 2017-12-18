@@ -11,7 +11,7 @@ uses
   cxDBData, cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   cxGridLevel, cxClasses, cxGridCustomView, cxGrid, ComCtrls, ImgList, StdCtrls,
   Buttons, cxImageComboBox, cxContainer, cxTextEdit, cxMaskEdit, cxSpinEdit,
-  cxDBEdit;
+  cxDBEdit, cxDropDownEdit, cxCalendar;
 
 type
   TMksPrincipalFRM = class(TForm)
@@ -62,6 +62,8 @@ type
     edtCad: TcxDBSpinEdit;
     dsControle: TDataSource;
     stbMaster: TStatusBar;
+    grbLastIte: TGroupBox;
+    edtLastIte: TcxDBDateEdit;
     procedure acOpenExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -73,6 +75,7 @@ type
     procedure AcConfigExecute(Sender: TObject);
     procedure acSalvarExecute(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure pgcMasterChange(Sender: TObject);
   private
     procedure MostraStatusTmr;
   public
@@ -159,6 +162,7 @@ begin
   MlkPrincipalDTM.StatusTmrConsole := TmrHabilitado;
   MlkPrincipalDTM.StatusTmrSync := TmrHabilitado;
   MostraStatusTmr;
+  MlkPrincipalDTM.SetLastIteration;
 
   MlkPrincipalDTM.getServerData;
 end;
@@ -198,8 +202,16 @@ begin
 procedure TMksPrincipalFRM.MostraStatusTmr;
 begin
   stbMaster.Panels[1].Text := MlkPrincipalDTM.StatusTmrSync;
-  stbMaster.Panels[3].Text := MlkPrincipalDTM.StatusTmrConsole;
+  stbMaster.Panels[4].Text := MlkPrincipalDTM.StatusTmrConsole;
   Application.ProcessMessages;
+end;
+
+procedure TMksPrincipalFRM.pgcMasterChange(Sender: TObject);
+begin
+   if pgcMaster.ActivePage = tabsContas then
+  begin
+    MlkPrincipalDTM.SelectAllRecordsConta;
+  end;
 end;
 
 end.

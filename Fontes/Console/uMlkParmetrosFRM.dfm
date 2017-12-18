@@ -136,7 +136,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
   inherited pgcManutencao: TPageControl
     Width = 606
     Height = 538
-    ActivePage = tabsCadastro
+    ActivePage = tabsCarga
     ExplicitWidth = 606
     ExplicitHeight = 538
     inherited tabsPesquisa: TTabSheet
@@ -354,6 +354,8 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
       end
     end
     inherited tabsCadastro: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 24
       ExplicitWidth = 598
       ExplicitHeight = 510
       inherited pnlMaster: TPanel
@@ -1536,6 +1538,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapRotaClick
         end
         object btnMapColetor: TSpeedButton
           Left = 551
@@ -1550,6 +1553,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapColetorClick
         end
         object btnMapExtrato: TSpeedButton
           Left = 551
@@ -1564,7 +1568,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
-          OnDblClick = btnMapExtratoClick
+          OnClick = btnMapExtratoClick
         end
         object btnMapFazenda: TSpeedButton
           Left = 550
@@ -1579,6 +1583,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapFazendaClick
         end
         object btnMapItinerario: TSpeedButton
           Left = 551
@@ -1593,6 +1598,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapItinerarioClick
         end
         object btnMapLinha: TSpeedButton
           Left = 551
@@ -1607,6 +1613,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapLinhaClick
         end
         object btnMapMotivo: TSpeedButton
           Left = 551
@@ -1621,6 +1628,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapMotivoClick
         end
         object btnMapProdutor: TSpeedButton
           Left = 551
@@ -1635,6 +1643,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapProdutorClick
         end
         object btnMatGrupoRota: TSpeedButton
           Left = 551
@@ -1649,6 +1658,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMatGrupoRotaClick
         end
         object btnMapTanque: TSpeedButton
           Left = 551
@@ -1663,6 +1673,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapTanqueClick
         end
         object btnMapVinculado: TSpeedButton
           Left = 551
@@ -1677,6 +1688,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapVinculadoClick
         end
         object btnMapVeiculo: TSpeedButton
           Left = 548
@@ -1691,6 +1703,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapVeiculoClick
         end
         object btnMapTag: TSpeedButton
           Left = 548
@@ -1705,6 +1718,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapTagClick
         end
         object btnMapTecnico: TSpeedButton
           Left = 553
@@ -1719,6 +1733,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapTecnicoClick
         end
         object btnMapAnalise: TSpeedButton
           Left = 548
@@ -1733,6 +1748,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapAnaliseClick
         end
         object edtMapColetor: TcxDBTextEdit
           Left = 7
@@ -1915,7 +1931,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
     Left = 496
     Top = 3
     Bitmap = {
-      494C01010D000E001C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010D000E00240010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000004000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000AC6A2BFFE1A53CFFE6C58FFFF2E0

@@ -230,14 +230,11 @@ type
     procedure btnMapVeiculoClick(Sender: TObject);
     procedure btnMapTagClick(Sender: TObject);
     procedure btnMapTecnicoClick(Sender: TObject);
-    procedure acSalvarExecute(Sender: TObject);
     procedure acManutencaoUpdate(Action: TBasicAction; var Handled: Boolean);
-  
+
   private
     whoOpenFileFinder : Integer;
     procedure RunFileFinder(whoOpened: integer);
-    function ValidarArquivoMapa(aContaId:Integer;aFile,aTabela: string): Boolean;
-    function ValidarAssociacao:Boolean;
   public
     { Public declarations }
   end;
@@ -379,14 +376,6 @@ begin
   end;
 end;
 
-procedure TMlkParmetrosFRM.acSalvarExecute(Sender: TObject);
-begin
-  // Valida a associacao dos mapas antes de salvar os dados
-  if not (ValidarAssociacao) then
-    Abort;
-  inherited;
-end;
-
 procedure TMlkParmetrosFRM.btnMapAnaliseClick(Sender: TObject);
 begin
   inherited;
@@ -490,165 +479,6 @@ procedure TMlkParmetrosFRM.RunFileFinder(whoOpened: integer);
 begin
   whoOpenFileFinder := whoOpened;
   acFindFile.Execute;
-end;
-// Valida o arquivo de mapra de carga com a conta ativa
-function TMlkParmetrosFRM.ValidarArquivoMapa(aContaId:Integer; aFile, aTabela: string): Boolean;
-var
-  _ArqOrgem, _TabelaDestino, _Separador, _TipoArquivo, _ChaveObrigatoria, _ChaveConta : string;
-begin
-  try
-    Result := True;
-    if FileExists(aFile) then
-    begin
-      LeIni(_TabelaDestino,aFile,'DESTINO','Tabela');
-      LeIni(_ChaveConta,aFile,'CONTA','ChaveConta');
-
-      if (  IntToStr(aContaId) <> _ChaveConta) then
-      begin
-        ShowMessage('Arquivo carregado da tabela [ '+ aTabela +' ], não pertence a conta ativa : Conta Arquivo( '+ _ChaveConta + ' )' +
-        ' Conta Ativa : ( ' + InttoStr(aContaId)+ ' )');
-        Result := False;
-      end;
-      if _TabelaDestino <> aTabela then
-      begin
-         ShowMessage('Arquivo carregado não é da tabela : ' + aTabela);
-        Result := False;
-      end;
-    end
-    else
-      ShowMessage('Arquivo associado à tabela : '+ aTabela + ' - ' + aFile + ', não localizado, verifique !');
-  finally
-    ;
-  end;
-
-end;
-// Valida a associacao dos mapas de importacao de dados para OWebService
-function TMlkParmetrosFRM.ValidarAssociacao: Boolean;
-var
-  _Conta : Integer;
-begin
-  _Conta := StrToInt(edtConta.Text);
-  Result := True;
-   if (edtMapAnalise.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapAnalise.Text, 'Analise') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
-  if (edtMapColetor.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapColetor.Text, 'Coletor') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
-  if (edtMapExtrato.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapExtrato.Text, 'Extrato') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
-  if (edtMapFazenda.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapFazenda.Text, 'Fazenda') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
-  if (edtMapItinerario.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapItinerario.Text, 'Itinerario') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
-  if (edtMapLInha.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapLInha.Text, 'Linha') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
-  if (edtMapMotivo.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapMotivo.Text, 'MotivoClto') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
-  if (edtMapProdutor.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapProdutor.Text, 'Produtor') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
-  if (edtMapGrupoRota.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapGrupoRota.Text, 'grupo_rota') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
-  if (edtMapRota.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapRota.Text, 'Rota') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
-  if (edtMapTecnico.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapTecnico.Text, 'Tecnico') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
-  if (edtMapTanque.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapTanque.Text, 'Tanque') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
-  if (edtMapVinculado.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapVinculado.Text, 'tanque_vinculado') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
-  if (edtMapTag.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapTag.Text, 'Tag') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
-  if (edtMapVeiculo.Text <> EmptyStr) then
-  begin
-    if not ValidarArquivoMapa(_Conta,edtMapVeiculo.Text, 'Veiculo') then
-    begin
-      Result := False;
-      Abort;
-    end;
-  end;
 end;
 
 end.
