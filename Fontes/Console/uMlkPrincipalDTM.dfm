@@ -4,7 +4,6 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
   Height = 515
   Width = 718
   object cnnMaster: TADOConnection
-    Connected = True
     ConnectionString = 
       'Provider=SQLOLEDB.1;Password=esd056402;Persist Security Info=Tru' +
       'e;User ID=sa;Initial Catalog=MilkSync;Data Source=DESKTOP-KUC122' +
@@ -1037,5 +1036,106 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
   object ImageList1: TImageList
     Left = 312
     Top = 104
+  end
+  object cnnDbMaster: TZConnection
+    ControlsCodePage = cCP_UTF16
+    UTF8StringsAsWideField = True
+    Port = 0
+    Protocol = 'sqlite-3'
+    LibraryLocation = 'C:\Desenvolvimento\tools\MilkSync\Deploy\sqlite3.dll'
+    Left = 32
+    Top = 376
+  end
+  object qryDbAux: TZQuery
+    Connection = cnnDbMaster
+    Params = <>
+    Left = 112
+    Top = 376
+  end
+  object cdsItinerarios: TClientDataSet
+    Aggregates = <>
+    Params = <>
+    Left = 552
+    Top = 272
+    object cdsItinerarioscodigo: TStringField
+      FieldName = 'codigo'
+    end
+    object cdsItinerarioslinha: TStringField
+      FieldName = 'linha'
+    end
+    object cdsItinerariosfazenda: TStringField
+      FieldName = 'fazenda'
+    end
+    object cdsItinerariosordem: TStringField
+      FieldName = 'ordem'
+      Size = 3
+    end
+    object cdsItinerarioshorario: TStringField
+      FieldName = 'horario'
+      Size = 10
+    end
+    object cdsItinerarioscoleta_seletiva: TStringField
+      FieldName = 'coleta_seletiva'
+      Size = 1
+    end
+  end
+  object cdsTanques: TClientDataSet
+    Aggregates = <>
+    Params = <>
+    Left = 632
+    Top = 272
+    object cdsTanquestipo: TStringField
+      FieldName = 'tipo'
+      Size = 1
+    end
+    object cdsTanquescodigo: TStringField
+      FieldName = 'codigo'
+    end
+    object cdsTanquesfazenda: TStringField
+      FieldName = 'fazenda'
+    end
+    object cdsTanquesveiculo: TStringField
+      FieldName = 'veiculo'
+    end
+    object cdsTanquescapacidade: TIntegerField
+      FieldName = 'capacidade'
+    end
+    object cdsTanquesaltura: TIntegerField
+      FieldName = 'altura'
+    end
+    object cdsTanquesperimetro: TIntegerField
+      FieldName = 'perimetro'
+    end
+    object cdsTanquesvolume: TIntegerField
+      FieldName = 'volume'
+    end
+    object cdsTanquescomunitario: TStringField
+      FieldName = 'comunitario'
+      Size = 1
+    end
+    object cdsTanquesdistribuicao: TStringField
+      FieldName = 'distribuicao'
+      Size = 2
+    end
+    object cdsTanquesdiferenca: TStringField
+      FieldName = 'diferenca'
+      Size = 1
+    end
+    object cdsTanquesimpressao: TStringField
+      FieldName = 'impressao'
+      Size = 1
+    end
+    object cdsTanquesdivisao: TStringField
+      FieldName = 'divisao'
+      Size = 1
+    end
+    object cdsTanquescoleta_seletiva: TStringField
+      FieldName = 'coleta_seletiva'
+      Size = 1
+    end
+    object cdsTanquesdeleted: TStringField
+      FieldName = 'deleted'
+      Size = 1
+    end
   end
 end

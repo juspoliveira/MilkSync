@@ -47,8 +47,8 @@ type
     dt_push: TDateTime;
     dt_inicio: TDateTime;
     dt_fim: TDateTime;
-    motivo: string[255];
-    cancelado: string[1];
+    motivo: string;
+    cancelado: string;
     total_coleta: Integer;
   end;
   TListaVisita = class(TObjectList)
@@ -374,7 +374,8 @@ type
      conta_id: string;
    end;
 
-  TStatusConta = (scAtivo, scInativo, scInterrompido, scAtualizando);
+
+TStatusConta = (scAtivo, scInativo, scInterrompido, scAtualizando);
 
 procedure PopularDadosConta(cdsPar: TDataSet);
 function RetornoMetodoWSPOST(URL: string; Parametros: TStringList): string;
@@ -442,6 +443,7 @@ function GetDataHora(Data: string): TDateTime;
 function ValidaInt(Numero: string): Integer;
 
 
+
 var
   DadosConta: TDadosConta;
   CargaMultiEmpresa : TMultiEmpresa;
@@ -463,6 +465,19 @@ const
   FlagNao = 'N';
   RetornaComunitario = '1';
   NaoRetornaComunitario = '0';
+
+  TableLancamentos =
+  ' Create Table lancamentos(  '+
+  ' id integer primary key autoincrement, '+
+  ' codigo varchar(6), '+
+  ' fazenda varchar(2),'+
+  ' materia varchar(3),'+
+  ' linha varchar(4),  '+
+  ' data varchar(10),  '+
+  ' hora varchar(10),  '+
+  ' volume double,     '+
+  ' ntanque integer,   '+
+  ' temperatura double);';
 
 implementation
 
@@ -494,6 +509,7 @@ var
   IdHTTP: TIdHTTP;
 begin
   IdHTTP := TIdHTTP.Create(nil);
+
   try
     // Proxy
     if DadosConta.UsarProxy then
@@ -507,7 +523,7 @@ begin
     InserirMsgLog('POST ' + URL);
     if Assigned(Parametros) then
       InserirMsgLog(Parametros.Text);
-    Result := IdHTTP.Post(URL, Parametros);
+     Result := IdHTTP.Post(URL, Parametros);
     InserirMsgLog('#POST ' + Result);
   finally
     FreeAndNil(IdHTTP);
@@ -608,7 +624,22 @@ end;
 function PostMetodoJSON(URL: string; Parametros: TStringList): TDadosRetorno;
 var
   ValorJSON: TJSONObject;
+  xValue : TStringList;
+  idxRemove : Integer;
+  json : TlkJSON;
 begin
+(*
+  json := TlkJSON.Create;
+  json.ParseText(RetornoMetodoWSPOST(URL, Parametros));
+
+
+  xValue := TStringList.Create;
+  xValue.Add (json.ToString);
+  xValue.SaveToFile('c:\temp\json.txt');
+
+ // ValorJSON := TJSONObject.create(Copy(xValue.Text,0,Pos(xValue.Text,QuotedStr('monitor.time'))-1)+ '}');
+
+ *)
   ValorJSON := TJSONObject.Create(RetornoMetodoWSPOST(URL, Parametros));
   try
     // Retorno
@@ -620,9 +651,12 @@ begin
 
     if ValorJSON.has('data') then
       Result.Dados := ValorJSON.getString('data');
+    if ValorJSON.has('monitor.time') then
+      Result.Monitor := (ValorJSON.getString('monitor.time'));
+   // Result.Monitor := FloatToStr(ValorJSON.getDouble('monitor.time'));
 
-    Result.ToString := Format('Metodo: %s - Sucesso: %s - Mensagem: %s - Parametros: %s - Dados: %s',
-      [Result.Metodo, BoolToStr(Result.Sucesso), Result.Mensagem, Result.Parametros, Result.Dados]);
+    Result.ToString := Format('Metodo: %s - Sucesso: %s - Mensagem: %s - Parametros: %s - Dados: %s - Time: %s',
+      [Result.Metodo, BoolToStr(Result.Sucesso), Result.Mensagem, Result.Parametros, Result.Dados, Result.Monitor]);
   finally
     ValorJSON.Free;
   end;
@@ -731,6 +765,7 @@ begin
   memREST := TStringList.Create;
 
   try
+
     memREST.Add('conta_id=' + IntToStr(ContaId));
     memREST.Add('dt_inicio=' + DataInicio);
     memREST.Add('dt_fim=' + DataTermino);
@@ -1118,7 +1153,8 @@ begin
   end;
   if ValorJSON.has('monitor.time') then
   begin
-    Result.Monitor := ValorJSON.getString('monitor.time');
+    Result.Monitor := (ValorJSON.getString('monitor.time'));
+    //Result.Monitor := FloatToStr (ValorJSON.getDouble('monitor.time'));
   end;
 
   Result.ToString := Format('Metodo: %s - Sucesso: %s - Mensagem: %s - Dados: %s',
@@ -1140,8 +1176,6 @@ begin
       IdHTTP.Request.ContentType := 'application/json';
       IdHTTP.Request.CharSet := 'utf-8';
       IdHTTP.Request.Method := 'POST';
-      IdHTTP.Response.ContentType := 'application/json';
-      IdHTTP.Response.CharSet := 'utf-8';
       Result := IdHTTP.Post(URL, DataToSend);
     end;
   finally
@@ -1965,6 +1999,32 @@ begin
       Result.Token := 'mi12-fg19-d154-4910'  ;
       Result.Doc := '01.405.821/0001-70';
     end;
+    200465:
+    begin
+      Result.Token:= '6d696e61736d696c6b';
+      Result.Doc  := '04.072.760/0001-65';
+    end;
+    298668:
+    begin
+      Result.Token:= '73616f766963656e74656d617472697a';
+      Result.Doc  := '86.454.741/0001-68' ;
+    end;
+    308600:
+    begin
+     Result.Token:= '73616f766963656e746572697461706f6c6973';
+     Result.Doc  := '86.454.741/0004-00';
+    end;
+    318691:
+    begin
+      Result.Token:= '73616f766963656e7465706572646f6573';
+      Result.Doc  := '86.454.741/0005-91';
+    end;
+    322200:
+    begin
+     Result.Token:= '64656c7265796c61746963696e696f73';
+     Result.Doc  := '22.430.532/0001-00';
+    end;
+
     11132:
     Result.Token := 's0167r';
     82009:

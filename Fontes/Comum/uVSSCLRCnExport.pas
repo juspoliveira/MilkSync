@@ -3,7 +3,31 @@ unit uVSSCLRCnExport;
 interface
 uses
   SysUtils, Classes;
-
+const
+  CreateTableRetornoSCA =
+  'CREATE TABLE [lancamentos] ( ' +
+  '[_id] INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+  '[codigo] TEXT(6), '+
+  '[fazenda] TEXT(2), '+
+  '[materia] TEXT(3), '+
+  '[linha] TEXT(4), '+
+  '[data] TEXT, '+
+  '[hora] TEXT, '+
+  '[volume] double, '+
+  '[ntanque] int, '+
+  '[temperatura] double);';
+const
+  InsertTableRetornoSCA =
+  ' Insert into lancamentos( '+
+  ' codigo, fazenda, materia, linha, data, hora, volume, ntanque, temperatura) '+
+  ' values(:codigo, :fazenda, :materia, :linha, :data, :hora, :volume, :ntanque, '+
+  ' :temperatura);';
+type
+  TAbrirBanco = class
+    criou : Boolean;
+    success : Boolean;
+    exists : Boolean;
+  end;
 type
   TMovimentoRM = class   // // Movimento RM
     tipoLinha : string; // [01]
@@ -277,9 +301,53 @@ type
     private
   end;
 
+procedure createParametros;
+procedure populaParametros;
+procedure destroiParametros;
+
+var
+TParametros, TValores : TStringList;
+
 implementation
 
 uses uGlobal;
+
+
+// Inicializa parametros sistema SCA
+procedure createParametros;
+begin
+  TParametros := TStringList.Create;
+  TValores := TStringList.Create;
+end;
+procedure populaParametros;
+begin
+  TParametros.Clear;
+  Tparametros.Add('codigo');
+  Tparametros.Add('fazenda');
+  Tparametros.Add('materia');
+  Tparametros.Add('linha');
+  Tparametros.Add('data');
+  Tparametros.Add('hora');
+  Tparametros.Add('volume');
+  Tparametros.Add('ntanque');
+  Tparametros.Add('temperatura');
+  // Inicializa
+  TValores.Clear;
+  TValores.Add(EmptyStr);
+  TValores.Add(EmptyStr);
+  TValores.Add(EmptyStr);
+  TValores.Add(EmptyStr);
+  TValores.Add(EmptyStr);
+  TValores.Add(EmptyStr);
+  TValores.Add(EmptyStr);
+  TValores.Add(EmptyStr);
+  TValores.Add(EmptyStr);
+end;
+procedure destroiParametros;
+begin
+  TParametros.Destroy;
+  TValores.Destroy;
+end;
 
 { TMovimentoRM }
 

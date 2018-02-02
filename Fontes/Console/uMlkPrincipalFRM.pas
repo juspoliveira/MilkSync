@@ -15,7 +15,6 @@ uses
 
 type
   TMksPrincipalFRM = class(TForm)
-    tryMaster: TTrayIcon;
     pmnManster: TPopupMenu;
     aclMaster: TActionList;
     acOpen: TAction;
@@ -64,6 +63,7 @@ type
     stbMaster: TStatusBar;
     grbLastIte: TGroupBox;
     edtLastIte: TcxDBDateEdit;
+    tryMaster: TTrayIcon;
     procedure acOpenExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -71,11 +71,11 @@ type
     procedure acHideExecute(Sender: TObject);
     procedure acStartExecute(Sender: TObject);
     procedure acStopExecute(Sender: TObject);
-    procedure acLogExecute(Sender: TObject);
     procedure AcConfigExecute(Sender: TObject);
     procedure acSalvarExecute(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure pgcMasterChange(Sender: TObject);
+    procedure AppEvenMasterMinimize(Sender: TObject);
   private
     procedure MostraStatusTmr;
   public
@@ -96,6 +96,7 @@ procedure TMksPrincipalFRM.acCloseExecute(Sender: TObject);
 begin
  tryMaster.BalloonHint := 'Bye Bye .. !';
  tryMaster.ShowBalloonHint;
+ Halt(0);
  Application.Terminate;
 end;
 
@@ -108,11 +109,6 @@ end;
 procedure TMksPrincipalFRM.acHideExecute(Sender: TObject);
 begin
   Self.Close;
-end;
-
-procedure TMksPrincipalFRM.acLogExecute(Sender: TObject);
-begin
-;
 end;
 
 procedure TMksPrincipalFRM.acOpenExecute(Sender: TObject);
@@ -157,10 +153,10 @@ procedure TMksPrincipalFRM.acStartExecute(Sender: TObject);
 begin
   memLog.Lines.Append('Servico Iniciado ...' + '[' +  FormatDateTime('dd-MM-yyyy hh:mm:ss', Now) + ']');
   MlkPrincipalDTM.tmrConsole.Enabled := True;
-  MlkPrincipalDTM.tmrSync.Enabled := True;
+  MlkPrincipalDTM.tmrSync.Enabled := False;
   MlkPrincipalDTM.sheConsole.StartAll;
   MlkPrincipalDTM.StatusTmrConsole := TmrHabilitado;
-  MlkPrincipalDTM.StatusTmrSync := TmrHabilitado;
+  MlkPrincipalDTM.StatusTmrSync := TmrInativo;
   MostraStatusTmr;
   MlkPrincipalDTM.SetLastIteration;
 
@@ -178,6 +174,11 @@ begin
   MostraStatusTmr;
 end;
 
+procedure TMksPrincipalFRM.AppEvenMasterMinimize(Sender: TObject);
+begin
+  acHide.Execute;
+end;
+
 procedure TMksPrincipalFRM.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := caNone;
@@ -190,6 +191,7 @@ begin
   tryMaster.Animate := True;
   tryMaster.ShowBalloonHint;
   MlkPrincipalDTM.ShowStatusTmr := MostraStatusTmr;
+
 end;
 
 procedure TMksPrincipalFRM.FormShow(Sender: TObject);
@@ -197,6 +199,7 @@ begin
   // Mostra status dos timers
   MostraStatusTmr;
  end;
+
 
 // Exibe o sttus to timer no Status Painel
 procedure TMksPrincipalFRM.MostraStatusTmr;

@@ -6,7 +6,8 @@ uses
   SysUtils, Classes, DB, ADODB,Forms,uConexao, Messages, Dialogs, Provider,
   uS2SQLDataSet, DBClient, uConstantesComuns, Variants, JvScheduledEvents,
   ExtCtrls, JvAppInst, uVSSCLRotaComum, uJSON, uSCLRCnExport, FMTBcd, SqlExpr,
-  DateUtils, ImgList, Controls;
+  DateUtils, ImgList, Controls, ZAbstractConnection, ZConnection,
+  ZAbstractRODataset, ZAbstractDataset, ZDataset, FileCtrl, Windows;
 
 
 type
@@ -231,6 +232,31 @@ type
     cdsViagemContaId: TIntegerField;
     cdsViagemLovDataViagem: TDateTimeField;
     ImageList1: TImageList;
+    cnnDbMaster: TZConnection;
+    qryDbAux: TZQuery;
+    cdsItinerarios: TClientDataSet;
+    cdsItinerarioscodigo: TStringField;
+    cdsItinerarioslinha: TStringField;
+    cdsItinerariosfazenda: TStringField;
+    cdsItinerarioshorario: TStringField;
+    cdsItinerarioscoleta_seletiva: TStringField;
+    cdsItinerariosordem: TStringField;
+    cdsTanques: TClientDataSet;
+    cdsTanquestipo: TStringField;
+    cdsTanquescodigo: TStringField;
+    cdsTanquesfazenda: TStringField;
+    cdsTanquesveiculo: TStringField;
+    cdsTanquescapacidade: TIntegerField;
+    cdsTanquesaltura: TIntegerField;
+    cdsTanquesperimetro: TIntegerField;
+    cdsTanquesvolume: TIntegerField;
+    cdsTanquescomunitario: TStringField;
+    cdsTanquesdistribuicao: TStringField;
+    cdsTanquesdiferenca: TStringField;
+    cdsTanquesimpressao: TStringField;
+    cdsTanquesdivisao: TStringField;
+    cdsTanquescoleta_seletiva: TStringField;
+    cdsTanquesdeleted: TStringField;
     procedure DataModuleCreate(Sender: TObject);
     procedure cdsContasBeforePost(DataSet: TDataSet);
     procedure tmrConsoleTimer(Sender: TObject);
@@ -287,6 +313,11 @@ type
     // Rastreabilidade SIGA
     function GetDadosSiga(DataInicio, DataTermino: TDateTime; Sync:string; Comunitario: string = '9'; FlgAtualizaUltDataLeitura: Boolean = False): String;
 
+    // Cria ou conecta em banco de dados Sqlite (DB)
+    function OpenDb(dbName: string): Boolean;
+    function CloseDb(dbName: string): Boolean;
+    function ExecDbCommand(dbName, cmdLine: string; Parametros, Valores: TStringList): Boolean;
+    function GetDbData(dbName: string; createFile: Boolean = False): Boolean;
 
   end;
 
@@ -304,7 +335,7 @@ var
   DadosRetornoViagem: TDadosRetorno;
 
   IdDescarga: Integer;
-  arqTexto, ArqRename, ArqSigaColetor, ArqSigaProdutor: string;
+  arqTexto, ArqRename,arqTmp, ArqSigaColetor, ArqSigaProdutor: string;
   _VerMagis : string;
   _MapasCarga : TMapasCarga;
   _FileMapName: string;
@@ -317,6 +348,7 @@ var
   DifQtdeColeta: Double;
   FlgGerarArq: Boolean;
   FlgGeraCabec: Boolean;
+  FlgGeraArqDB: Boolean;
   FlgExisteDescarga: Boolean;
   ArquivoDados: TStringList;
   DataInicioStr, DataTerminoStr: string;
@@ -396,6 +428,23 @@ begin
   // Validar associacao dos mapas de integracao
   if (not ValidarAssociacao) then
     MostraMsgErro('Falha na associacao dos mapas de integracao, verifique !');
+end;
+// Desconecta banco de dados Sqlite
+function TMlkPrincipalDTM.CloseDb(dbName: string): Boolean;
+begin
+  if FileExists(dbName) then
+  begin
+    // Se tiver conectado ,desconecta
+    if cnnDbMaster.Connected then
+      cnnDbMaster.Disconnect;
+    // Testa se desconectou e devolve resultado
+    if cnnDbMaster.Connected then
+      Result := False
+    else
+      Result := True;
+  end
+  else
+    Result := True;
 end;
 
 function TMlkPrincipalDTM.coletasToString(cds: TClientDataSet; separator: Char;
@@ -503,6 +552,26 @@ begin
    begin
      CodEmpresa := '1';
      NomeEmpresa :=  'Celles Cordeiro Alimentos';
+   end
+     else if DadosConta.IdConta = '298668' then
+   begin
+     CodEmpresa := '1';
+     NomeEmpresa :=  'Laticinios Sao Vicente';
+   end
+   else if DadosConta.IdConta = '308600' then
+   begin
+     CodEmpresa := '1';
+     NomeEmpresa :=  'LSVTM - Filial Ritapolis';
+   end
+   else if DadosConta.IdConta = '318691' then
+   begin
+     CodEmpresa := '1';
+     NomeEmpresa :=  'LSVTM- Filial Perdoes';
+   end
+   else if DadosConta.IdConta = '322200' then
+   begin
+     CodEmpresa := '1';
+     NomeEmpresa :=  'LSVTM - Filial Sao JOao Del Rey';
    end;
 
 
@@ -614,7 +683,7 @@ end;
 
 procedure TMlkPrincipalDTM.DataModuleCreate(Sender: TObject);
 var
-  strConfig: TStringList;
+  strConfig, parametros, valores: TStringList;
 begin
   strConfig := TStringList.Create;
   try
@@ -639,19 +708,101 @@ begin
     // Seta timers de sincronizacao e geracao de arquivos
     tmrSync.Interval := (cdsControleIntervalocarga.AsInteger * 60000);
     tmrConsole.Interval := (cdsControleIntervalo.AsInteger * 60000);
-    tmrSync.Enabled := True;
-    tmrConsole.Enabled := False;
+    tmrSync.Enabled := False;
+    tmrConsole.Enabled := True;
     FStatusTmrSync := TmrInativo;
     FStatusTmrConsole := TmrHabilitado;
 
     if Assigned(ShowStatusTmr) then
       ShowStatusTmr;
 
+   // FSQL := 'C:\Users\jusce\Dropbox\MylkSync\SCA\280465\12018\003_18_01_2017_9.7.27.0--2018-01-18_2018-01-18.db';
+   // OpenDb(FSQL);
+    (*
+    // Testar carga dados sca
+    cdsLinha.CreateDataSet;
+    cdsProdutor.CreateDataSet;
+    cdsFazendas.CreateDataSet;
+    cdsItinerarios.CreateDataSet;
+    cdsTanques.CreateDataSet;
+    GetDbData('captacaodbc1.db');
+    GetDbData('captacaodbc2.db');
+    GetDbData('captacaodbc3.db');
+    GetDbData('captacaodbc5.db');
+    GetDbData('captacaodbc6.db', True);
+
+    try
+      parametros := TStringList.Create;
+      valores := TStringList.Create;
+      // Testa exportacao dados SCA
+      FSQL := '003_18_01_2017_9.7.27.0--2018-01-18_2018-01-18.db';
+      if OpenDb(FSQL) then
+      begin
+        ExecDbCommand(FSQL, TableLancamentos, parametros, valores);
+        parametros.Add('codigo');
+        parametros.Add('fazenda');
+        parametros.Add('materia');
+        parametros.Add('linha');
+        parametros.Add('data');
+        parametros.Add('hora');
+        parametros.Add('volume');
+        parametros.Add('ntanque');
+        parametros.Add('temperatura');
+
+        valores.Add('001');
+        valores.Add('1010');
+        valores.Add('001');
+        valores.Add('0003');
+        valores.Add('2018-01-18');
+        valores.Add('13:45:00');
+        valores.Add('900');
+        valores.Add('1');
+        valores.Add('3.5');
+
+        ExecDbCommand(FSQL,InsertTableRetornoSCA,parametros,valores);
+      end;
+    finally
+      parametros.Free;
+      valores.Free;
+    end;
+    *)
   except
     ShowMessage('Falha so se conectar ao banco de dados, verifique !');
     Application.Terminate;
   end;
 
+end;
+// Executa comando sql no banco de dados sqlite(DB)
+function TMlkPrincipalDTM.ExecDbCommand(dbName, cmdLine: string;Parametros, Valores: TStringList): Boolean;
+var
+  i: Integer;
+begin
+
+  if FileExists(dbName) then
+  begin
+    try
+     // cnnDbMaster.Connected := False;
+     // cnnDbMaster.Database := dbName;
+     // cnnMaster.Connected := True;
+      qryDbAux.SQL.Clear;
+      qryDbAux.SQL.Add(cmdLine);
+      qryDbAux.Prepare;
+      // Verifica se tem
+      if Parametros.Count > 0 then
+      begin
+        for i := 0 to Parametros.Count -1 do
+        begin
+          qryDbAux.ParamByName(Parametros[i]).Value := Valores[i];
+        end;
+      end;
+      qryDbAux.ExecSQL;
+      Result := True;
+    except on E: Exception do
+      Result := False;
+    end;
+  end
+  else
+    Result := False;
 end;
 // Exporta dados das descarga - Atesto e gera arquuivo
 procedure TMlkPrincipalDTM.ExportarColetas(Layout: string;DataProcIni, DataProcFim : TDateTime);
@@ -689,6 +840,7 @@ var
   FProdutorCarga : TProdutorCarga;
   FArqLog : TStringList;
   FArqSaveLog: string;
+  FolderLogMaster, NomeArqLogMaster : string;
   _RegistroMovimento : TMovimentoRM;
   _ItemRegistro : TItensMovimentoRM;
   _DocProdutor, _LinhaDados, _Separador, _Sincronizou : string;
@@ -805,6 +957,10 @@ var
   end;
 begin
   try
+    // Diretorio de log principal
+    FolderLogMaster := ExtractFilePath(Application.ExeName) + '\Log\';
+    // Nome do arquivo de log Master
+    NomeArqLogMaster := FolderLogMaster + 'Mys_' + FormatDateTime('dd-MM-yyyy hh:mm:ss', Now) + '.txt';
     // Cria a estrutura de registro de ocorrências - Log de operação
     FArqLog := TStringList.Create;
     // Inicia o log de atividades
@@ -832,9 +988,26 @@ begin
       DataTerminoAux := DataTermino;
 
 
-
-    PopulaAtoresColeta(DataInicio,DataTerminoAux, Sync, Comunitario);
-
+    // Popula colecoes de cadastro
+    try
+       PopulaAtoresColeta(DataInicio,DataTerminoAux, Sync, Comunitario);
+    except
+      on E: Exception do
+      begin
+        FArqLog.Append('<<<<< FALHA AO CARREGAR TABELAS >>>>' );
+        FArqLog.Append(E.Message);
+        FArqLog.Append('*******************************************');
+        if not DirectoryExists(FolderLogMaster) then
+        begin
+          ForceDirectories(FolderLogMaster);
+          FArqLog.SaveToFile(NomeArqLogMaster);
+        end
+        else
+        begin
+          FArqLog.SaveToFile(NomeArqLogMaster);
+        end;
+      end;
+    end;
     _Sincronizou := FlagNao;
     // Arquivo com dados coleta formatado
     _ArqSaida := TStringList.Create;
@@ -855,7 +1028,13 @@ begin
     else if Layout = 'SCL' then
     begin
       _Separador := '|';
-      FolderSaida := DadosConta.PathArqScl + '\SCL\' + DadosConta.IdConta;
+      if DadosConta.VerScl = 'A' then
+      begin
+        FolderSaida := DadosConta.PathArqScl + '\SCA\' + DadosConta.IdConta;
+        FlgGeraArqDB := True;
+      end
+      else
+        FolderSaida := DadosConta.PathArqScl + '\SCL\' + DadosConta.IdConta;
     end ;
 
     // ordena as viagem por id
@@ -922,7 +1101,6 @@ begin
             _RegistroMovimento := TMovimentoRM.Create;
             _ItemRegistro := TItensMovimentoRM.Create;
           end;
-
 
           // Cria objeto viagem para persistencia no log
           ObjViagem := ViagemJahRegistrada(cdsViagensid.Value);
@@ -1051,6 +1229,66 @@ begin
             // Gera cabeçalho no arquivo de saída
             _ArqSaida.Add(FCargaRural.toString);
           end;
+          // Gera nome do arquivo para o sistema SCA
+          if ( (Layout = 'SCL') and (DadosConta.VerScl = 'A') ) then
+          begin
+            if FlgGeraArqDB then
+            begin
+               // Monta nome estutura de pasta do arquivo saida
+               if not DirectoryExists(FolderSaida ) then  // DadosConta.PathArqMagis +'\MagisErp\'+ DadosConta.IdConta
+               begin
+                 NomePasta := FolderSaida + '\'+ IntToStr(MonthOfTheYear(Date())) + IntToStr(YearOf(Date()));
+                 ForceDirectories(NomePasta);
+               end
+               else
+               begin
+                 if not  DirectoryExists(  FolderSaida + '\'+ IntToStr(MonthOfTheYear(Date())) +
+                         IntToStr(YearOf(Date()))  ) then
+                 begin
+                   NomePasta := FolderSaida +'\'+  IntToStr(MonthOfTheYear(Date())) +
+                         IntToStr(YearOf(Date()));
+                   ForceDirectories(NomePasta);
+                 end;
+               end;
+
+                // Nome do arquivo de saida no diretorio
+               arqTexto := FolderSaida + '\' + IntToStr(MonthOfTheYear(Date())) +
+                         IntToStr(YearOf(Date()))+ '\';
+
+               // Nome do arquivo para backup de o arquivo existir
+               ArqRename := arqTexto;
+
+               // Somente nome do arquivo de saida que sera gravado temporariamente em outro diretorio, repois renomeado para o local padrao
+               arqTmp :=  cdsViagenslinha.Value + '_' +
+                            cdsViagenscoletor.Value + '_' +
+                            FormatDateTime('dd_MM_yyyy_hh.mm.ss',Now) + '--'+
+                            FormatDateTime('yyyy_MM_dd',cdsViagensdt_abertura.Value) + '-'+
+                            FormatDateTime('yyyy_MM_dd',cdsViagensdt_fechamento.Value) + '.db';
+
+               arqTexto := arqTexto + arqTmp;
+
+               // Backup
+               ArqRename := ArqRename + 'R_'+ arqTmp;
+
+               // renomeia arquivo existente
+                if FileExists(arqTmp) then
+                begin
+                  DeleteFile(Pchar(arqTmp));
+                end;
+
+                //cria o arquivo de saida para o sistema SCA
+               if OpenDb(arqTmp) then
+               begin
+                 // Cria estrutura de paramentros de insercao dos registros
+                 createParametros;
+                 // Cria a tabela de dados no arquivo novo
+                 ExecDbCommand(arqTmp,CreateTableRetornoSCA,TParametros, Tvalores);
+                 // destroy os stringlists de parametros
+                 destroiParametros;
+               end;
+               FlgGeraArqDB := False;
+            end;
+          end;
 
           FlgGeraCabec := True;
           cdsColetas.First;
@@ -1148,7 +1386,11 @@ begin
                 else
                   FProdutorCarga.Compartimento := 1;
 
-                FProdutorCarga.QtdeColetada := cdsColetasquantidade.AsFloat;
+                if (cdsColetasquantidade.AsFloat > 0) then
+                  FProdutorCarga.QtdeColetada := cdsColetasquantidade.AsFloat
+                else
+                  FProdutorCarga.QtdeColetada := 0;
+
                 FProdutorCarga.Temperatura := cdsColetastemperatura.Value;
                 FProdutorCarga.Amostra := cdsColetasamostra.Value;
                 FProdutorCarga.Regua := cdsColetasregua.Value;
@@ -1203,7 +1445,10 @@ begin
               end;
               if Layout = 'SCL' then
               begin
-                 _LinhaDados :=
+                // Arquivo para integracao sistema Sistem2
+                if DadosConta.VerScl = '2' then
+                begin
+                  _LinhaDados :=
                   cdsColetasdt_coleta.AsString + _Separador +
                   RetZero(cdsColetasCodigoLinha.AsString,4) + _Separador +
                   RetZero(cdsColetasCodigoRota.AsString,4)+ _Separador +
@@ -1216,7 +1461,30 @@ begin
                   Retzero(IntToStr(0), 11) + _Separador +
                   Retzero(FloatToStr(cdsColetasregua.AsFloat * 100),7) + _Separador  ;
 
-                _ArqSaida.Add(_LinhaDados);
+                  _ArqSaida.Add(_LinhaDados);
+                end;
+                // Arquivo para integracao sistema SCA
+                if DadosConta.VerScl = 'A' then
+                begin
+                  try
+                    createParametros;
+                    populaParametros;
+                    TValores.Clear;
+                    Tvalores.Add(cdsColetasCodigoProdutor.Value);
+                    Tvalores.Add(cdsColetasCodigoFazenda.Value);
+                    Tvalores.Add('001');  // Codigo da materia
+                    Tvalores.Add(cdsColetasCodigoLinha.Value);
+                    Tvalores.Add(FormatDateTime('yyyy-MM-dd',cdsColetasdt_coleta.Value));
+                    Tvalores.Add(FormatDateTime('hh:mm:ss',cdsColetasdt_coleta.Value));
+                    Tvalores.Add(cdsColetasquantidade.AsString);
+                    Tvalores.Add(cdsColetastanque.Value);
+                    Tvalores.Add(TrocaVirgPPto(cdsColetastemperatura.AsString));
+
+                    ExecDbCommand(arqTmp,InsertTableRetornoSCA,Tparametros, Tvalores);
+                    finally
+                    destroiParametros;
+                  end;
+                end;
               end;
 
               // Acumula total descarregado no objeto viagem persistencia log
@@ -1238,10 +1506,32 @@ begin
             end;
           end;
         finally
+
+           // Arquivos para integra'cao sistema SCA
+           if (Layout = 'SCL') and (DadosConta.VerScl = 'A') then
+           begin
+             if FileExists(arqTmp) then
+             begin
+                // renomeia arquivo existente
+                if FileExists(arqTexto) then
+                begin
+                  if FileExists(ArqRename) then
+                    DeleteFile(PChar(ArqRename));
+                  RenameFile(arqTexto, ArqRename);
+                end;
+
+                // Move o arquivo temporario para a pasta da conta
+                 CopyFile(PChar(arqTmp),PChar(arqTexto),false);
+                 if CloseDb(arqTmp) then
+                    DeleteFile(Pchar(arqTmp));
+
+                 FlgGeraArqDB := True;
+             end;
+           end;
+
            if (_ArqSaida.Count > 0) then
            begin
              // Monta nome arquivo saida
-
              if not DirectoryExists(FolderSaida ) then  // DadosConta.PathArqMagis +'\MagisErp\'+ DadosConta.IdConta
              begin
                NomePasta := FolderSaida + '\'+ IntToStr(MonthOfTheYear(Date())) + IntToStr(YearOf(Date()));
@@ -1282,7 +1572,7 @@ begin
                     ArqRename := ArqRename + 'RM'+ FormatDateTime('ddMMyyyy', DataInicio)+'.tx_';
                  end;
                end;
-               if Layout = 'SCL' then
+               if ( (Layout = 'SCL') and (DadosConta.VerScl = '2') ) then
                begin
                  arqTexto := arqTexto + IntToStr(cdsViagensid.Value)+ '_' + cdsViagenslinha.Value + '_'+
                            FormatDateTime('ddMMyyyy',cdsViagensdt_abertura.Value)+ '.txt';
@@ -1313,7 +1603,7 @@ begin
               if FileExists(arqTexto) then
               begin
                 if FileExists(ArqRename) then
-                  DeleteFile(ArqRename);
+                  DeleteFile(PChar(ArqRename));
                 RenameFile(arqTexto, ArqRename);
               end;
 
@@ -1393,10 +1683,26 @@ begin
   except
     on E: Exception do
     begin
-      Result := 'Erro: ' + E.message;
+      if not Assigned(FArqLog) then
+      begin
+        FArqLog := TStringList.Create;
+      end;
+        FArqLog.Append('<<<<< FALHA AO CARREGAR TABELAS >>>>' );
+        FArqLog.Append(E.Message);
+        FArqLog.Append('*******************************************');
+        if not DirectoryExists(FolderLogMaster) then
+        begin
+          ForceDirectories(FolderLogMaster);
+          FArqLog.SaveToFile(NomeArqLogMaster);
+        end
+        else
+        begin
+          FArqLog.SaveToFile(NomeArqLogMaster);
+        end;
+        Result := 'Erro: ' + E.message;
+        FArqLog.Destroy;
     end;
   end;
-
 end;
 
 function TMlkPrincipalDTM.GetDadosSiga(DataInicio, DataTermino: TDateTime; Sync,
@@ -1708,7 +2014,7 @@ begin
               if FileExists(arqTexto) then
               begin
                 if FileExists(ArqRename) then
-                  DeleteFile(ArqRename);
+                  DeleteFile(PChar(ArqRename));
                 RenameFile(arqTexto, ArqRename);
               end;
 
@@ -1752,7 +2058,204 @@ begin
     Result := 'Erro: ' + E.message;
   end;
 
+end;
+// Carrega dados das tabelas SQLite (DB) - Sistema SCA
+function TMlkPrincipalDTM.GetDbData(dbName: string; createFile: Boolean): Boolean;
+var
+  ListaAux : TStringList;
+begin
+  if FileExists(dbName) then
+  begin
+    try
+     // Conecta com o arquivo de dados
+     cnnDbMaster.Connected := False;
+     cnnDbMaster.Database := dbName;
+     cnnDbMaster.Connected := True;
 
+     // pega dados das linhas:
+     qryDbAux.SQL.Clear;
+     qryDbAux.SQL.Add('Select * from linha');
+     qryDbAux.Open;
+     qryDbAux.First;
+     while not( qryDbAux.Eof) do
+     begin
+       if not (cdsLinha.Locate('codigo',qryDbAux.FieldByName('lincodigo').AsString, [loPartialKey])) then
+       begin
+         cdsLinha.Append;
+         cdsLinhaCodigo.Value := qryDbAux.FieldByName('lincodigo').AsString;
+         cdsLinhaNome.Value := qryDbAux.FieldByName('lindescri').AsString;
+         cdsLinha.Post;
+       end;
+       qryDbAux.Next;
+     end;
+     // pega dados dos produtores:
+     qryDbAux.SQL.Clear;
+     qryDbAux.SQL.Add('Select * from produtor');
+     qryDbAux.Open;
+     qryDbAux.First;
+     while not( qryDbAux.Eof) do
+     begin
+       if not (cdsProdutor.Locate('codigo',qryDbAux.FieldByName('codigo').AsString,[loPartialKey])) then
+       begin
+         cdsProdutor.Append;
+         cdsProdutorCodigo.Value := qryDbAux.FieldByName('codigo').AsString;
+         cdsProdutorNome.Value := qryDbAux.FieldByName('nome').AsString;
+         cdsProdutor.Post;
+       end;
+       qryDbAux.Next;
+     end;
+     // pega dados das fazendas:
+     qryDbAux.SQL.Clear;
+     qryDbAux.SQL.Add('Select * from fazenda');
+     qryDbAux.Open;
+     qryDbAux.First;
+     while not( qryDbAux.Eof) do
+     begin
+       if not (cdsFazendas.Locate('codigo',qryDbAux.FieldByName('codigo').AsString,[loPartialKey])) then
+       begin
+         cdsFazendas.Append;
+         cdsFazendascodigo.Value := qryDbAux.FieldByName('codigo').AsString;
+         if cdsProdutor.Locate('codigo',qryDbAux.FieldByName('codigo').AsString,[loPartialKey]) then
+           cdsFazendasnome.Value := Trim(qryDbAux.FieldByName('descri').AsString) + ' - ('+ cdsProdutorNome.AsString +')'
+         else
+           cdsFazendasnome.Value := qryDbAux.FieldByName('descri').AsString;
+         cdsFazendasprodutor.Value := qryDbAux.FieldByName('codigo').AsString;
+         cdsFazendas.Post;
+         // Tanques
+         cdsTanques.Append;
+         cdsTanquescodigo.Value := qryDbAux.FieldByName('codigo').AsString;
+         cdsTanquestipo.Value := 'F';
+         cdsTanquesfazenda.Value := qryDbAux.FieldByName('codigo').AsString;
+         cdsTanquesaltura.Value := 0;
+         cdsTanquesperimetro.Value := 0;
+         cdsTanquesvolume.Value := 1000;
+         cdsTanquescapacidade.Value := 1000;
+         cdsTanquesveiculo.Value := EmptyStr;
+         cdsTanquesdiferenca.Value := 'D';
+         cdsTanquesdivisao.Value := 'M';
+         cdsTanquescomunitario.Value :='0';
+         cdsTanquesimpressao.Value := 'D';
+         cdsTanquesdistribuicao.Value := 'DC';
+         cdsTanquescoleta_seletiva.Value := '0';
+         cdsTanques.Post;
+
+       end;
+       qryDbAux.Next;
+     end;
+
+     // pega dados dos Itinerarios:
+     qryDbAux.SQL.Clear;
+     qryDbAux.SQL.Add('Select * from fazenda');
+     qryDbAux.Open;
+     qryDbAux.First;
+     while not( qryDbAux.Eof) do
+     begin
+       cdsItinerarios.Append;
+       cdsItinerarioscodigo.Value := qryDbAux.FieldByName('codigo').AsString +
+                                      '/' + qryDbAux.FieldByName('codlinha').AsString;
+       cdsItinerarioslinha.Value := qryDbAux.FieldByName('codlinha').AsString;
+       cdsItinerariosfazenda.Value := qryDbAux.FieldByName('codigo').AsString;
+       cdsItinerariosordem.Value := qryDbAux.FieldByName('sequencia').AsString;
+       cdsItinerarioscoleta_seletiva.Value := '0';
+       cdsItinerarios.Post;
+
+       qryDbAux.Next;
+     end;
+
+
+
+     Result := True;
+    finally
+      if createFile then
+      begin
+         // Exporta Linhas
+         ListaAux := TStringList.Create;
+         ListaAux.Clear;
+         ListaAux.Add('codigo|nome|rota');
+         cdsLinha.First;
+         while not (cdsLinha.Eof) do
+         begin
+           ListaAux.Add(cdsLinhaCodigo.Value+'|'+ cdsLinhaNome.Value + '|1|');
+           cdsLinha.Next;
+         end;
+         if ListaAux.Count > 0 then
+           ListaAux.SaveToFile('Linhas.txt');
+
+         // Exporta Produtores
+         ListaAux.Clear;
+         ListaAux.Add('codigo|nome');
+         cdsProdutor.First;
+         while not (cdsProdutor.Eof) do
+         begin
+           ListaAux.Add(cdsProdutorCodigo.Value+'|'+ cdsProdutorNome.Value + '|');
+           cdsProdutor.Next;
+         end;
+         if ListaAux.Count > 0 then
+           ListaAux.SaveToFile('Produtores.txt');
+
+         // Exporta Fazendas
+         ListaAux.Clear;
+         ListaAux.Add('codigo|nome|produtor');
+         cdsFazendas.First;
+         while not (cdsFazendas.Eof) do
+         begin
+           ListaAux.Add(cdsFazendascodigo.Value + '|' + cdsFazendasnome.Value + '|' + cdsFazendasprodutor.Value + '|');
+           cdsFazendas.Next;
+         end;
+         if ListaAux.Count > 0 then
+           ListaAux.SaveToFile('Fazendas.txt');
+         // Exporta Itinerarios
+         ListaAux.Clear;
+         ListaAux.Add('codigo|linha|fazenda|ordem|horario|seletiva');
+         cdsItinerarios.First;
+         while not (cdsItinerarios.Eof) do
+         begin
+           ListaAux.Add(cdsItinerarioscodigo.AsString +
+            '|' + cdsItinerarioslinha.AsString +
+            '|' + cdsItinerariosfazenda.AsString +
+            '|' + cdsItinerariosordem.AsString +
+            '|' + cdsItinerarioshorario.AsString +
+            '|' + cdsItinerarioscoleta_seletiva.AsString + '|');
+
+           cdsItinerarios.Next;
+         end;
+         if ListaAux.Count > 0 then
+           ListaAux.SaveToFile('Itinerarios.txt');
+
+         // Exporta Tanques
+         ListaAux.Clear;
+         ListaAux.Add('Tipo|codigo|fazenda|veiculo|capacidade|altura|perimetro|volume|comunitario|distribuicao|diferenca|impressao|divisao|Coleta_Seletiva|deleted');
+         cdsTanques.First;
+         while not (cdsTanques.Eof) do
+         begin
+           ListaAux.Add(cdsTanquestipo.AsString +
+            '|' + cdsTanquescodigo.AsString +
+            '|' + cdsTanquesfazenda.AsString +
+            '|' + cdsTanquesveiculo.AsString +
+            '|' + cdsTanquescapacidade.AsString +
+            '|' + cdsTanquesaltura.AsString +
+            '|' + cdsTanquesperimetro.AsString +
+            '|' + cdsTanquesvolume.AsString +
+            '|' + cdsTanquescomunitario.AsString +
+            '|' + cdsTanquesdistribuicao.AsString +
+            '|' + cdsTanquesdiferenca.AsString +
+            '|' + cdsTanquesimpressao.AsString +
+            '|' + cdsTanquesdivisao.AsString +
+            '|' + cdsTanquescoleta_seletiva.AsString +
+            '|' + cdsTanquesdeleted.AsString +
+            '|');
+
+           cdsTanques.Next;
+         end;
+         if ListaAux.Count > 0 then
+           ListaAux.SaveToFile('tanques.txt');
+         // Destroy a lista auxiliar
+        ListaAux.Destroy;
+      end;
+    end;
+  end
+  else
+    Result := False;
 end;
 
 function TMlkPrincipalDTM.GetDescargas(ContaId:Integer; DataInicio, DataTermino: TDateTime;
@@ -1996,7 +2499,7 @@ begin
       // Totvs Datasul
       if (cdsContasGeraTotvsDatasul.AsString = FlagSim) then
       begin
-        ExportarDescargas(cdsContasContaId.Value,dtInicio, dtFim);
+       // ExportarDescargas(cdsContasContaId.Value,dtInicio, dtFim);
         ExportarColetas('Datasul',dtInicio,dtFim);
       end;
       // Totvs Rm
@@ -2131,8 +2634,35 @@ begin
   Result.NomeArqSaida[15] := 'SclJust.txt';
 end;
 
+// abre conexao ou cria banco de dados SQLITE(DB)
+function TMlkPrincipalDTM.OpenDb(dbName: string): Boolean;
+begin
+  Result := False;
+  if FileExists(dbName) then
+  begin
+    try
+     if cnnDbMaster.Connected then
+       cnnDbMaster.Disconnect;
+     cnnDbMaster.Database := dbName;
+     cnnDbMaster.Connected := True;
+     Result := True;
+    except
+      result := False;
+    end;
+  end
+  else // Banco de dados novo, cria a estrutura basica
+  begin
+    if cnnDbMaster.Connected then
+       cnnDbMaster.Disconnect;
+    cnnDbMaster.Database := dbName;
+    cnnDbMaster.Connected := True;
+    if FileExists(dbName) then
+      Result := True
+    else
+      Result := False;
+  end;
+end;
 // Carrega informacoes do mapa de exportacao
-
 function TMlkPrincipalDTM.OrdenaCrescente(Par01, Par02: Pointer): Integer;
 var
  obj1, obj2: TColeta;
@@ -2859,27 +3389,32 @@ end;
 procedure TMlkPrincipalDTM.tmrConsoleTimer(Sender: TObject);
 var
   dtInicio, dtFim : TDateTime;
+  Success: Boolean;
 begin
   FStatusTmrConsole := TmrAtivo;
   FStatusTmrSync := TmrInabilitado;
+  Success := False;
   try
-    tmrSync.OnTimer := nil;
-    tmrSync.Enabled := False;
-    if Assigned(ShowStatusTmr) then
-      ShowStatusTmr;
-    while not tmrSync.Enabled do
+    if not tmrSync.Enabled then
     begin
+      tmrSync.OnTimer := nil;
+      tmrSync.Enabled := False;
+      Success := True;
+      if Assigned(ShowStatusTmr) then
+        ShowStatusTmr;
       getServerData();
     end;
   finally
     // reabilita evento timer de console
-    tmrSync.OnTimer := tmrSyncTimer;
-    tmrSync.Enabled := True;
-    FStatusTmrSync := TmrInativo;
-    FStatusTmrConsole := TmrInativo;
-    if Assigned(ShowStatusTmr) then
-      ShowStatusTmr;
-
+    if Success then
+    begin
+      tmrSync.OnTimer := tmrSyncTimer;
+      tmrSync.Enabled := True;
+      FStatusTmrSync := TmrInativo;
+      FStatusTmrConsole := TmrInativo;
+      if Assigned(ShowStatusTmr) then
+        ShowStatusTmr;
+    end;
   end;
 end;
 // Timer para sincronizacao da carga nas tabelas de cadastro

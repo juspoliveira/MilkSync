@@ -33,10 +33,16 @@ object frmCadastroZeos: TfrmCadastroZeos
     object tabsRegistro: TcxTabSheet
       Caption = 'Registro'
       ImageIndex = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabsGrid: TcxTabSheet
       Caption = 'Pesquisa'
       ImageIndex = 1
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object grdMaster: TcxGrid
         Left = 0
         Top = 0
@@ -99,7 +105,6 @@ object frmCadastroZeos: TfrmCadastroZeos
     LabelFont.Style = [fsBold, fsItalic]
     LabelAlignment = taLeftJustify
     Align = alTop
-    DoubleBuffered = False
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -13
@@ -325,7 +330,7 @@ object frmCadastroZeos: TfrmCadastroZeos
     Left = 354
     Top = 65534
     Bitmap = {
-      494C01010B000D00040020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B000D00080020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       00000000000036000000280000008000000060000000010020000000000000C0
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
