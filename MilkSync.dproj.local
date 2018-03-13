@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2017/06/20 23:20:48.000.094,=C:\Users\jusce\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/07/05 16:26:58.000.249,=C:\Users\jusce\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/07/05 17:08:21.000.905,=C:\Users\jusce\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/07/05 17:29:35.000.418,=C:\Users\jusce\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2018/02/01 14:29:49.000.051,=C:\Users\jusce\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2018/02/01 14:31:25.000.760,C:\Users\jusce\Documents\RAD Studio\Projects\Project1.dproj=C:\Desenvolvimento\tools\MilkSync\MilkSync.dproj</Transaction>
+    <Transaction>2018/02/01 14:32:23.000.719,=C:\Desenvolvimento\tools\MilkSync\Fontes\Console\uMlkParmetrosFRM.pas</Transaction>
+    <Transaction>2018/02/01 14:32:26.000.704,=C:\Desenvolvimento\tools\MilkSync\Fontes\Console\uMlkPrincipalDTM.pas</Transaction>
+    <Transaction>2018/02/01 14:32:26.000.993,=C:\Desenvolvimento\tools\MilkSync\Fontes\Console\uMlkPrincipalFRM.pas</Transaction>
+    <Transaction>2018/02/01 14:33:00.000.124,=C:\Desenvolvimento\tools\MilkSync\Fontes\FWDelphi_Comum\ufrmCadastro.pas</Transaction>
+    <Transaction>2018/02/01 14:48:30.000.107,=C:\Desenvolvimento\tools\MilkSync\Fontes\Comum\uJSON.pas</Transaction>
+    <Transaction>2018/02/01 14:50:06.000.586,=C:\Desenvolvimento\tools\MilkSync\Fontes\Comum\uVSSCLRCnExport.pas</Transaction>
+    <Transaction>2018/02/01 14:51:43.000.531,=C:\Desenvolvimento\tools\MilkSync\Fontes\Comum\uVSSCLRotaComum.pas</Transaction>
+  </Transactions>
+</BorlandProject>

@@ -1,0 +1,13 @@
+Debug/
+__history/
+Install/
+Deploy/
+*.exe
+Fontes/Console/Release/Win32/
+*.rar
+*.~ddp
+*.~dfm
+*.~pas
+*.dcu
+*.mdf
+*.ldf

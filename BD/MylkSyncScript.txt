@@ -1,0 +1,145 @@
+CREATE TABLE [Contas](
+    [Id] INT NOT NULL IDENTITY(1,1) PRIMARY KEY , 
+    [NomeEmpresa] VARCHAR(70), 
+    [ContaId] INTEGER, 
+    [KeyId] Varchar(15), 
+    [Ativa] Varchar(1), 
+    [DatUltLeituraDescargaWS] DATE, 
+    [PathArqDescarga] VARCHAR(255), 
+    [PercAtesto] FLOAT, 
+    [HostURL] varchar(500), 
+    [Log] varchAR(1), 
+    [ProxyHost] varchar(20), 
+    [ProxyPorta] varchar(10), 
+    [ProxyUsuario] varchaR(20), 
+    [ProxySenha] VARCHAR(20), 
+    [Intervalo] floaT, 
+    [ProxyUsar] varCHAR(1), 
+    [EnviarNotifAtesto] varCHAR(1), 
+    [DatIniLeituraDescargaWS] date, 
+    [GeraTotvsDatasul] VARCHAR(1) DEFAULT 'S', 
+    [GeraTotvsRm] VARCHAR(1) DEFAULT 'N', 
+    [GeraMagis] VARCHAR(1) DEFAULT 'N', 
+    [GeraMeta] VARCHAR(1) DEFAULT 'N', 
+    [GeraSiga] VARCHAR(1) DEFAULT 'N', 
+    [VerDatasul] Varchar(01), 
+    [VerRm] Varchar(01), 
+    [VerMagis] Varchar(01), 
+    [VerMeta] Varchar(01), 
+    [VerSiga] Varchar(01), 
+    [GeraScl] Varchar(01), 
+    [VerScl] Varchar(01), 
+    [PathArqDatasul] Varchar(255), 
+    [PathArqRm] Varchar(255), 
+    [PathArqMagis] Varchar(255), 
+    [PathArqMeta] Varchar(255), 
+    [PathArqSiga] Varchar(255), 
+    [PathArqScl] Varchar(255), 
+    [ParContaId1] integer, 
+    [PathArqCarga] Varchar(255), 
+    [IntervaloCarga] Float, 
+    [CargaMultiEmpresa] Varchar(1), 
+    [PathCargaApi] Varchar(255), 
+    [DropTable] Varchar(1), 
+    [ParColetasHoje] Varchar(1));
+
+CREATE TABLE [LogDescarga] (
+[LodId] INTEGER   NOT NULL IDENTITY(1,1) PRIMARY KEY,
+[LodDescargaId] INTEGER  NULL,
+[LodRotaId] inteGER  NULL,
+[LodRotaCod] VARCHAR(50)  NULL,
+[LodEnviaNota] VARCHAR(1)  NULL,
+[LodDataProc] date  NULL,
+[LodDifColeta] FLOAT);
+
+CREATE TABLE [LogViagem] (
+[LovId] INTEGER NOT NULL IDENTITY(1,1)  PRIMARY KEY ,
+[LovRotaId] inTEGER  NULL,
+[LovRotaCod] VARCHAR(20)  NULL,
+[LovEnviaNotif] varCHAR(1)  NULL,
+[LovDataProc] date  NULL,
+[LovDifColeta] FLOAT  NULL,
+[LovQtdeDescarga] inTEGER  NULL,
+[LovViagemId] inTEGER  NULL,
+[LovGerDatasul] Varchar (01), 
+[LovGerRm] Varchar(01), 
+[LovGerMagis] Varchar(01), [LovGerMeta] Varchar(01), 
+[LovGerSiga] Varchar(01), [LovColetor] Varchar(15), 
+[LovVeiculo] Varchar(15), [LovDataViagem] Date, 
+[LovGerScl] Varchar(01), [LovIndex] integer);
+
+CREATE TABLE [Parametros] (
+  [ID] INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+  [ParContaId] INTEGER, 
+  [ParDatUltLeituraDescargaWS] DATE, 
+  [ParPathArqDescarga] VARCHAR(255), 
+  [ParPercAtesto] FLOAT, 
+  [ParHostURL] varchar(500), 
+  [ParLog] varchAR(1), 
+  [ParProxyHost] varchar(20), 
+  [ParProxyPorta] varchar(10), 
+  [ParProxyUsuario] varchaR(20), 
+  [ParProxySenha] VARCHAR(20), 
+  [ParIntervalo] floaT, 
+  [ParProxyUsar] varCHAR(1), 
+  [ParEnviarNotifAtesto] varCHAR(1), 
+  [ParDatIniLeituraDescargaWS] date, 
+  [ParGeraTotvsDatasul] VARCHAR(1) DEFAULT 'S', 
+  [ParGeraTotvsRm] VARCHAR(1) DEFAULT 'N', 
+  [ParGeraMagis] VARCHAR(1) DEFAULT 'N', 
+  [ParGeraMeta] VARCHAR(1) DEFAULT 'N', 
+  [ParGeraSiga] VARCHAR(1) DEFAULT 'N', 
+  [ParVerDatasul] Varchar(01), 
+  [ParVerRm] Varchar(01), 
+  [ParVerMagis] Varchar(01), 
+  [ParVerMeta] Varchar(01), 
+  [ParVerSiga] Varchar(01), 
+  [ParGeraScl] Varchar(01), 
+  [ParVerScl] Varchar(01), 
+  [ParPathArqDatasul] Varchar(255), 
+  [ParPathArqRm] Varchar(255), 
+  [ParPathArqMagis] Varchar(255), 
+  [ParPathArqMeta] Varchar(255), 
+  [ParPathArqSiga] Varchar(255), 
+  [ParPathArqScl] Varchar(255), 
+  [ParContaId1] integer, 
+  [ParContaId2] integer, 
+  [ParContaId3] integer, 
+  [ParContaId4] integer, 
+  [ParContaId5] integer, 
+  [ParContaId6] integer, 
+  [ParPathArqCarga] Varchar(255), 
+  [ParIntervaloCarga] Float, 
+  [ParKeyId1] Varchar(15), 
+  [ParKeyId2] Varchar(15), 
+  [ParKeyId3] Varchar(15), 
+  [ParKeyId4] Varchar(15), 
+  [ParKeyId5] Varchar(15), 
+  [ParKeyId6] Varchar(15), 
+  [ParCargaMultiEmpresa] Varchar(1), 
+  [ParPathCargaApi] Varchar(255), 
+  [ParDropTable] Varchar(1), ParColetasHoje Varchar(1));
+  
+Create table Controle (
+ Id Int not null Identity(1,1) Primary Key,
+ Intervalo Int null,
+ IntervaloCarga int null   
+);  
+  
+alter table contas add PatMapColetor Varchar(300);
+alter table contas add PatMapRota Varchar(300);
+alter table contas add PatMapAnalise Varchar(300);
+alter table contas add PatMapExtrato Varchar(300);
+alter table contas add PatMapFazenda Varchar(300);
+alter table contas add PatMapItinerario Varchar(300);
+alter table contas add PatMapLinha Varchar(300);
+alter table contas add PatMapMotivo Varchar(300);
+alter table contas add PatMapProdutor Varchar(300);
+alter table contas add PatMapGrupoRota Varchar(300);
+alter table contas add PatMapTanque Varchar(300);
+alter table contas add PatMapTag Varchar(300);
+alter table contas add PatMapTecnico Varchar(300);
+alter table contas add PatMapVinculado Varchar(300);
+alter table contas add PatMapVeiculo Varchar(300);
+
+
