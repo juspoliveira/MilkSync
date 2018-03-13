@@ -1,9 +1,11 @@
 object MlkPrincipalDTM: TMlkPrincipalDTM
   OldCreateOrder = False
   OnCreate = DataModuleCreate
+  OnDestroy = DataModuleDestroy
   Height = 515
   Width = 718
   object cnnMaster: TADOConnection
+    Connected = True
     ConnectionString = 
       'Provider=SQLOLEDB.1;Password=esd056402;Persist Security Info=Tru' +
       'e;User ID=sa;Initial Catalog=MilkSync;Data Source=DESKTOP-KUC122' +
@@ -108,6 +110,14 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     object cdsContasDatUltLeituraDescargaWS: TDateTimeField
       FieldName = 'DatUltLeituraDescargaWS'
       ProviderFlags = [pfInUpdate]
+    end
+    object cdsContasDatUltSync: TDateTimeField
+      DisplayLabel = ' Sincronizacao'
+      FieldName = 'DatUltSync'
+    end
+    object cdsContasDatUltCarga: TDateTimeField
+      DisplayLabel = 'Carga'
+      FieldName = 'DatUltCarga'
     end
     object cdsContasEnviarNotifAtesto: TStringField
       FieldName = 'EnviarNotifAtesto'
@@ -318,6 +328,10 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
       ProviderFlags = [pfInUpdate]
       Size = 1
     end
+    object cdsContasCarga: TStringField
+      FieldName = 'Carga'
+      Size = 1
+    end
   end
   object sqlContas: TS2SQLDataSet
     ADOQuery = qryContas
@@ -329,7 +343,6 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     Top = 24
   end
   object tmrConsole: TTimer
-    Enabled = False
     Interval = 60000
     OnTimer = tmrConsoleTimer
     Left = 171
@@ -339,13 +352,14 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     AutoSave = False
     Events = <
       item
-        Name = 'evtDescarga'
-        StartDate = '2016/07/15 17:33:10.000'
+        Name = 'evtArquivos'
+        OnExecute = sheConsoleEvents1Execute
+        StartDate = '2018/03/03 14:33:42.000'
         RecurringType = srkDaily
         EndType = sekNone
         Freq_StartTime = 0
         Freq_EndTime = 86399000
-        Freq_Interval = 10800000
+        Freq_Interval = 9000000
         Daily_EveryWeekDay = True
       end>
     Left = 233
@@ -1020,6 +1034,9 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     object cdsViagensbocas: TStringField
       FieldName = 'bocas'
     end
+    object cdsViagenstanques: TStringField
+      FieldName = 'tanques'
+    end
   end
   object qryAux: TADOQuery
     Connection = cnnMaster
@@ -1040,9 +1057,10 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
   object cnnDbMaster: TZConnection
     ControlsCodePage = cCP_UTF16
     UTF8StringsAsWideField = True
+    HostName = 'sqlite3.dll'
     Port = 0
     Protocol = 'sqlite-3'
-    LibraryLocation = 'C:\Desenvolvimento\tools\MilkSync\Deploy\sqlite3.dll'
+    LibraryLocation = '.\sqlite3.dll'
     Left = 32
     Top = 376
   end

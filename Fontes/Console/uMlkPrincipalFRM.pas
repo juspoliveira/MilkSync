@@ -11,7 +11,7 @@ uses
   cxDBData, cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   cxGridLevel, cxClasses, cxGridCustomView, cxGrid, ComCtrls, ImgList, StdCtrls,
   Buttons, cxImageComboBox, cxContainer, cxTextEdit, cxMaskEdit, cxSpinEdit,
-  cxDBEdit, cxDropDownEdit, cxCalendar;
+  cxDBEdit, cxDropDownEdit, cxCalendar, JvComponentBase, JvDebugHandler;
 
 type
   TMksPrincipalFRM = class(TForm)
@@ -50,7 +50,6 @@ type
     grdContasViewContaId: TcxGridDBColumn;
     grdContasViewKeyId: TcxGridDBColumn;
     grdContasViewAtiva: TcxGridDBColumn;
-    grdContasViewDatUltLeituraDescargaWS: TcxGridDBColumn;
     grdContasViewSync: TcxGridDBColumn;
     GroupBox1: TGroupBox;
     btnSaveTimer: TSpeedButton;
@@ -64,6 +63,9 @@ type
     grbLastIte: TGroupBox;
     edtLastIte: TcxDBDateEdit;
     tryMaster: TTrayIcon;
+    grdContasViewDatUltSync: TcxGridDBColumn;
+    grdContasViewCarga: TcxGridDBColumn;
+    grdContasViewDatUltCarga: TcxGridDBColumn;
     procedure acOpenExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -76,6 +78,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure pgcMasterChange(Sender: TObject);
     procedure AppEvenMasterMinimize(Sender: TObject);
+
   private
     procedure MostraStatusTmr;
   public
@@ -96,8 +99,10 @@ procedure TMksPrincipalFRM.acCloseExecute(Sender: TObject);
 begin
  tryMaster.BalloonHint := 'Bye Bye .. !';
  tryMaster.ShowBalloonHint;
+ MlkPrincipalDTM.Finish;
  Halt(0);
  Application.Terminate;
+
 end;
 
 procedure TMksPrincipalFRM.AcConfigExecute(Sender: TObject);
@@ -161,6 +166,14 @@ begin
   MlkPrincipalDTM.SetLastIteration;
 
   MlkPrincipalDTM.getServerData;
+
+  try
+    MlkPrincipalDTM.tmrConsole.Enabled := False;
+    MlkPrincipalDTM.tmrSyncTimer(nil);
+  finally
+     MlkPrincipalDTM.tmrConsole.Enabled := True;;
+  end;
+
 end;
 // Para os timmers e servicos
 procedure TMksPrincipalFRM.acStopExecute(Sender: TObject);
@@ -188,10 +201,10 @@ end;
 procedure TMksPrincipalFRM.FormCreate(Sender: TObject);
 begin
   tryMaster.Visible := True;
-  tryMaster.Animate := True;
+  tryMaster.Animate := False;
   tryMaster.ShowBalloonHint;
   MlkPrincipalDTM.ShowStatusTmr := MostraStatusTmr;
-
+ // ReportMemoryLeaksOnShutdown := True;
 end;
 
 procedure TMksPrincipalFRM.FormShow(Sender: TObject);
@@ -206,6 +219,7 @@ procedure TMksPrincipalFRM.MostraStatusTmr;
 begin
   stbMaster.Panels[1].Text := MlkPrincipalDTM.StatusTmrSync;
   stbMaster.Panels[4].Text := MlkPrincipalDTM.StatusTmrConsole;
+  pgcMaster.ActivePage := tabsContas;
   Application.ProcessMessages;
 end;
 

@@ -188,6 +188,7 @@ type
      Veiculo: string[15];
      ComunitarioPendente: string;
      bocas: string;
+     tanques: string;
    end;
    TListaRegViagem = class(TObjectList)
      public
@@ -374,7 +375,11 @@ type
      conta_id: string;
    end;
 
-
+type
+  TSatusSync = record
+    Result : Boolean;
+    State : string ;   // E - Encerrado <> A - Andamento
+  end;
 TStatusConta = (scAtivo, scInativo, scInterrompido, scAtualizando);
 
 procedure PopularDadosConta(cdsPar: TDataSet);
@@ -417,13 +422,13 @@ function DataSetToJsonTxt(pDataSet:TDataSet; conta_id:Integer = 0; Token:string 
 //function JsontToDatat(LinhaDados: WideString): TClientDataSet;
 
 // Consulta dados de cadastro na API e gera arquivos formatados
-procedure ExportDataWs(xMapasCarga: TMapasCarga);
+function ExportDataWs(xMapasCarga: TMapasCarga): TStringList;
 
 // Atualiza dados no servidor (API) Integração
 function LoadFromMapIni(owner: Char; conta_id : Integer; MasterMap: string): TMapasCarga;
 function AtualizaTabelasWs (xMapasCarga: TMapasCarga) : TStringList;
 function ExibeAmostraDados(aNomeArqivo, aSeparador: string): TJvCsvDataSet;
-function ImportaArquivoMapeado(aFileMapa: string;MultiEmpresa:TMultiEmpresa ): TCdsImportado;
+function ImportaArquivoMapeado(aPathBase, aFileMapa: string;MultiEmpresa:TMultiEmpresa ): TCdsImportado;
 // Retorno o token e o doc da conta para limpeza de dados
 function getToken(contaId: integer): TTokenConta;
 
@@ -443,12 +448,12 @@ function GetDataHora(Data: string): TDateTime;
 function ValidaInt(Numero: string): Integer;
 
 
-
 var
   DadosConta: TDadosConta;
   CargaMultiEmpresa : TMultiEmpresa;
   FSQL : string;
   FResultado: Variant;
+  FListaAux : TStringList;
 
 const
   IdInfoRegProxyEscrever = 1;
@@ -1471,10 +1476,9 @@ begin
       // Log do metodo invocado
       Result.Append('#' + xMapasCarga.Metodos[x] + '#');
       _wsParametros.Clear;
-      _CdsImportado := ImportaArquivoMapeado(xMapasCarga.Mapas[x],CargaMultiEmpresa);
+      _CdsImportado := ImportaArquivoMapeado(DadosConta.PathArqCargaApi,xMapasCarga.Mapas[x],CargaMultiEmpresa);
       if _CdsImportado.Sucesso then
       begin
-
         // Pega token da conta
         _Token := getToken(xMapasCarga.ContaId);
 
@@ -1482,10 +1486,10 @@ begin
         if xSalvaJson then
         begin
           // Cria pasta se não existir
-          if not DirectoryExists(DadosConta.PathArqCarga + '\Api\'+ IntToStr(xMapasCarga.ContaId)) then
-            ForceDirectories(DadosConta.PathArqCarga + '\Api\' + IntToStr(xMapasCarga.ContaId));
+          if not DirectoryExists(DadosConta.PathArqCargaApi + '\Api\'+ IntToStr(xMapasCarga.ContaId)) then
+            ForceDirectories(DadosConta.PathArqCargaApi + '\Api\' + IntToStr(xMapasCarga.ContaId));
           // Salva Json do arquivo
-          _wsParametros.SaveToFile(DadosConta.PathArqCarga + '\Api\'+ IntToStr(xMapasCarga.ContaId) + '\' + StringReplace(xMapasCarga.NomeArqSaida[x],'.txt','.json',[]));
+          _wsParametros.SaveToFile(DadosConta.PathArqCargaApi + '\Api\'+ IntToStr(xMapasCarga.ContaId) + '\' + StringReplace(xMapasCarga.NomeArqSaida[x],'.txt','.json',[]));
         end;
         if (_CdsImportado.Dados.RecordCount > 0) then
         // if _wsParametros.Count > 0 then
@@ -1509,7 +1513,7 @@ begin
       end;
     end;
   finally
-    Result.Add('# Final de Atualização Tabelas Servidor :: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss',Now));
+     Result.Add('# Final de Atualização Tabelas Servidor :: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss',Now));
     _wsParametros.Destroy;
   end;
 end;
@@ -1562,7 +1566,7 @@ begin
 
 end;
 // Importa arquivo mapeado
-function ImportaArquivoMapeado(aFileMapa: string; MultiEmpresa:TMultiEmpresa): TCdsImportado;
+function ImportaArquivoMapeado(aPathBase,aFileMapa: string; MultiEmpresa:TMultiEmpresa): TCdsImportado;
 var
   _lista,_Linha: TStringList;
   _Aux, _Conta, _ArqOrgem, _TabelaDestino, _Separador, _TipoArquivo, _CDS, _TipoCampo, _ChaveObrigatoria : string;
@@ -1583,6 +1587,8 @@ begin
     if _ChaveObrigatoria = FlagSim then
           _RequerIdContrato := True;
     LeIni(_ArqOrgem,aFileMapa,'FONTE','Arquivo');
+    // Monta caminho completo da localizacao do arquivo origem
+    _ArqOrgem := aPathBase + '\' + _ArqOrgem;
     // Tabela Destino
     LeIni(_TabelaDestino,aFileMapa,'DESTINO','Tabela');
     // Tipo de Arquivo
@@ -1797,22 +1803,25 @@ begin
 end;
 
 // Consulta e exporta dados de cadastro da api do ws
-procedure ExportDataWs(xMapasCarga: TMapasCarga);
+function ExportDataWs(xMapasCarga: TMapasCarga): TStringList;
 var
   xDataRetorno : TDadosRetorno;
   i, j, k, l: Integer;
   xData : TJSONArray;
   Registro: TJSONObject;
   keys, ArqSaida : TStringList;
-  LinhaDados, NomeArquivo : string;
+  LinhaDados, NomeArquivo: string;
 
 begin
-  for i := 1 to 6 do
-  begin
+  try
     // se a posição não estiver preenchida, avalia a proxima
-    if (DadosConta.ChaveContas[i] = EmptyStr) then
-      Continue;
+    if (DadosConta.IdConta = EmptyStr) then
+    Exit;
+    Result := TStringList.Create;
     try
+      Result.Append('--------------------------------------------------');
+      Result.Append('Inicio da consulda dos dados no servidor: - ' + FormatDateTime('dd-MM-yyyy hh:mm:ss', Now()));
+      Result.Append('--------------------------------------------------');
       // Exporta os arquivos da conta, metodo a metodo
       ArqSaida := TStringList.Create;
       for k := 1 to 15 do
@@ -1820,10 +1829,13 @@ begin
         // Nome do arquivo de saída
         NomeArquivo := xMapasCarga.NomeArqSaida[k];
 
+        if NomeArquivo = EmptyStr then
+          Continue;
+
         // Le dados na API do WS
         xDataRetorno.Dados := EmptyStr;
         xDataRetorno.Sucesso := False;
-        xDataRetorno := readMetodoApi(DadosConta.ChaveContas[i],xMapasCarga.MetodosRead[k]);
+        xDataRetorno := readMetodoApi(DadosConta.IdConta,xMapasCarga.MetodosRead[k]);
         if xDataRetorno.Sucesso then
         begin
           // Formata dados e gera o arquivo na pasta da conta ativa
@@ -1846,27 +1858,36 @@ begin
              ArqSaida.Add(LinhaDados);
           end;
           // Gera o arquivo no diretório específico
-          if DirectoryExists(DadosConta.PathArqCargaApi + '\' + DadosConta.ChaveContas[i]) then
+          if DirectoryExists(DadosConta.PathArqCargaApi + '\Dump\' + DadosConta.IdConta) then
           begin
-            NomeArquivo := DadosConta.PathArqCargaApi + '\' + DadosConta.ChaveContas[i] + '\' +  NomeArquivo;
+            NomeArquivo := DadosConta.PathArqCargaApi + '\Dump\' + DadosConta.IdConta + '\' +  NomeArquivo;
             ArqSaida.SaveToFile(NomeArquivo);
           end
           else
           begin
-            ForceDirectories(DadosConta.PathArqCargaApi + '\' + DadosConta.ChaveContas[i]);
-            NomeArquivo := DadosConta.PathArqCargaApi + '\'+ DadosConta.ChaveContas[i] + '\' + NomeArquivo;
+            ForceDirectories(DadosConta.PathArqCargaApi + '\Dump\' + DadosConta.IdConta);
+            NomeArquivo := DadosConta.PathArqCargaApi + '\Dump\'+ DadosConta.IdConta + '\' + NomeArquivo;
             ArqSaida.SaveToFile(NomeArquivo);
           end;
+          Result.Append('Arquivo gerado: '+ NomeArquivo);
           // Limpa dados do arquivo
           ArqSaida.Clear;
         end;
       end;
-    finally
-      xData.destroy;
-      ArqSaida.Destroy;
-      keys.Destroy;
+    except
+      on e: Exception do
+      begin
+        Result.Append('Falha ao consultar arquivos no servidor');
+        Result.Append('Mensagem de erro reportada:' + e.Message);
+      end;
     end;
+  finally
+    xData.destroy;
+    ArqSaida.Destroy;
+    keys.Destroy;
+
   end;
+
 end;
 // Extrai versão do executável
 function VersaoAplicativo(Executavel: string): string;
@@ -2024,12 +2045,15 @@ begin
      Result.Token:= '64656c7265796c61746963696e696f73';
      Result.Doc  := '22.430.532/0001-00';
     end;
-
+    322108:
+    begin
+      Result.Token :=  '1g2j-819a-010y-4713';
+      Result.Doc := '21.601.281/0001-08';
+    end;
     11132:
     Result.Token := 's0167r';
     82009:
     Result.Token := 's9087c';
-
   end;
 end;
 // Funcoes das classes

@@ -212,6 +212,13 @@ type
     grdMasterViewPatMapVinculado: TcxGridDBColumn;
     grdMasterViewPatMapVeiculo: TcxGridDBColumn;
     grdMasterViewSync: TcxGridDBColumn;
+    acDesableAll: TAction;
+    tbDesableSync: TToolButton;
+    ToolButton2: TToolButton;
+    mniAtivaInativa: TPopupMenu;
+    acDesableAll1: TMenuItem;
+    Inativa1: TMenuItem;
+    acEnableAll: TAction;
     procedure FormCreate(Sender: TObject);
     procedure acInsertExecute(Sender: TObject);
     procedure acFindFileExecute(Sender: TObject);
@@ -231,6 +238,9 @@ type
     procedure btnMapTagClick(Sender: TObject);
     procedure btnMapTecnicoClick(Sender: TObject);
     procedure acManutencaoUpdate(Action: TBasicAction; var Handled: Boolean);
+    procedure acDesableAllExecute(Sender: TObject);
+    procedure Inativa1Click(Sender: TObject);
+    procedure acEnableAllExecute(Sender: TObject);
 
   private
     whoOpenFileFinder : Integer;
@@ -248,6 +258,20 @@ uses
   uMlkPrincipalDTM, uConstantesComuns, uVSSCLRotaComum;
 
 {$R *.dfm}
+// desabilita a sincronizacao de todas as contas
+procedure TMlkParmetrosFRM.acDesableAllExecute(Sender: TObject);
+begin
+  inherited;
+  if MostraMsgConf('Desabilitar Sincronizacao de todas as contas?') then
+    MlkPrincipalDTM.desableAllSync(FlagNao);
+end;
+// habilita sincronizacao de todas as contas
+procedure TMlkParmetrosFRM.acEnableAllExecute(Sender: TObject);
+begin
+  inherited;
+   if MostraMsgConf('Habilitar Sincronizacao de todas as contas?') then
+    MlkPrincipalDTM.desableAllSync(FlagSim);
+end;
 // Localiza arquivo de mapa de carga e salva no componente
 procedure TMlkParmetrosFRM.acFindFileExecute(Sender: TObject);
 begin
@@ -472,6 +496,12 @@ begin
    GetDados := MlkPrincipalDTM.PesquisarConta;
    SetDados := MlkPrincipalDTM.SalvarConta;
    MlkPrincipalDTM.PesquisarConta(FiltroInicial);
+end;
+
+procedure TMlkParmetrosFRM.Inativa1Click(Sender: TObject);
+begin
+  inherited;
+  acDesableAll.Execute;
 end;
 
 // Executa acao de localizacao dos arquivos de mapa
