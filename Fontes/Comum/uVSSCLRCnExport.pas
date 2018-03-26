@@ -301,6 +301,24 @@ type
     private
   end;
 
+type
+  TSendMessage = class
+    conta: string;
+    rota: string;
+    prioridade: string;
+    titulo: string;
+    data: string;
+    NomeRota: string;
+    NomeLinha: String;
+    AgenteColeta: string;
+    PlacaVeiculo: string;
+    Mensangem: string;
+    public
+      procedure clear;
+      function dataToJson: TStringList;
+      function dataToArray: TStringList;
+  end;
+
 procedure createParametros;
 procedure populaParametros;
 procedure destroiParametros;
@@ -837,5 +855,74 @@ begin
    Self.DataColeta + _Separador +
    Self.HoraColeta
 end;
+
+procedure TSendMessage.clear;
+begin
+  Self.conta := EmptyStr;
+  Self.rota := EmptyStr;
+  Self.prioridade := EmptyStr;
+  Self.titulo := EmptyStr;
+  Self.data := EmptyStr;
+  Self.NomeRota := EmptyStr;
+  Self.NomeLinha := EmptyStr;
+  Self.AgenteColeta := EmptyStr;
+  Self.PlacaVeiculo := EmptyStr;
+  Self.Mensangem := EmptyStr;
+end;
+{ TSendMessage }
+function TSendMessage.dataToArray: TStringList;
+var
+  Dado : string;
+  Aspas, Ponto : Char;
+begin
+   try
+     Aspas := '''';
+     Ponto := '=';
+     Result := TStringList.Create;
+     Result.Clear;
+
+     Result.Append('conta_id'+ Ponto + Self.conta);
+     Result.Append('rota_id' + Ponto + Self.rota);
+     Result.Append('prioridade' + Ponto + Self.prioridade);
+     Result.Append('titulo' +  Ponto + Self.titulo);
+     Result.Append('data' + Ponto + Self.data);
+     Result.Append('rota'+ Ponto + Self.NomeRota);
+     Result.Append('linha' + Ponto + Self.NomeLinha);
+     Result.Append('motorista' + Ponto + Self.AgenteColeta);
+     Result.Append('placa' + Ponto + Self.PlacaVeiculo);
+     Result.Append('mensagem' +  Ponto + Self.Mensangem);
+   finally
+    ;
+   end;
+end;
+
+function TSendMessage.dataToJson: TStringList ;
+var
+  Dado : string;
+  Aspas, Ponto : Char;
+begin
+   try
+     Aspas := '"';
+     Ponto := ':';
+     Result := TStringList.Create;
+     Result.Clear;
+     Dado := '{' +
+       AnsiQuotedStr('conta_id',Aspas) + Ponto + AnsiQuotedStr(Self.conta,Aspas) + ',' +
+       AnsiQuotedStr('rota_id', Aspas) + Ponto + AnsiQuotedStr(Self.rota,Aspas) + ',' +
+       AnsiQuotedStr('prioridade', Aspas) + Ponto + AnsiQuotedStr(Self.prioridade, Aspas) + ',' +
+       AnsiQuotedStr('titulo',Aspas) +  Ponto + AnsiQuotedStr(Self.titulo, Aspas) + ',' +
+       AnsiQuotedStr('data', Aspas) + Ponto + AnsiQuotedStr(Self.data, Aspas) + ',' +
+       AnsiQuotedStr('rota', Aspas) + Ponto + AnsiQuotedStr(Self.NomeRota, Aspas) + ',' +
+       AnsiQuotedStr('linha', Aspas) + Ponto + AnsiQuotedStr(Self.NomeLinha, Aspas) + ',' +
+       AnsiQuotedStr('motorista', Aspas) + Ponto + AnsiQuotedStr(Self.AgenteColeta, Aspas) + ',' +
+       AnsiQuotedStr('placa', Aspas) + Ponto + AnsiQuotedStr(Self.PlacaVeiculo, Aspas) + ',' +
+       AnsiQuotedStr('mensagem', Aspas) +  Ponto + AnsiQuotedStr(Self.Mensangem, Aspas) + '}';
+
+     Result.Add(dado);
+   finally
+    ;
+   end;
+end;
+
 end.
 

@@ -8,7 +8,7 @@ uses
   ExtCtrls, JvAppInst, uVSSCLRotaComum, uJSON, uSCLRCnExport, FMTBcd, SqlExpr,
   DateUtils, ImgList, Controls, ZAbstractConnection, ZConnection,
   ZAbstractRODataset, ZAbstractDataset, ZDataset, FileCtrl, Windows, JvTFManager,
-  RxTimerLst;
+  RxTimerLst, RxNotify;
 
 
 type
@@ -262,15 +262,17 @@ type
     cdsContasDatUltCarga: TDateTimeField;
     cdsContasCarga: TStringField;
     cdsViagenstanques: TStringField;
+    fwMaster: TRxFolderMonitor;
     procedure DataModuleCreate(Sender: TObject);
     procedure cdsContasBeforePost(DataSet: TDataSet);
     procedure tmrConsoleTimer(Sender: TObject);
     procedure tmrSyncTimer(Sender: TObject);
 
-    function getServerData: TSatusSync;
+    function getServerData(pConta_id : Integer = 0): TSatusSync;
     procedure DataModuleDestroy(Sender: TObject);
     procedure sheConsoleEvents1Execute(Sender: TJvEventCollectionItem;
       const IsSnoozeEvent: Boolean);
+    procedure fwMasterChange(Sender: TObject);
 
   private
     FStrConexao: string;
@@ -278,7 +280,7 @@ type
     FStatusTmrSync: string;
     FStatusTmrConsole: string;
     function IsContaInserted(Codigo: Integer): Boolean;
-    function ResetSync(Tipo:String): Boolean;
+    function ResetSync(Tipo:String; pConta_id : Integer = 0): Boolean;
 
   public
     ShowStatusTmr:  procedure of object;
@@ -752,6 +754,17 @@ begin
 
     if Assigned(ShowStatusTmr) then
       ShowStatusTmr;
+    // Ativa monitoramento da pasta de notificacao de viagens
+    try
+      strConfig := TStringList.Create;
+      strConfig.LoadFromFile('config.ini');
+      fwMaster.FolderName := strConfig.Strings[0];
+      fwMaster.Active := True;
+    finally
+      strConfig.Destroy;
+    end;
+
+    fwMaster.Active := True;
 
    // FSQL := 'C:\Users\jusce\Dropbox\MylkSync\SCA\280465\12018\003_18_01_2017_9.7.27.0--2018-01-18_2018-01-18.db';
    // OpenDb(FSQL);
@@ -915,6 +928,84 @@ begin
   // Libera memoria
   LiberaMemoria;
 end;
+// Monitora o diretorio de notificacao de viagens
+procedure TMlkPrincipalDTM.fwMasterChange(Sender: TObject);
+var
+  dtInicio, dtFim : TDateTime;
+  Success: Boolean;
+  ListaContas, Arqconf : TStringList;
+  FileConta: string;
+  i, conta: Integer;
+begin
+  Success := False;
+  try
+    Arqconf := TStringList.Create;
+    ListaContas := TStringList.Create;
+    // Carrega configuracoes
+    if FileExists('config.ini') then
+    begin
+      Arqconf.LoadFromFile('config.ini');
+    end
+    else
+      Abort;
+    // Caminho e nome do arquivo com a lista de contas a sincronizar
+    FileConta := fwMaster.FolderName + '\' + 'sync.txt';
+
+    if ( FileExists(FileConta))  then
+    begin
+      ListaContas.LoadFromFile(FileConta);
+      if (ListaContas.Count = 0) then
+         Abort;
+    end
+    else
+      Abort;
+
+    if (FStatusTmrSync <> TmrAtivo) and ( FStatusTmrConsole <> TmrAtivo) then
+    begin
+      tmrSync.OnTimer := nil;
+      tmrSync.Enabled := False;
+      tmrConsole.OnTimer := nil;
+      tmrConsole.Enabled := False;
+      FStatusTmrSync := TmrInabilitado;
+      FStatusTmrConsole := TmrInabilitado;
+      Success := True;
+      if Assigned(ShowStatusTmr) then
+        ShowStatusTmr;
+      try
+        conta := 1;
+        // sincroniza cada conta da lista de contas
+        for i := 0 to ListaContas.Count -1 do
+        begin
+          if TryStrToInt(ListaContas.Strings[i],conta) then;
+            getServerData(conta);
+        end;
+        // apaga o arquivo apos processamento
+        deletefile(PChar(FileConta));
+      except
+        ;
+      end;
+      // libera a memoria
+     // LiberaMemoria;
+
+    end;
+  finally
+    // Destroy as listas
+    ListaContas.Destroy;
+    Arqconf.Destroy;
+    // reabilita evento timer de console
+    if Success then
+    begin
+      tmrSync.OnTimer := tmrSyncTimer;
+      tmrSync.Enabled := False;
+      tmrConsole.OnTimer := tmrConsoleTimer;
+      tmrConsole.Enabled := True;
+      FStatusTmrSync := TmrInativo;
+      FStatusTmrConsole := TmrInativo;
+      if Assigned(ShowStatusTmr) then
+        ShowStatusTmr;
+    end;
+  end;
+end;
 
 // Gera arquivos de descarga
 function TMlkPrincipalDTM.GetColetas(DataInicio, DataTermino: TDateTime; Sync,
@@ -934,7 +1025,7 @@ var
   _ItemRegistro : TItensMovimentoRM;
   _DocProdutor, _LinhaDados, _Separador, _Sincronizou : string;
   CplNome : string;  // Complemento do nome do arquivo de saida (Gerado com Random)
-
+  MsgNotificacao: TSendMessage;
 
   function GetViagem(Id: Integer): TJSONObject;
   var
@@ -1034,7 +1125,6 @@ var
   end;
   procedure clearTables;
   begin
-
     if cdsColetas.Active then cdsColetas.EmptyDataSet;
     if cdsViagens.Active then cdsViagens.EmptyDataSet;
     if cdsRota.Active then cdsRota.EmptyDataSet;
@@ -1043,6 +1133,27 @@ var
     if cdsProdutor.Active then cdsProdutor.EmptyDataSet;
     if cdsFazendas.Active then cdsFazendas.EmptyDataSet;
     if cdsVeiculos.Active then cdsVeiculos.EmptyDataSet;
+  end;
+  function EnviaNotificacao(Mensagem: TStringList): Boolean;
+  var
+    Resposta : TDadosRetorno;
+  begin
+    try
+      try
+       // Mensagem.SaveToFile('mens.json');
+        Resposta := PostMetodoJSON(DadosConta.HostURL + 'sendNotificacaoRota',Mensagem );
+        if Resposta.Sucesso then
+         Result := True
+        else
+          Result := False;
+      except on e: Exception do
+        begin
+          Result := False;
+        end;
+      end;
+    finally
+      ;
+    end;
   end;
 begin
   try
@@ -1156,6 +1267,7 @@ begin
     try
       for i := 0 to (cdsViagens.RecordCount -1) do
       begin
+
         if (Layout <> 'RM') then
            _ArqSaida.Clear
         else if (DadosConta.VerRm <> 'U') then
@@ -1164,14 +1276,138 @@ begin
         // Verifica se a viagem já foi processada
         if ViagemJahProcessada(cdsViagensid.Value, Layout) then
         begin
+
           FArqLog.Append('Viagem já processada: ' + IntToStr(cdsViagensid.Value));
           cdsViagens.Next;
           Continue;
         end;
+
+        // Cria objeto viagem para persistencia no log
+        ObjViagem := ViagemJahRegistrada(cdsViagensid.Value);
+        ObjViagem.Id := cdsViagensid.Value;
+        ObjViagem.ContaId := StrToInt(DadosConta.IdConta);
+        ObjViagem.RotaId := cdsViagensrota_id.Value;
+        ObjViagem.RotaCodigo := cdsViagensrota.Value;
+        ObjViagem.DatAbertura := cdsViagensdt_abertura.Value;
+
+        // Completa dados da viagem
+        regPos := cdsViagens.RecNo;
+        cdsViagens.Edit;
+        if cdsLinha.Locate('codigo', cdsViagenslinha.Value,[loPartialKey]) then
+        begin
+          cdsViagensNomeLinha.Value := cdsLinhaNome.Value;
+          cdsViagenskm_padrao.Value := cdsLinhadistancia.Value;
+        end;
+        if cdsRota.Locate('codigo', cdsViagensrota.Value,[loPartialKey]) then
+        begin
+          cdsViagensNomeRota.Value := cdsRotaNome.Value;
+        end;
+        if cdsColetor.Locate('codigo', cdsViagenscoletor.Value,[loPartialKey])then
+        begin
+          cdsViagensNomeColetor.Value := cdsColetorNome.Value;
+        end;
+        if cdsVeiculos.Locate('codigo',cdsViagensveiculo.Value,[loPartialKey])then
+        begin
+          cdsViagensPlacaVeiculo.Value := cdsVeiculosplaca.Value;
+        end;
+        ObjViagem.Coletor := cdsViagenscoletor.Value;
+        ObjViagem.Veiculo := cdsViagensPlacaVeiculo.Value;
+
+        // Numero da viagem para o veículo e motorista coletor
+        if (not ObjViagem.Registrada) then
+        begin
+          qryAux.SQL.Clear;
+          qryAux.SQL.Add('Select Count(LovId) Total from LogViagem where LovColetor = :LovColetor and LovVeiculo = :LovVeiculo and LovDataViagem BETWEEN :P1 AND :P2');
+          qryAux.Parameters.ParamByName('LovColetor').Value := ObjViagem.Coletor;
+          qryAux.Parameters.ParamByName('LovVeiculo').Value := ObjViagem.Veiculo;
+          qryAux.Parameters.ParamByName('P1').Value := FormatDateTime('yyyy-MM-dd 00:00:00',ObjViagem.DatAbertura);
+          qryAux.Parameters.ParamByName('P2').Value := FormatDateTime('yyyy-MM-dd 23:59:59',ObjViagem.DatAbertura);
+          qryAux.Open;
+          // qryAux.ParamByName('P1').Value := FormatDateTime('yyyy-MM-dd 00:00:00',GetData(DateToStr(ObjViagem.DatAbertura)));
+          FResultado := (qryAux.FieldByName('Total').Value + 1);
+          ObjViagem.Index := FResultado;
+        end
+        else if (ObjViagem.Index = 0) then // Viagem registrada sem indice - Seta Indice (Número sequencial das viagens na data)
+        begin
+          qryAux.SQL.Clear;
+          qryAux.SQL.Add('Select LovViagemId, Ifnull(LovIndex,0) from LogViagem where LovColetor = :LovColetor and LovVeiculo = :LovVeiculo and LovDataViagem BETWEEN :P1 AND :P2 ORDER BY LovDataViagem ');
+          qryAux.Parameters.ParamByName('LovColetor').Value := ObjViagem.Coletor;
+          qryAux.Parameters.ParamByName('LovVeiculo').Value := ObjViagem.Veiculo;
+          qryAux.Parameters.ParamByName('P1').Value := FormatDateTime('yyyy-MM-dd 00:00:00',ObjViagem.DatAbertura);
+          qryAux.Parameters.ParamByName('P2').Value := FormatDateTime('yyyy-MM-dd 23:59:59',ObjViagem.DatAbertura);
+          qryAux.Open;
+          qryAux.First;
+          // Atualiza todos os indices das viagens na data da viagem processa se o indece nao tiver sido setado
+          while not qryAux.Eof do
+          begin
+             qryApoio.SQL.Clear;
+             qryApoio.SQL.Add('update LogViagem Set LovIndex = :p1 where LovViagemId = :p2 and Ifnull(LovIndex,0) = 0');
+             qryApoio.Parameters.ParamByName('p1').Value := qryAux.RecNo;
+             qryApoio.Parameters.ParamByName('p2').Value  := qryAux.FieldByName('LovViagemId').Value;
+             qryApoio.ExecSQL;
+             qryAux.Next;
+          end;
+          // Busca o indice da viagem que esta sendo processada
+          qryApoio.SQL.Clear;
+          qryApoio.SQL.Add('Select LovIndex from LogViagem where LovViagemId = :p1');
+          qryApoio.Parameters.ParamByName('p1').Value := ObjViagem.Id;
+          qryApoio.Open;
+
+          ObjViagem.Index := qryApoio.FieldByName('LovIndex').Value;
+        end;
+        cdsViagensNumeroViagem.Value := ObjViagem.Index;
+
+        // Verifica se o codigo do coletor está configurado corretamente com (/) na composição
+        if Layout = 'Datasul' then
+        begin
+          if (Pos('/',cdsViagenscoletor.AsString)) <= 0 then
+          begin
+            cdsViagenscoletor.Value := cdsViagenscoletor.Value + '/01';
+          end;
+          if cdsViagenscoletor.Value = 'null' then
+          begin
+            cdsViagenscoletor.Value := '001/01';
+          end;
+        end;
+
+        cdsViagens.Post;
+
+        // Retorna a posição que o cds viagem estava
+        cdsViagens.RecNo := regPos;
+
         // Verifica se viagem tem distribuição de tanque comunitario pendente e não gera o arquivo
         if (cdsViagenscomunitario_pendente.Value = 'true') then
         begin
+          // Monta objeto de notificacao pra enviar mensagem ao seguidor de rota.
+          try
+            MsgNotificacao := TSendMessage.Create;
+            MsgNotificacao.conta := DadosConta.IdConta;
+            MsgNotificacao.rota := cdsViagensrota_id.AsString;
+            MsgNotificacao.prioridade := 'B';
+            MsgNotificacao.titulo := 'Arquivo de Viagem - Tanque Coletivo';
+            MsgNotificacao.data := FormatDateTime('dd/MM/yyyy - hh:mm:ss', now);
+            MsgNotificacao.NomeRota := cdsViagensNomeRota.AsString;
+            MsgNotificacao.NomeLinha := cdsViagensNomeLinha.AsString;
+            MsgNotificacao.AgenteColeta := cdsViagensNomeColetor.AsString; // Nome do agente de coleta
+            MsgNotificacao.PlacaVeiculo := cdsViagensPlacaVeiculo.AsString; // Placa do Veiculo
+            MsgNotificacao.Mensangem := ' A Viagem : ' + cdsViagensid.AsString +
+                           ' -  precisa de sua atencao, pois possui tanques coletivos ' +
+                           ' sem a distribuicao de valores para os produtores vinculados. Gentileza verificar ' +
+                           ' para que o arquivo de integracao possa ser gerado. ';
+
+
+            if EnviaNotificacao(MsgNotificacao.dataToArray)then
+              FArqLog.Append('Notificacao envida com sucesso !')
+            else
+              FArqLog.Append('Falha ao notificar distribuicao de tanque coletivo!');
+          finally
+            Fresultado := EmptyStr;
+            FSQL := EmptyStr;
+            MsgNotificacao.Destroy;
+          end;
+
           FArqLog.Append('(*)VIAGEM COM TANQUE COMUNITARIO PENDENTE:  ' + IntToStr(cdsViagensid.Value));
+
           cdsViagens.Next;
           Continue;
         end;
@@ -1195,13 +1431,7 @@ begin
             _ItemRegistro := TItensMovimentoRM.Create;
           end;
 
-          // Cria objeto viagem para persistencia no log
-          ObjViagem := ViagemJahRegistrada(cdsViagensid.Value);
-          ObjViagem.Id := cdsViagensid.Value;
-          ObjViagem.ContaId := StrToInt(DadosConta.IdConta);
-          ObjViagem.RotaId := cdsViagensrota_id.Value;
-          ObjViagem.RotaCodigo := cdsViagensrota.Value;
-          ObjViagem.DatAbertura := cdsViagensdt_abertura.Value;
+
           if not ValidarData(ObjViagem.DatAbertura) then
           begin
             ObjViagem.DatAbertura := Now;
@@ -1215,90 +1445,6 @@ begin
           if Layout = 'SCL' then
             ObjViagem.GerouScl := FlagSim;
 
-          // Completa dados da viagem
-          regPos := cdsViagens.RecNo;
-          cdsViagens.Edit;
-          if cdsLinha.Locate('codigo', cdsViagenslinha.Value,[loPartialKey]) then
-          begin
-            cdsViagensNomeLinha.Value := cdsLinhaNome.Value;
-            cdsViagenskm_padrao.Value := cdsLinhadistancia.Value;
-          end;
-          if cdsRota.Locate('codigo', cdsViagensrota.Value,[loPartialKey]) then
-          begin
-            cdsViagensNomeRota.Value := cdsRotaNome.Value;
-          end;
-          if cdsColetor.Locate('codigo', cdsViagenscoletor.Value,[loPartialKey])then
-          begin
-            cdsViagensNomeColetor.Value := cdsColetorNome.Value;
-          end;
-          if cdsVeiculos.Locate('codigo',cdsViagensveiculo.Value,[loPartialKey])then
-          begin
-            cdsViagensPlacaVeiculo.Value := cdsVeiculosplaca.Value;
-          end;
-          ObjViagem.Coletor := cdsViagenscoletor.Value;
-          ObjViagem.Veiculo := cdsViagensPlacaVeiculo.Value;
-
-          // Numero da viagem para o veículo e motorista coletor
-          if (not ObjViagem.Registrada) then
-          begin
-            qryAux.SQL.Clear;
-            qryAux.SQL.Add('Select Count(LovId) Total from LogViagem where LovColetor = :LovColetor and LovVeiculo = :LovVeiculo and LovDataViagem BETWEEN :P1 AND :P2');
-            qryAux.Parameters.ParamByName('LovColetor').Value := ObjViagem.Coletor;
-            qryAux.Parameters.ParamByName('LovVeiculo').Value := ObjViagem.Veiculo;
-            qryAux.Parameters.ParamByName('P1').Value := FormatDateTime('yyyy-MM-dd 00:00:00',ObjViagem.DatAbertura);
-            qryAux.Parameters.ParamByName('P2').Value := FormatDateTime('yyyy-MM-dd 23:59:59',ObjViagem.DatAbertura);
-            qryAux.Open;
-            // qryAux.ParamByName('P1').Value := FormatDateTime('yyyy-MM-dd 00:00:00',GetData(DateToStr(ObjViagem.DatAbertura)));
-            FResultado := (qryAux.FieldByName('Total').Value + 1);
-            ObjViagem.Index := FResultado;
-          end
-          else if (ObjViagem.Index = 0) then // Viagem registrada sem indice - Seta Indice (Número sequencial das viagens na data)
-          begin
-            qryAux.SQL.Clear;
-            qryAux.SQL.Add('Select LovViagemId, Ifnull(LovIndex,0) from LogViagem where LovColetor = :LovColetor and LovVeiculo = :LovVeiculo and LovDataViagem BETWEEN :P1 AND :P2 ORDER BY LovDataViagem ');
-            qryAux.Parameters.ParamByName('LovColetor').Value := ObjViagem.Coletor;
-            qryAux.Parameters.ParamByName('LovVeiculo').Value := ObjViagem.Veiculo;
-            qryAux.Parameters.ParamByName('P1').Value := FormatDateTime('yyyy-MM-dd 00:00:00',ObjViagem.DatAbertura);
-            qryAux.Parameters.ParamByName('P2').Value := FormatDateTime('yyyy-MM-dd 23:59:59',ObjViagem.DatAbertura);
-            qryAux.Open;
-            qryAux.First;
-            // Atualiza todos os indices das viagens na data da viagem processa se o indece nao tiver sido setado
-            while not qryAux.Eof do
-            begin
-               qryApoio.SQL.Clear;
-               qryApoio.SQL.Add('update LogViagem Set LovIndex = :p1 where LovViagemId = :p2 and Ifnull(LovIndex,0) = 0');
-               qryApoio.Parameters.ParamByName('p1').Value := qryAux.RecNo;
-               qryApoio.Parameters.ParamByName('p2').Value  := qryAux.FieldByName('LovViagemId').Value;
-               qryApoio.ExecSQL;
-               qryAux.Next;
-            end;
-            // Busca o indice da viagem que esta sendo processada
-            qryApoio.SQL.Clear;
-            qryApoio.SQL.Add('Select LovIndex from LogViagem where LovViagemId = :p1');
-            qryApoio.Parameters.ParamByName('p1').Value := ObjViagem.Id;
-            qryApoio.Open;
-
-            ObjViagem.Index := qryApoio.FieldByName('LovIndex').Value;
-          end;
-          cdsViagensNumeroViagem.Value := ObjViagem.Index;
-
-          // Verifica se o codigo do coletor está configurado corretamente com (/) na composição
-          if Layout = 'Datasul' then
-          begin
-            if (Pos('/',cdsViagenscoletor.AsString)) <= 0 then
-            begin
-              cdsViagenscoletor.Value := cdsViagenscoletor.Value + '/01';
-            end;
-            if cdsViagenscoletor.Value = 'null' then
-            begin
-              cdsViagenscoletor.Value := '001/01';
-            end;
-          end;
-
-          cdsViagens.Post;
-
-          // Retorna a posição que o cds viagem estava
-          cdsViagens.RecNo := regPos;
 
           if Layout = 'Magis' then
           begin
@@ -2563,7 +2709,7 @@ begin
 
 end;
 // Comunica com servidor MilksRota e gerar arquivos
-function TMlkPrincipalDTM.getServerData: TSatusSync;
+function TMlkPrincipalDTM.getServerData(pConta_id : Integer): TSatusSync;
   function clearDadosConta() : Boolean ;
   begin
     try
@@ -2600,7 +2746,7 @@ begin
       ShowStatusTmr;
 
     // Reseta status de sincronizacaode todas as contas
-    if not ResetSync('Sync') then
+    if not ResetSync('Sync',pConta_id) then
       Abort;
     // Seleciona todas as contas cadastradas
     SelectAllRecordsConta;
@@ -2616,8 +2762,19 @@ begin
         Continue;
       end;
 
+      // se for executar para uma unica conta, localiza o registro da conta
+      if (pConta_id <> 0) then
+      begin
+        if not( cdsContas.Locate('contaid',pConta_id,[loPartialKey])) then
+        begin
+          cdsContas.Last;
+          cdsContas.Next;
+          Break;
+        end;
+      end;
+
       // Periodo de geracao dos arquivos
-      dtInicio := cdsContasDatIniLeituraDescargaWS.Value;;
+      dtInicio := (cdsContasDatIniLeituraDescargaWS.Value -1);
       if (cdsContasParColetasHoje.Value = FlagSim) then
         dtFim := Date()
       else
@@ -2676,6 +2833,10 @@ begin
 
       cdsContas.Next;
       Application.ProcessMessages;
+      // Execucao apenas para uma conta, abandona o laco de repeticao
+      if (pConta_id <> 0) then
+        Break;
+
     end;
     Result.Result := True;
     Result.State := 'E';
@@ -2693,6 +2854,8 @@ begin
     if Assigned(ShowStatusTmr) then
       ShowStatusTmr;
     Application.ProcessMessages;
+    // Se a funcao foi acionada para gerar de uma unica conta, zera o parametro da conta apos executar.
+    pConta_id := 0;
 
   end;
 end;
@@ -3311,7 +3474,11 @@ procedure TMlkPrincipalDTM.PopulaAtoresColeta(DataInicio,
              if Viagem.has('bocas') then
                objRegViagem.bocas := Viagem.getString('bocas');
              if Viagem.has('tanques') then
+             begin
                objRegViagem.tanques := Viagem.getString('tanques');
+               if (objRegViagem.tanques = '0' ) or (objRegViagem.tanques = 'null') then
+               objRegViagem.tanques := '3';
+             end;
 
              // Empilha Viagem
             // Result.Add(objRegViagem);
@@ -3567,18 +3734,28 @@ begin
 
 end;
 
-function TMlkPrincipalDTM.ResetSync(Tipo:String): Boolean;
+function TMlkPrincipalDTM.ResetSync(Tipo:String; pConta_id : Integer): Boolean;
+var
+  inicio, fim : string;
 begin
   try
+    inicio := '0';
+    fim := '999999';
+    // Testa se a aca sera sobre uma unica conta ou todas
+    if (pConta_id <> 0) then
+    begin
+      inicio := IntToStr(pConta_id);
+      fim := IntToStr(pConta_id);
+    end;
     if Tipo = 'Sync' then
     begin
-      FSQL := 'Update contas set sync = :p1' ;
-      FConexaoBD.ExecutarComando(FSQL,[FlagNao]);
+      FSQL := 'Update contas set sync = :p1 where contaid between :p2 and :p3';
+      FConexaoBD.ExecutarComando(FSQL,[FlagNao, inicio, fim]);
     end
     else if Tipo = 'Carga' then
     begin
-       FSQL := 'Update contas set Carga = :p1' ;
-      FConexaoBD.ExecutarComando(FSQL,['0']);
+       FSQL := 'Update contas set Carga = :p1 where contaid between :p2 and :p3' ;
+      FConexaoBD.ExecutarComando(FSQL,['0', inicio, fim]);
     end;
     Result := True;
   except
@@ -3720,12 +3897,15 @@ end;
 procedure TMlkPrincipalDTM.tmrSyncTimer(Sender: TObject);
 var
   x: Integer;
-  FLogAtu : TStringList;
+  FLogAtu, _Saida_Proc : TStringList;
   FNomeArqLog, Carga_OK : string;
   dtInicio, dtFim : TDateTime;
 begin
 
   try
+    // cria instancia do array de resultado de processamento
+    _Saida_Proc := TStringList.Create;
+
     try
 
       if not (tmrConsole.Enabled) then
@@ -3824,7 +4004,8 @@ begin
             FLogAtu.Append('Log de Atividades de Atualizacao-------------');
             FLogAtu.Append('-------------------<>------------------------');
             // Executa o envio dos dados e retorna o log
-            FLogAtu.Append(AtualizaTabelasWs(_MapasCarga).Text);
+             AtualizaTabelasWs(_Saida_Proc,_MapasCarga);
+            FLogAtu.Append(_Saida_Proc.Text);
            except
              on e: Exception do
              begin
@@ -3845,7 +4026,9 @@ begin
              FLogAtu.Append('Log de Atividades de Consulta Registros -----');
              FLogAtu.Append('-------------------<>------------------------');
             // Executa a consulta dos dados e retorna o log
-             FLogAtu.Append(ExportDataWs(_MapasCarga).Text);
+             _Saida_Proc.Clear;
+             ExportDataWs(_Saida_Proc,_MapasCarga);
+             FLogAtu.Append(_Saida_Proc.Text);
            except
              on e: Exception do
              begin
@@ -3905,6 +4088,9 @@ begin
     tmrConsole.OnTimer := tmrConsoleTimer;
     tmrConsole.Enabled := True;
     sheConsole.StartAll;
+
+    // Destroy a instancia do resultado de processamento
+    _Saida_Proc.Destroy;
    end;
 end;
 // Valida arquivos de mapa de carga

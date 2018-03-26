@@ -496,6 +496,23 @@ begin
    GetDados := MlkPrincipalDTM.PesquisarConta;
    SetDados := MlkPrincipalDTM.SalvarConta;
    MlkPrincipalDTM.PesquisarConta(FiltroInicial);
+
+   // Associa eventos dos botoes do mapa de carga
+   btnMapAnalise.OnClick := btnMapAnaliseClick;
+   btnMapColetor.OnClick := btnMapColetorClick;
+   btnMapExtrato.OnClick := btnMapExtratoClick;
+   btnMapFazenda.OnClick := btnMapFazendaClick;
+   btnMapItinerario.OnClick := btnMapItinerarioClick;
+   btnMapLinha.OnClick := btnMapLinhaClick;
+   btnMapMotivo.OnClick := btnMapMotivoClick;
+   btnMapProdutor.OnClick := btnMapProdutorClick;
+   btnMatGrupoRota.OnClick := btnMatGrupoRotaClick;
+   btnMapTanque.OnClick := btnMapTanqueClick;
+   btnMapVinculado.OnClick := btnMapVinculadoClick;
+   btnMapVeiculo.OnClick := btnMapVeiculoClick;
+   btnMapTag.OnClick := btnMapTagClick;
+   btnMapRota.OnClick := btnMapRotaClick;
+   btnMapTecnico.OnClick := btnMapTecnicoClick;
 end;
 
 procedure TMlkParmetrosFRM.Inativa1Click(Sender: TObject);

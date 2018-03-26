@@ -5,7 +5,6 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
   Height = 515
   Width = 718
   object cnnMaster: TADOConnection
-    Connected = True
     ConnectionString = 
       'Provider=SQLOLEDB.1;Password=esd056402;Persist Security Info=Tru' +
       'e;User ID=sa;Initial Catalog=MilkSync;Data Source=DESKTOP-KUC122' +
@@ -114,10 +113,12 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     object cdsContasDatUltSync: TDateTimeField
       DisplayLabel = ' Sincronizacao'
       FieldName = 'DatUltSync'
+      ProviderFlags = [pfInUpdate]
     end
     object cdsContasDatUltCarga: TDateTimeField
       DisplayLabel = 'Carga'
       FieldName = 'DatUltCarga'
+      ProviderFlags = [pfInUpdate]
     end
     object cdsContasEnviarNotifAtesto: TStringField
       FieldName = 'EnviarNotifAtesto'
@@ -354,12 +355,12 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
       item
         Name = 'evtArquivos'
         OnExecute = sheConsoleEvents1Execute
-        StartDate = '2018/03/03 14:33:42.000'
+        StartDate = '2018/03/15 14:33:42.000'
         RecurringType = srkDaily
         EndType = sekNone
         Freq_StartTime = 0
         Freq_EndTime = 86399000
-        Freq_Interval = 9000000
+        Freq_Interval = 1800000
         Daily_EveryWeekDay = True
       end>
     Left = 233
@@ -510,7 +511,7 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
   object qrySql: TADOQuery
     Connection = cnnMaster
     Parameters = <>
-    Left = 352
+    Left = 424
     Top = 24
   end
   object qryControle: TADOQuery
@@ -519,19 +520,19 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     Parameters = <>
     SQL.Strings = (
       'Select * from Controle')
-    Left = 424
+    Left = 496
     Top = 24
   end
   object dspControle: TDataSetProvider
     DataSet = qryControle
-    Left = 504
+    Left = 576
     Top = 24
   end
   object cdsControle: TClientDataSet
     Aggregates = <>
     Params = <>
     ProviderName = 'dspControle'
-    Left = 576
+    Left = 648
     Top = 24
     object cdsControleId: TAutoIncField
       FieldName = 'Id'
@@ -1155,5 +1156,14 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
       FieldName = 'deleted'
       Size = 1
     end
+  end
+  object fwMaster: TRxFolderMonitor
+    DelayTime = 60000
+    Filter = [fnLastWrite, fnLastAccess, fnCreation]
+    FolderName = 'C:\Desenvolvimento\tools\MilkSync\Deploy\Notifica'
+    MonitorSubtree = False
+    OnChange = fwMasterChange
+    Left = 352
+    Top = 32
   end
 end

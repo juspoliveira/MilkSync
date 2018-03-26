@@ -3,6 +3,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
   ClientHeight = 622
   ClientWidth = 669
   Visible = False
+  ExplicitTop = -203
   ExplicitWidth = 675
   ExplicitHeight = 651
   PixelsPerInch = 96
@@ -136,17 +137,18 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
   inherited pgcManutencao: TPageControl
     Width = 669
     Height = 538
-    ExplicitWidth = 606
+    ActivePage = tabsCadastro
+    ExplicitWidth = 669
     ExplicitHeight = 538
     inherited tabsPesquisa: TTabSheet
       ExplicitLeft = 4
       ExplicitTop = 24
-      ExplicitWidth = 598
+      ExplicitWidth = 661
       ExplicitHeight = 510
       inherited grdMaster: TcxGrid
         Width = 661
         Height = 510
-        ExplicitWidth = 598
+        ExplicitWidth = 661
         ExplicitHeight = 510
         inherited grdMasterView: TcxGridDBTableView
           DataController.KeyFieldNames = 'Id'
@@ -357,12 +359,12 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
     inherited tabsCadastro: TTabSheet
       ExplicitLeft = 4
       ExplicitTop = 24
-      ExplicitWidth = 598
+      ExplicitWidth = 661
       ExplicitHeight = 510
       inherited pnlMaster: TPanel
         Width = 661
         Height = 510
-        ExplicitWidth = 598
+        ExplicitWidth = 661
         ExplicitHeight = 510
         object GroupBox1: TGroupBox
           AlignWithMargins = True
@@ -373,7 +375,6 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Align = alTop
           Caption = '| Conta |'
           TabOrder = 0
-          ExplicitWidth = 592
           object cxLabel5: TLabel
             Left = 4
             Top = 54
@@ -577,7 +578,6 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Align = alTop
           Caption = '| Proxy |'
           TabOrder = 1
-          ExplicitWidth = 592
           object cxLabel4: TLabel
             Left = 101
             Top = 21
@@ -695,7 +695,6 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Align = alTop
           Caption = '| Formato Arquivos Saida |'
           TabOrder = 2
-          ExplicitWidth = 592
           object cbxMagis: TcxDBImageComboBox
             Left = 221
             Top = 42
@@ -952,7 +951,6 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Align = alTop
           Caption = '| Atesto |'
           TabOrder = 3
-          ExplicitWidth = 592
           object cxLabel11: TLabel
             Left = 7
             Top = 22
@@ -1006,7 +1004,6 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Align = alClient
           Caption = '| Intervalos |'
           TabOrder = 4
-          ExplicitWidth = 592
           object lbl6: TLabel
             Left = 10
             Top = 50
@@ -1097,15 +1094,11 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
     object tabsArquivos: TTabSheet
       Caption = 'Arquivos'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object s: TGroupBox
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 592
+        Width = 655
         Height = 337
         Align = alTop
         Caption = '| Diretorio de Arquivos de Saida |'
@@ -1278,7 +1271,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
         AlignWithMargins = True
         Left = 3
         Top = 346
-        Width = 592
+        Width = 655
         Height = 161
         Align = alClient
         Caption = '| Diretorio de Arquivos de Carga |'
@@ -1336,14 +1329,10 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
     object tabsCarga: TTabSheet
       Caption = 'Mapas Importacao (Carga)'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object GroupBox7: TGroupBox
         Left = 0
         Top = 0
-        Width = 598
+        Width = 661
         Height = 510
         Align = alClient
         Caption = '| Localizacao dos Mapas |'
@@ -1724,6 +1713,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapTagClick
         end
         object btnMapTecnico: TSpeedButton
           Left = 553
@@ -1740,7 +1730,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           ParentFont = False
         end
         object btnMapAnalise: TSpeedButton
-          Left = 548
+          Left = 550
           Top = 31
           Width = 23
           Height = 22
@@ -1752,6 +1742,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnMapAnaliseClick
         end
         object edtMapColetor: TcxDBTextEdit
           Left = 7
@@ -1759,7 +1750,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           DataBinding.DataField = 'PatMapColetor'
           DataBinding.DataSource = dsMaster
           Properties.ClearKey = 46
-          TabOrder = 0
+          TabOrder = 1
           OnClick = btnMapColetorClick
           Width = 541
         end
@@ -1768,7 +1759,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Top = 96
           DataBinding.DataField = 'PatMapExtrato'
           DataBinding.DataSource = dsMaster
-          TabOrder = 1
+          TabOrder = 2
           Width = 541
         end
         object edtMapRota: TcxDBTextEdit
@@ -1776,7 +1767,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Top = 449
           DataBinding.DataField = 'PathMapRota'
           DataBinding.DataSource = dsMaster
-          TabOrder = 2
+          TabOrder = 13
           OnClick = btnMatGrupoRotaClick
           Width = 541
         end
@@ -1785,7 +1776,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Top = 484
           DataBinding.DataField = 'PatMapTecnico'
           DataBinding.DataSource = dsMaster
-          TabOrder = 3
+          TabOrder = 14
           OnClick = btnMapTecnicoClick
           Width = 541
         end
@@ -1794,7 +1785,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Top = 128
           DataBinding.DataField = 'PatMapFazenda'
           DataBinding.DataSource = dsMaster
-          TabOrder = 4
+          TabOrder = 3
           Width = 541
         end
         object edtMapItinerario: TcxDBTextEdit
@@ -1802,7 +1793,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Top = 160
           DataBinding.DataField = 'PatMapItinerario'
           DataBinding.DataSource = dsMaster
-          TabOrder = 5
+          TabOrder = 4
           OnClick = btnMapItinerarioClick
           Width = 541
         end
@@ -1811,7 +1802,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Top = 193
           DataBinding.DataField = 'PatMapLinha'
           DataBinding.DataSource = dsMaster
-          TabOrder = 6
+          TabOrder = 5
           Width = 541
         end
         object edtMapMotivo: TcxDBTextEdit
@@ -1819,7 +1810,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Top = 224
           DataBinding.DataField = 'PatMapMotivo'
           DataBinding.DataSource = dsMaster
-          TabOrder = 7
+          TabOrder = 6
           OnClick = btnMapMotivoClick
           Width = 541
         end
@@ -1828,7 +1819,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Top = 256
           DataBinding.DataField = 'PatMapProdutor'
           DataBinding.DataSource = dsMaster
-          TabOrder = 8
+          TabOrder = 7
           Width = 541
         end
         object edtMapGrupoRota: TcxDBTextEdit
@@ -1836,7 +1827,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Top = 288
           DataBinding.DataField = 'PatMapGrupoRota'
           DataBinding.DataSource = dsMaster
-          TabOrder = 9
+          TabOrder = 8
           OnClick = btnMatGrupoRotaClick
           Width = 541
         end
@@ -1845,7 +1836,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Top = 321
           DataBinding.DataField = 'PatMapTanque'
           DataBinding.DataSource = dsMaster
-          TabOrder = 10
+          TabOrder = 9
           Width = 541
         end
         object edtMapVinculado: TcxDBTextEdit
@@ -1853,7 +1844,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Top = 353
           DataBinding.DataField = 'PatMapVinculado'
           DataBinding.DataSource = dsMaster
-          TabOrder = 11
+          TabOrder = 10
           OnClick = btnMapVinculadoClick
           Width = 541
         end
@@ -1862,7 +1853,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Top = 385
           DataBinding.DataField = 'PatMapVeiculo'
           DataBinding.DataSource = dsMaster
-          TabOrder = 12
+          TabOrder = 11
           OnClick = btnMapVeiculoClick
           Width = 541
         end
@@ -1871,7 +1862,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Top = 417
           DataBinding.DataField = 'PatMapTag'
           DataBinding.DataSource = dsMaster
-          TabOrder = 13
+          TabOrder = 12
           Width = 541
         end
         object edtMapAnalise: TcxDBTextEdit
@@ -1880,7 +1871,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           DataBinding.DataField = 'PatMapAnalise'
           DataBinding.DataSource = dsMaster
           Properties.ClearKey = 46
-          TabOrder = 14
+          TabOrder = 0
           Width = 541
         end
       end
@@ -1890,64 +1881,12 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
     Top = 603
     Width = 669
     ExplicitTop = 603
-    ExplicitWidth = 606
+    ExplicitWidth = 669
   end
   inherited tbCadastro: TJvToolBar
     Width = 669
     ButtonWidth = 26
-    ExplicitWidth = 606
-    inherited tbInserir: TcxButton
-      Height = 22
-      ExplicitHeight = 22
-    end
-    inherited tbGravar: TcxButton
-      Height = 22
-      ExplicitHeight = 22
-    end
-    inherited tbCancelar: TcxButton
-      Height = 22
-      ExplicitHeight = 22
-    end
-    inherited tbExcluir: TcxButton
-      Height = 22
-      ExplicitHeight = 22
-    end
-    inherited tbNovaPesq: TcxButton
-      Height = 22
-      ExplicitHeight = 22
-    end
-    inherited tbFiltrar: TcxButton
-      Height = 22
-      ExplicitHeight = 22
-    end
-    inherited tbImprimir: TcxButton
-      Height = 22
-      ExplicitHeight = 22
-    end
-    inherited tbPrimeiro: TcxButton
-      Height = 22
-      ExplicitHeight = 22
-    end
-    inherited tbAnterior: TcxButton
-      Height = 22
-      ExplicitHeight = 22
-    end
-    inherited tbProximo: TcxButton
-      Height = 22
-      ExplicitHeight = 22
-    end
-    inherited tbUltimo: TcxButton
-      Height = 22
-      ExplicitHeight = 22
-    end
-    inherited tbAjuda: TcxButton
-      Height = 22
-      ExplicitHeight = 22
-    end
-    inherited tbFechar: TcxButton
-      Height = 22
-      ExplicitHeight = 22
-    end
+    ExplicitWidth = 669
     object ToolButton2: TToolButton
       Left = 450
       Top = 0
@@ -1969,7 +1908,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
   end
   inherited pnlCabecalho: TJvGradientHeaderPanel
     Width = 669
-    ExplicitWidth = 606
+    ExplicitWidth = 669
   end
   inherited acManutencao: TActionList
     Left = 388
@@ -2019,7 +1958,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
     Left = 488
     Top = 65530
     Bitmap = {
-      494C010110007800580010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101100078005C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

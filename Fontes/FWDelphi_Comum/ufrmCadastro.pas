@@ -334,7 +334,7 @@ begin
       begin
         if Campo.DataType = ftDateTime then
           CmdTxtWhereFiltro := CmdTxtWhereFiltro + Format(' and %s between %s and %s ',
-            [NomeCampo, QuotedStr(FormatDateTime('yyyy-mm-dd', Campo.Value)),
+            [NomeCampo, QuotedStr(FormatDateTime('yyyy-mm-dd 00:00:00', Campo.Value)),
             QuotedStr(FormatDateTime('yyyy-mm-dd hh:mm:ss',
             StrToDateTime(Format('%s 23:59:59', [Copy(Campo.AsString, 1, 10)]))))])
         else if Campo.FieldKind = fkLookup then

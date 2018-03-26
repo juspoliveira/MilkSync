@@ -81,6 +81,7 @@ type
 
   private
     procedure MostraStatusTmr;
+    function VersaoApp (const FileName: string; var Major, Minor, Release, Build: Integer): Boolean;
   public
     { Public declarations }
   end;
@@ -208,10 +209,17 @@ begin
 end;
 
 procedure TMksPrincipalFRM.FormShow(Sender: TObject);
+var
+ vMaior, vMenor, vRelease,vBiuld : Integer;
 begin
   // Mostra status dos timers
   MostraStatusTmr;
- end;
+  // Mostra versao da app na barra de titulos
+  if VersaoApp(Application.ExeName,vMaior, vMenor, vRelease, vBiuld) then
+    Self.Caption := Self.Caption + ' <> ' + IntToStr(vMaior) + '.' + IntToStr(vMenor)+
+                                            '.' + IntToStr(vRelease) +
+                                            '.' + IntToStr(vBiuld);
+end;
 
 
 // Exibe o sttus to timer no Status Painel
@@ -230,5 +238,51 @@ begin
     MlkPrincipalDTM.SelectAllRecordsConta;
   end;
 end;
+
+function TMksPrincipalFRM.VersaoApp(const FileName: string; var Major, Minor, Release, Build: Integer): Boolean;
+
+// Portugues
+//  Pega os números de versão maior, Menor, release e build para o arquivo
+//       exe ou dll passado como argumento em FileName, coloca esses números
+//       nas variáveis major, minor, release e build passadas como referencia.
+// Retorna True = Sucesso, conseguiu obter a versão
+// Retorna False = Falha, provavelmente arquivo não localizado ou informação
+//                 de versão não consta no arquivo.
+
+var
+  Zero: DWORD; // set to 0 by GetFileVersionInfoSize
+  VersionInfoSize: DWORD;
+  PVersionData: pointer;
+  PFixedFileInfo: PVSFixedFileInfo;
+  FixedFileInfoLength: UINT;
+
+begin
+  Result := False;
+  Major := 0;
+  Minor := 0;
+  Release := 0;
+  Build := 0;
+  VersionInfoSize := GetFileVersionInfoSize(pChar(FileName), Zero);
+  if VersionInfoSize = 0 then
+     exit;
+  PVersionData := AllocMem(VersionInfoSize);
+  try
+    if GetFileVersionInfo(pChar(FileName), 0, VersionInfoSize, PVersionData) = False then
+       exit;
+//      raise Exception.Create('Não pude recuperar informação sobre versão');
+    if VerQueryValue(PVersionData, '', pointer(PFixedFileInfo), FixedFileInfoLength) = False then
+       exit;
+    Major := PFixedFileInfo^.dwFileVersionMS shr 16;
+    Minor := PFixedFileInfo^.dwFileVersionMS and $FFFF;
+    Release := PFixedFileInfo^.dwFileVersionLS shr 16;
+    Build := PFixedFileInfo^.dwFileVersionLS and $FFFF;
+  finally
+    FreeMem(PVersionData);
+  end;
+  if (Major or Minor or Release or Build) <> 0 then
+     result := True;
+//    result := IntToStr(Major) + IntToStr(Minor) + IntToStr(Release) + IntToStr(Build);
+end;
+
 
 end.

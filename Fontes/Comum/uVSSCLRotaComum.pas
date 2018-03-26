@@ -380,6 +380,7 @@ type
     Result : Boolean;
     State : string ;   // E - Encerrado <> A - Andamento
   end;
+
 TStatusConta = (scAtivo, scInativo, scInterrompido, scAtualizando);
 
 procedure PopularDadosConta(cdsPar: TDataSet);
@@ -422,11 +423,11 @@ function DataSetToJsonTxt(pDataSet:TDataSet; conta_id:Integer = 0; Token:string 
 //function JsontToDatat(LinhaDados: WideString): TClientDataSet;
 
 // Consulta dados de cadastro na API e gera arquivos formatados
-function ExportDataWs(xMapasCarga: TMapasCarga): TStringList;
+function ExportDataWs(pDataOut: TStringList; xMapasCarga: TMapasCarga): Boolean;
 
 // Atualiza dados no servidor (API) Integração
 function LoadFromMapIni(owner: Char; conta_id : Integer; MasterMap: string): TMapasCarga;
-function AtualizaTabelasWs (xMapasCarga: TMapasCarga) : TStringList;
+function AtualizaTabelasWs (var pDataOut: TStringList; xMapasCarga: TMapasCarga) : Boolean;
 function ExibeAmostraDados(aNomeArqivo, aSeparador: string): TJvCsvDataSet;
 function ImportaArquivoMapeado(aPathBase, aFileMapa: string;MultiEmpresa:TMultiEmpresa ): TCdsImportado;
 // Retorno o token e o doc da conta para limpeza de dados
@@ -628,28 +629,36 @@ end;
 
 function PostMetodoJSON(URL: string; Parametros: TStringList): TDadosRetorno;
 var
-  ValorJSON: TJSONObject;
+  ValorJSON, Subchave: TJSONObject;
   xValue : TStringList;
   idxRemove : Integer;
   json : TlkJSON;
 begin
-(*
-  json := TlkJSON.Create;
-  json.ParseText(RetornoMetodoWSPOST(URL, Parametros));
 
-
-  xValue := TStringList.Create;
-  xValue.Add (json.ToString);
-  xValue.SaveToFile('c:\temp\json.txt');
-
- // ValorJSON := TJSONObject.create(Copy(xValue.Text,0,Pos(xValue.Text,QuotedStr('monitor.time'))-1)+ '}');
-
- *)
   ValorJSON := TJSONObject.Create(RetornoMetodoWSPOST(URL, Parametros));
   try
     // Retorno
     if ValorJSON.has('success') then
-      Result.Sucesso := ValorJSON.getBoolean('success');
+    begin
+      if (ValorJSON.getString('success') = 'true') then
+      begin
+         Result.Sucesso := True;
+      end
+      else
+      begin
+        try
+          Subchave := TJSONObject.create(ValorJSON.getString('success'));
+          if Subchave.has('message')then
+        begin
+          if Subchave.getString('message') = 'success' then
+            Result.Sucesso := True;
+        end;
+        finally
+          Subchave.Destroy;
+        end;
+      end;
+    end;
+    //Result.Sucesso := ValorJSON.getBoolean('success');
 
     if ValorJSON.has('message') then
       Result.Mensagem := ValorJSON.getString('message');
@@ -1310,9 +1319,9 @@ begin
 end;
 
 
-function AtualizaTabelasWs (xMapasCarga: TMapasCarga) : TStringList;
+function AtualizaTabelasWs (var pDataOut: TStringList; xMapasCarga: TMapasCarga) : Boolean;
 var
-  _wsParametros : TStringList;
+  _wsParametros, _Saida_Proc : TStringList;
   _CdsImportado : TCdsImportado;
   _wsDadosRetorno : TDadosRetorno;
   x : Integer;
@@ -1320,7 +1329,7 @@ var
   _Token : TTokenConta;
 
   // Limpa tabelas no servidor, antes de sincronizar os dados
-  function dropTablesWs : TStringList;
+  function dropTablesWs(var pData: TStringList) : Boolean;
   var
     _Parameters : string;
     _Separador  : string;
@@ -1330,7 +1339,8 @@ var
     if (DadosConta.DropTable = FlagSim ) then
     begin
       try
-        Result := TStringList.Create;
+       Result := False;
+       // Result := TStringList.Createç
         _Separador := ',' ;
         _Aspas := '"';
 
@@ -1355,13 +1365,13 @@ var
           _wsDadosRetorno :=  xPostMetodoJSON(DadosConta.HostURL + 'clearTag', _wsParametros);
           if _wsDadosRetorno.Sucesso then
           begin
-             Result.Append('Limpeza Tabela de Tags Executado com sucesso');
+             pData.Append('Limpeza Tabela de Tags Executado com sucesso');
              Deletefile(DadosConta.PathArqCarga + '\dropTag.txt');
           end
           else
           begin
-            Result.Append('Falha na limpeza da tabela de Tags');
-            Result.Append(_wsDadosRetorno.Mensagem);
+            pData.Append('Falha na limpeza da tabela de Tags');
+            pData.Append(_wsDadosRetorno.Mensagem);
           end;
         end;
         if FileExists(DadosConta.PathArqCarga + '\dropItinerario.txt') then
@@ -1370,13 +1380,13 @@ var
           _wsDadosRetorno :=  xPostMetodoJSON(DadosConta.HostURL + 'clearItinerario', _wsParametros);
           if _wsDadosRetorno.Sucesso then
           begin
-             Result.Append('Limpeza Tabela de Itinerarios Executado com sucesso');
+             pData.Append('Limpeza Tabela de Itinerarios Executado com sucesso');
              Deletefile(DadosConta.PathArqCarga + '\dropItinerario.txt');
           end
           else
           begin
-            Result.Append('Falha na limpeza da tabela de Itinerarios');
-            Result.Append(_wsDadosRetorno.Mensagem);
+            pData.Append('Falha na limpeza da tabela de Itinerarios');
+            pData.Append(_wsDadosRetorno.Mensagem);
           end;
         end;
         if FileExists(DadosConta.PathArqCarga + '\dropVinculado.txt') then
@@ -1385,13 +1395,13 @@ var
           _wsDadosRetorno :=  xPostMetodoJSON(DadosConta.HostURL + 'clearVinculado', _wsParametros);
           if _wsDadosRetorno.Sucesso then
           begin
-             Result.Append('Limpeza Tabela de Tanques Comunitarios Executado com sucesso');
+             pData.Append('Limpeza Tabela de Tanques Comunitarios Executado com sucesso');
              Deletefile(DadosConta.PathArqCarga + '\dropVinculado.txt');
           end
           else
           begin
-            Result.Append('Falha na limpeza da tabela de Tanques Comunitarios');
-            Result.Append(_wsDadosRetorno.Mensagem);
+            pData.Append('Falha na limpeza da tabela de Tanques Comunitarios');
+            pData.Append(_wsDadosRetorno.Mensagem);
           end;
         end;
         if FileExists(DadosConta.PathArqCarga + '\dropGrupoRota.txt') then
@@ -1400,13 +1410,13 @@ var
           _wsDadosRetorno :=  xPostMetodoJSON(DadosConta.HostURL + 'clearGrupoRota', _wsParametros);
           if _wsDadosRetorno.Sucesso then
           begin
-             Result.Append('Limpeza Tabela de Grupos de Rotas Executado com sucesso');
+             pData.Append('Limpeza Tabela de Grupos de Rotas Executado com sucesso');
              Deletefile(DadosConta.PathArqCarga + '\dropGrupoRota.txt');
           end
           else
           begin
-            Result.Append('Falha na limpeza da tabela de Grupos de Rotas');
-            Result.Append(_wsDadosRetorno.Mensagem);
+            pData.Append('Falha na limpeza da tabela de Grupos de Rotas');
+            pData.Append(_wsDadosRetorno.Mensagem);
           end;
         end;
         if FileExists(DadosConta.PathArqCarga + '\dropTag.txt') then
@@ -1415,13 +1425,13 @@ var
           _wsDadosRetorno :=  xPostMetodoJSON(DadosConta.HostURL + 'clearExtrato', _wsParametros);
           if _wsDadosRetorno.Sucesso then
           begin
-             Result.Append('Limpeza Tabela de Extrato Executado com sucesso');
+             pData.Append('Limpeza Tabela de Extrato Executado com sucesso');
              Deletefile(DadosConta.PathArqCarga + '\dropExtrato.txt');
           end
           else
           begin
-            Result.Append('Falha na limpeza da tabela de Extrato');
-            Result.Append(_wsDadosRetorno.Mensagem);
+            pData.Append('Falha na limpeza da tabela de Extrato');
+            pData.Append(_wsDadosRetorno.Mensagem);
           end;
         end;
         if FileExists(DadosConta.PathArqCarga + '\dropAnalise.txt') then
@@ -1430,17 +1440,18 @@ var
           _wsDadosRetorno :=  xPostMetodoJSON(DadosConta.HostURL + 'clearAnalise', _wsParametros);
           if _wsDadosRetorno.Sucesso then
           begin
-             Result.Append('Limpeza Tabela de Analises Executado com sucesso');
+             pData.Append('Limpeza Tabela de Analises Executado com sucesso');
              Deletefile(DadosConta.PathArqCarga + '\dropAnalise.txt');
           end
           else
           begin
-            Result.Append('Falha na limpeza da tabela de Analises');
-            Result.Append(_wsDadosRetorno.Mensagem);
+            pData.Append('Falha na limpeza da tabela de Analises');
+            pData.Append(_wsDadosRetorno.Mensagem);
           end;
         end;
+        Result := True;
       finally
-        Result.Append('(-) Fim Limpeza Tabelas no Servidor (-)');
+        pData.Append('(-) Fim Limpeza Tabelas no Servidor (-)');
       end;
     end;
   end;
@@ -1448,20 +1459,24 @@ begin
   try
     _CdsImportado.Dados := TClientDataSet.Create(nil);
     // Inicializa log de envio
-    Result := TStringList.Create;
-    Result.Add('# Início de Atualização Tabelas Servidor :: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss',Now));
-    Result.Append('Conta : ' + IntToStr(xMapasCarga.ContaId));
+    Result := False; // TStringList.Create;
+    pDataOut.Append('# Início de Atualização Tabelas Servidor :: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss',Now));
+    pDataOut.Append('Conta : ' + IntToStr(xMapasCarga.ContaId));
 
     // Cria array de parametro para envio
     _wsParametros := TStringList.Create;
 
+    // Cria array de saida do processamento.
+    _Saida_Proc := TStringList.Create;
+
     // Limpa tabelas no servidor, antes de enviar os arquivos
     if (DadosConta.DropTable = FlagSim) then
     begin
-      Result.Add(EmptyStr);
-      Result.Add('(-) Apaga registros nas tabelas no servidor (-)');
+      pDataOut.Add(EmptyStr);
+      pDataOut.Add('(-) Apaga registros nas tabelas no servidor (-)');
       // Apaga tabelas
-      Result.Add(dropTablesWs.Text);
+      dropTablesWs(_Saida_Proc);
+      pDataOut.Append(_Saida_Proc.Text);
     end;
 
     xSalvaJson := True;
@@ -1474,7 +1489,7 @@ begin
         Continue;
 
       // Log do metodo invocado
-      Result.Append('#' + xMapasCarga.Metodos[x] + '#');
+      pDataOut.Append('#' + xMapasCarga.Metodos[x] + '#');
       _wsParametros.Clear;
       _CdsImportado := ImportaArquivoMapeado(DadosConta.PathArqCargaApi,xMapasCarga.Mapas[x],CargaMultiEmpresa);
       if _CdsImportado.Sucesso then
@@ -1498,23 +1513,26 @@ begin
           _wsDadosRetorno :=  xPostMetodoJSON(DadosConta.HostURL + xMapasCarga.Metodos[x], _wsParametros);
           if _wsDadosRetorno.Sucesso then
           begin
-             Result.Append('Dados enviados com sucesso !')
+             pDataOut.Append('Dados enviados com sucesso !')
           end
           else
           begin
-            Result.Append('?? Falha ao enviar :' + xMapasCarga.Metodos[x]);
-            Result.Append(_wsDadosRetorno.MsgWS);
+            pDataOut.Append('?? Falha ao enviar :' + xMapasCarga.Metodos[x]);
+            pDataOut.Append(_wsDadosRetorno.MsgWS);
           end;
         end;
+        Result := True;
       end
       else // Não conseguiu abrir o arquivo
       begin
-        Result.Append('Falha ao abrir o arquivo: ' + _CdsImportado.Notificacao);
+        pDataOut.Append('Falha ao abrir o arquivo: ' + _CdsImportado.Notificacao);
+        Result := False;
       end;
     end;
   finally
-     Result.Add('# Final de Atualização Tabelas Servidor :: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss',Now));
+     pDataOut.Append('# Final de Atualização Tabelas Servidor :: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss',Now));
     _wsParametros.Destroy;
+    _Saida_Proc.Destroy;
   end;
 end;
 // carrega dados do arquivo txt para dataset
@@ -1803,7 +1821,7 @@ begin
 end;
 
 // Consulta e exporta dados de cadastro da api do ws
-function ExportDataWs(xMapasCarga: TMapasCarga): TStringList;
+function ExportDataWs(pDataOut: TStringList; xMapasCarga: TMapasCarga): Boolean;
 var
   xDataRetorno : TDadosRetorno;
   i, j, k, l: Integer;
@@ -1817,11 +1835,11 @@ begin
     // se a posição não estiver preenchida, avalia a proxima
     if (DadosConta.IdConta = EmptyStr) then
     Exit;
-    Result := TStringList.Create;
+    Result := False; //TStringList.Create;
     try
-      Result.Append('--------------------------------------------------');
-      Result.Append('Inicio da consulda dos dados no servidor: - ' + FormatDateTime('dd-MM-yyyy hh:mm:ss', Now()));
-      Result.Append('--------------------------------------------------');
+      pDataOut.Append('--------------------------------------------------');
+      pDataOut.Append('Inicio da consulda dos dados no servidor: - ' + FormatDateTime('dd-MM-yyyy hh:mm:ss', Now()));
+      pDataOut.Append('--------------------------------------------------');
       // Exporta os arquivos da conta, metodo a metodo
       ArqSaida := TStringList.Create;
       for k := 1 to 15 do
@@ -1869,7 +1887,7 @@ begin
             NomeArquivo := DadosConta.PathArqCargaApi + '\Dump\'+ DadosConta.IdConta + '\' + NomeArquivo;
             ArqSaida.SaveToFile(NomeArquivo);
           end;
-          Result.Append('Arquivo gerado: '+ NomeArquivo);
+          pDataOut.Append('Arquivo gerado: '+ NomeArquivo);
           // Limpa dados do arquivo
           ArqSaida.Clear;
         end;
@@ -1877,15 +1895,14 @@ begin
     except
       on e: Exception do
       begin
-        Result.Append('Falha ao consultar arquivos no servidor');
-        Result.Append('Mensagem de erro reportada:' + e.Message);
+        pDataOut.Append('Falha ao consultar arquivos no servidor');
+        pDataOut.Append('Mensagem de erro reportada:' + e.Message);
       end;
     end;
   finally
     xData.destroy;
     ArqSaida.Destroy;
     keys.Destroy;
-
   end;
 
 end;
