@@ -333,6 +333,11 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
       FieldName = 'Carga'
       Size = 1
     end
+    object cdsContasGerarCsv: TStringField
+      DisplayLabel = 'Gerar CSV'
+      FieldName = 'GerarCsv'
+      Size = 1
+    end
   end
   object sqlContas: TS2SQLDataSet
     ADOQuery = qryContas
@@ -350,7 +355,7 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     Top = 24
   end
   object sheConsole: TJvScheduledEvents
-    AutoSave = False
+    AutoSave = True
     Events = <
       item
         Name = 'evtArquivos'
@@ -360,7 +365,18 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
         EndType = sekNone
         Freq_StartTime = 0
         Freq_EndTime = 86399000
-        Freq_Interval = 1800000
+        Freq_Interval = 10800000
+        Daily_EveryWeekDay = True
+      end
+      item
+        Name = 'evtRunOneHour'
+        OnExecute = sheConsoleEvents1Execute
+        StartDate = '2018/04/20 15:44:38.000'
+        RecurringType = srkDaily
+        EndType = sekNone
+        Freq_StartTime = 0
+        Freq_EndTime = 86399000
+        Freq_Interval = 3600000
         Daily_EveryWeekDay = True
       end>
     Left = 233
@@ -1158,7 +1174,7 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     end
   end
   object fwMaster: TRxFolderMonitor
-    DelayTime = 60000
+    DelayTime = 15000
     Filter = [fnLastWrite, fnLastAccess, fnCreation]
     FolderName = 'C:\Desenvolvimento\tools\MilkSync\Deploy\Notifica'
     MonitorSubtree = False

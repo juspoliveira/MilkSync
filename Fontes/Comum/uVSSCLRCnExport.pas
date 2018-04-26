@@ -318,6 +318,49 @@ type
       function dataToJson: TStringList;
       function dataToArray: TStringList;
   end;
+type
+  TResumoViagem = class
+    id : Integer;
+    dataInicio: TDateTime;
+    dataFim: TDateTime;
+    kmInicio: Integer;
+    kmFinal: Integer;
+    distancia: Integer;
+    veiculoCodigo: string;
+    veiculoPlaca: string;
+    linhaCodigo: string;
+    linhaNome: string;
+    rotaCodigo: string;
+    rotaNome: string;
+    coletorCodigo: string;
+    coletorNome: string;
+    tecnicoCodigo: string;
+    tecnicoNome: string;
+    volumeInformado: Integer;
+    volumeAferido: Integer;
+    volumeDescartado: Integer;
+    atesto: Integer;
+    tipoDescarga: string; // B- Balanca, M-Medidor Vazao , A-Ambos
+    qtdeVisitas: Integer;
+    qtdeCancelados: Integer;
+    qtdeNaoRealizados: Integer;
+    descarregada : string;
+    repositoriosVeiculo: record
+      bocas: array[0..6] of Char;
+      qtdeBocas: array[0..6] of Integer;
+      tempBocas: array[0..6] of Double;
+    end;
+    destinoVolume : record
+      silos: array[0..5] of string;
+      qtdeSilo: array [0..5] of Integer;
+    end;
+    public
+      public constructor Create();
+      public destructor Destroy;  override;
+      function buildColunsName(separador: char): string;
+      function toString (separador: Char) : string;
+  end;
+
 
 procedure createParametros;
 procedure populaParametros;
@@ -921,6 +964,108 @@ begin
      Result.Add(dado);
    finally
     ;
+   end;
+end;
+
+{ TResumoViagem }
+
+function TResumoViagem.buildColunsName(separador: char): string;
+var
+i: Integer;
+aux : string;
+begin
+  Result :=
+  'Id_Viagem' + separador +
+  'Dt_Inicio' + separador +
+  'Dt_Fim' + separador +
+  'Km_Inicial' + separador +
+  'Km_Final' + separador +
+  'Distancia' + separador +
+  'Codigo_Veiculo' + separador +
+  'Placa_Veiculo' + separador +
+  'Codigo_Linha' + separador +
+  'Nome_Linha' + separador +
+  'Codigo_Rota' + separador +
+  'Nome_Rota' + separador +
+  'Codigo_Coletor' + separador +
+  'Nome_Coletor' + separador +
+  'Codigo_Tecnico' + separador +
+  'Nome_Tecnico' + separador +
+  'Volume_Informado' + separador +
+  'Volume_Aferido' + separador +
+  'Volume_Descartado' + separador +
+  'Atesto' + separador +
+  'Tipo_Descarga' + separador +
+  'Coletas_realizadas' + separador +
+  'Coletas_Cancelados' + separador +
+  'Coletas_Pendentes' + separador +
+  'Descarregada' + separador;
+   for i := 0 to Length(Self.repositoriosVeiculo.bocas) - 1 do
+   begin
+      aux := EmptyStr;
+      if (Self.repositoriosVeiculo.bocas[i] <> '') then
+      begin
+        aux := aux + 'Boca (' + IntToStr(i) + ')' + separador +
+                     'Volume (' +  IntToStr(i) + ')' + separador +
+                     'Temperatura (' + IntToStr(i) + ')' + separador;
+      end;
+     if aux <> EmptyStr then
+       Result := Result + aux + separador;
+   end;
+end;
+
+constructor TResumoViagem.Create;
+begin
+ inherited;
+end;
+
+destructor TResumoViagem.Destroy;
+begin
+  inherited;
+end;
+
+function TResumoViagem.toString(separador: Char): string;
+var
+i: Integer;
+aux : string;
+begin
+ Result :=
+   IntToStr(Self.id) + separador +
+   FormatDateTime('dd/MM/yyyy hh:mm:ss', Self.dataInicio)+ separador +
+   FormatDateTime('dd/MM/yyyy hh:mm:ss',Self.dataFim)+ separador +
+   IntToStr(Self.kmInicio) + separador +
+   IntToStr(self.kmFinal) + separador+
+   IntToStr(self.distancia) + separador+
+   Self.veiculoCodigo + separador+
+   Self.veiculoPlaca + separador+
+   self.linhaCodigo + separador+
+   Self.linhaNome + separador +
+   self.rotaCodigo + separador +
+   self.rotaNome + separador+
+   self.coletorCodigo + separador +
+   self.coletorNome + separador +
+   self.tecnicoCodigo + separador +
+   Self.tecnicoNome + separador +
+   IntToStr(Self.volumeInformado) + separador +
+   IntToStr(Self.volumeAferido) + separador +
+   IntToStr(self.volumeDescartado) + separador +
+   IntToStr(self.atesto) + separador +
+   self.tipoDescarga + separador +
+   IntToStr(self.qtdeVisitas) + separador +
+   IntToStr(self.qtdeCancelados) + separador+
+   IntToStr(self.qtdeNaoRealizados) + separador +
+   Self.descarregada + separador;
+   for i := 0 to Length(Self.repositoriosVeiculo.bocas) - 1 do
+   begin
+      aux := EmptyStr;
+      if (Self.repositoriosVeiculo.bocas[i] <> '') then
+      begin
+        aux := aux + Self.repositoriosVeiculo.bocas[i] + separador +
+        IntToStr(Self.repositoriosVeiculo.qtdeBocas[i]) + separador +
+        FloatToStr(Self.repositoriosVeiculo.tempBocas[i]) + separador;
+      end;
+     if aux <> EmptyStr then
+       Result := Result + aux + separador;
    end;
 end;
 

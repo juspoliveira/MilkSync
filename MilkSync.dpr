@@ -16,7 +16,6 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.Title := 'MilkSync';
-  Application.CreateForm(TMlkPrincipalDTM, MlkPrincipalDTM);
   Application.CreateForm(TMksPrincipalFRM, MksPrincipalFRM);
   Application.Run;
 end.

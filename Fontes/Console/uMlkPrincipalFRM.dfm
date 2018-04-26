@@ -1,7 +1,7 @@
 object MksPrincipalFRM: TMksPrincipalFRM
   Left = 0
   Top = 0
-  BorderIcons = [biSystemMenu]
+  BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Plataforma Milk Plus :: MilkSync - Integrador'
   ClientHeight = 500
@@ -1047,6 +1047,10 @@ object MksPrincipalFRM: TMksPrincipalFRM
     object tabsContas: TTabSheet
       Caption = 'Contas'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object grdContas: TcxGrid
         Left = 0
         Top = 0
@@ -1177,7 +1181,7 @@ object MksPrincipalFRM: TMksPrincipalFRM
   object pmnManster: TPopupMenu
     Images = imgMaster
     Left = 544
-    Top = 184
+    Top = 195
     object Abrir1: TMenuItem
       Action = acOpen
     end
@@ -1191,7 +1195,7 @@ object MksPrincipalFRM: TMksPrincipalFRM
   object aclMaster: TActionList
     Images = imgMaster
     Left = 477
-    Top = 185
+    Top = 195
     object acOpen: TAction
       Caption = 'Abrir'
       Hint = 'Abrir'
@@ -1251,20 +1255,15 @@ object MksPrincipalFRM: TMksPrincipalFRM
       OnExecute = acSalvarExecute
     end
   end
-  object AppEvenMaster: TApplicationEvents
-    OnMinimize = AppEvenMasterMinimize
-    Left = 656
-    Top = 178
-  end
   object IdAntiFreeMaster: TIdAntiFreeze
-    Left = 656
-    Top = 346
+    Left = 264
+    Top = 195
   end
   object imgMaster: TImageList
     Left = 656
     Top = 418
     Bitmap = {
-      494C010119007000D00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010119007000340110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000007000000001002000000000000070
       0000000000000000000000000000000000000000000000000000000000000000
       0000703B06839F4A06C3B75400FFB85500FFB65300FF9F4804C36E3906830000
@@ -2198,17 +2197,15 @@ object MksPrincipalFRM: TMksPrincipalFRM
   object dsContas: TDataSource
     DataSet = MlkPrincipalDTM.cdsContas
     Left = 592
-    Top = 179
+    Top = 195
   end
   object dsControle: TDataSource
     DataSet = MlkPrincipalDTM.cdsControle
     Left = 408
-    Top = 184
+    Top = 195
   end
   object tryMaster: TTrayIcon
-    BalloonHint = 'Monitoramento iniciado'
-    BalloonTitle = 'MilkSync - Integrador'
-    BalloonTimeout = 50000
+    BalloonTitle = 'Milk Sync- Integrador'
     BalloonFlags = bfInfo
     Icon.Data = {
       0000010002001010000001000800680500002600000010100000010020006804
@@ -2292,8 +2289,8 @@ object MksPrincipalFRM: TMksPrincipalFRM
       000000000000000000000300000006000000FF80000001FF00000060000000C0
       00000000000000000000000100002003000070070000}
     PopupMenu = pmnManster
-    OnClick = acOpenExecute
-    Left = 360
-    Top = 248
+    Visible = True
+    Left = 336
+    Top = 192
   end
 end

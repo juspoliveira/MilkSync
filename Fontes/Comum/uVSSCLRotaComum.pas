@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP,uJSON,
   JvStrings, JvScheduledEvents, IdMultiPartFormData, IdSNTP, DBClient, variants, DB, IniFiles, Dialogs,
-  JvComponentBase, JvCSVBaseControls, JvCsvData, Controls, ShellAPI, Forms, WebAdapt ;
+  JvComponentBase, JvCSVBaseControls, JvCsvData, Controls, ShellAPI, Forms, WebAdapt, uGlobal ;
 
 type
   TViagem = class
@@ -321,6 +321,7 @@ type
     GeraMeta : string[1];
     GeraSiga : string[1];
     GeraScl : string[1];
+    GerarCsv : string[1];
     VerDatasul : string[1];
     VerRm : string[1];
     VerMagis : string[1];
@@ -330,7 +331,7 @@ type
     ColetasHoje: string[1];
 
   end;
-
+ {
   TDadosRetorno = record
     Metodo: string;
     Sucesso: Boolean;
@@ -343,7 +344,7 @@ type
     MsgWS: WideString;
     Monitor : string;
   end;
-
+ }
 type
   TCdsImportado = record
     Dados : TClientDataSet;
@@ -380,6 +381,7 @@ type
     Result : Boolean;
     State : string ;   // E - Encerrado <> A - Andamento
   end;
+
 
 TStatusConta = (scAtivo, scInativo, scInterrompido, scAtualizando);
 
@@ -487,7 +489,7 @@ const
 
 implementation
 
-uses uRotinasComuns, Math, DateUtils, uLkJSON , uGlobal;
+uses uRotinasComuns, Math, DateUtils, uLkJSON;
 
 function RetornoMetodoWSGET(URL: string): string;
 var
@@ -527,10 +529,18 @@ begin
       IdHTTP.ProxyParams.ProxyUsername := DadosConta.DadosProxy.Usuario;
     end;
     InserirMsgLog('POST ' + URL);
-    if Assigned(Parametros) then
-      InserirMsgLog(Parametros.Text);
-     Result := IdHTTP.Post(URL, Parametros);
-    InserirMsgLog('#POST ' + Result);
+    try
+      if Assigned(Parametros) then
+        InserirMsgLog(Parametros.Text);
+      Result := IdHTTP.Post(URL, Parametros);
+      InserirMsgLog('#POST ' + Result);
+    except on e: Exception do
+      begin
+        //InserirMsgLog('------FALHA AO CONSULTAR SERVIDOR------');
+        //InserirMsgLog(URL + ' :  Parametros :' + Parametros.Text);
+        ;
+      end;
+    end;
   finally
     FreeAndNil(IdHTTP);
   end;
@@ -1152,27 +1162,31 @@ function xPostMetodoJSON(URL: string; Parametros: TStringList): TDadosRetorno;
 var
   ValorJSON: TJSONObject;
 begin
-   ValorJSON := TJSONObject.Create(RetornoMetodoWSPOST(URL, Parametros));
-   Result.MsgWS := VRetornoMetodoWSPOST(URL, Parametros);
-  // Retorno
-  if ValorJSON.has('success') then
-    Result.Sucesso := ValorJSON.getBoolean('success');
+  try
+     ValorJSON := TJSONObject.Create(RetornoMetodoWSPOST(URL, Parametros));
+     Result.MsgWS := VRetornoMetodoWSPOST(URL, Parametros);
+    // Retorno
+    if ValorJSON.has('success') then
+      Result.Sucesso := ValorJSON.getBoolean('success');
 
-  if ValorJSON.has('message') then
-    Result.Mensagem := ValorJSON.getString('message');
+    if ValorJSON.has('message') then
+      Result.Mensagem := ValorJSON.getString('message');
 
-  if ValorJSON.has('data') then
-  begin
-    Result.Dados := ValorJSON.getString('data');
+    if ValorJSON.has('data') then
+    begin
+      Result.Dados := ValorJSON.getString('data');
+    end;
+    if ValorJSON.has('monitor.time') then
+    begin
+      Result.Monitor := (ValorJSON.getString('monitor.time'));
+      //Result.Monitor := FloatToStr (ValorJSON.getDouble('monitor.time'));
+    end;
+
+    Result.ToString := Format('Metodo: %s - Sucesso: %s - Mensagem: %s - Dados: %s',
+      [Result.Metodo, BoolToStr(Result.Sucesso), Result.Mensagem, Result.Dados]);
+  finally
+    ValorJSON.Destroy;
   end;
-  if ValorJSON.has('monitor.time') then
-  begin
-    Result.Monitor := (ValorJSON.getString('monitor.time'));
-    //Result.Monitor := FloatToStr (ValorJSON.getDouble('monitor.time'));
-  end;
-
-  Result.ToString := Format('Metodo: %s - Sucesso: %s - Mensagem: %s - Dados: %s',
-    [Result.Metodo, BoolToStr(Result.Sucesso), Result.Mensagem, Result.Dados]);
 end;
 
 function VRetornoMetodoWSPOST(URL: string; Parametros: TStringList): string;
@@ -1183,14 +1197,18 @@ begin
   IdHTTP := TIdHTTP.Create(nil);
   DataToSend := TStringStream.Create( UTF8Encode(Parametros.Text));
   try
-    if Assigned(Parametros) then
-    begin
-      IdHTTP.Request.Clear;
-      IdHTTP.Request.UserAgent := 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; Acoo Browser; GTB5; Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1) ; Maxthon; InfoPath.1; .NET CLR 3.5.30729; .NET CLR 3.0.30618)';
-      IdHTTP.Request.ContentType := 'application/json';
-      IdHTTP.Request.CharSet := 'utf-8';
-      IdHTTP.Request.Method := 'POST';
-      Result := IdHTTP.Post(URL, DataToSend);
+    try
+      if Assigned(Parametros) then
+      begin
+        IdHTTP.Request.Clear;
+        IdHTTP.Request.UserAgent := 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; Acoo Browser; GTB5; Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1) ; Maxthon; InfoPath.1; .NET CLR 3.5.30729; .NET CLR 3.0.30618)';
+        IdHTTP.Request.ContentType := 'application/json';
+        IdHTTP.Request.CharSet := 'utf-8';
+        IdHTTP.Request.Method := 'POST';
+        Result := IdHTTP.Post(URL, DataToSend);
+      end;
+    except on e: Exception do
+     ;
     end;
   finally
     FreeAndNil(IdHTTP);
@@ -1491,7 +1509,7 @@ begin
       // Log do metodo invocado
       pDataOut.Append('#' + xMapasCarga.Metodos[x] + '#');
       _wsParametros.Clear;
-      _CdsImportado := ImportaArquivoMapeado(DadosConta.PathArqCargaApi,xMapasCarga.Mapas[x],CargaMultiEmpresa);
+      _CdsImportado := ImportaArquivoMapeado(DadosConta.PathArqCarga,xMapasCarga.Mapas[x],CargaMultiEmpresa);
       if _CdsImportado.Sucesso then
       begin
         // Pega token da conta
@@ -1533,6 +1551,7 @@ begin
      pDataOut.Append('# Final de Atualização Tabelas Servidor :: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss',Now));
     _wsParametros.Destroy;
     _Saida_Proc.Destroy;
+    _CdsImportado.Dados.Destroy;
   end;
 end;
 // carrega dados do arquivo txt para dataset
@@ -1547,13 +1566,14 @@ var
 begin
   if aNomeArqivo <> EmptyStr then
   begin
-    csvDataset := TJvCsvDataSet.Create(nil);
-    csvFileBase := TJvCSVBase.Create(nil);
-
-    csvDataset.SavesChanges := False;
-    csvDataset.LoadsFromFile := True;
 
     try
+      csvDataset := TJvCsvDataSet.Create(nil);
+      csvFileBase := TJvCSVBase.Create(nil);
+
+      csvDataset.SavesChanges := False;
+      csvDataset.LoadsFromFile := True;
+
       Separador := aSeparador[1];
       xColunas := TStringList.Create;
       xNomeColuna := TStringList.Create;
@@ -1579,6 +1599,8 @@ begin
     finally
       xColunas.Destroy;
       xNomeColuna.Destroy;
+      csvDataset.Destroy;
+      csvFileBase.Destroy;
     end;
   end;
 
@@ -1771,7 +1793,9 @@ begin
       _FK.Free;
       _ChavesFk.Free;
       _TabelasFk.Free;
+      _Atributos.Free;
       BaseCarga.Free;
+
     end;
   end
   else // Não Localizou o arquivo mapeado
@@ -1849,6 +1873,10 @@ begin
 
         if NomeArquivo = EmptyStr then
           Continue;
+        // se o nome do metodo esta vazio, nao executa a consulta
+        if xMapasCarga.MetodosRead[k] = EmptyStr then
+          Continue;
+
 
         // Le dados na API do WS
         xDataRetorno.Dados := EmptyStr;
@@ -2067,6 +2095,37 @@ begin
       Result.Token :=  '1g2j-819a-010y-4713';
       Result.Doc := '21.601.281/0001-08';
     end;
+    356637:
+    begin
+      Result.Token := 'afbd-b926-8b33-b771';
+      Result.Doc := '66.301.334/0005-37'
+    end;
+    360379:
+    begin
+      Result.Token := '5db7-55ab-11be-ad61';
+      Result.Doc := '03.548.401/0001-79';
+    end;
+    370311:
+    begin
+      Result.Token := 'f871-6c49-1e2a-11f4';
+      Result.Doc := '03.548.401/0004-11';
+    end;
+    380301:
+    begin
+      Result.Token := 'c448-9848-efd4-7ce7';
+      Result.Doc := '03.548.401/0022-01';
+    end;
+    390327:
+    begin
+      Result.Token := 'c5fb-1585-69b3-3b4b';
+      Result.Doc := '03.548.401/0026-27';
+    end;
+    400300:
+    begin
+      Result.Token := 'ec41-6149-95e2-829f';
+      Result.Doc := '03.548.401/0005-00 ';
+    end;
+    
     11132:
     Result.Token := 's0167r';
     82009:

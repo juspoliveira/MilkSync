@@ -8,7 +8,7 @@ uses
   ExtCtrls, JvAppInst, uVSSCLRotaComum, uJSON, uSCLRCnExport, FMTBcd, SqlExpr,
   DateUtils, ImgList, Controls, ZAbstractConnection, ZConnection,
   ZAbstractRODataset, ZAbstractDataset, ZDataset, FileCtrl, Windows, JvTFManager,
-  RxTimerLst, RxNotify;
+  RxTimerLst, RxNotify, uGlobal, uVSSCLRCnExport;
 
 
 type
@@ -263,6 +263,7 @@ type
     cdsContasCarga: TStringField;
     cdsViagenstanques: TStringField;
     fwMaster: TRxFolderMonitor;
+    cdsContasGerarCsv: TStringField;
     procedure DataModuleCreate(Sender: TObject);
     procedure cdsContasBeforePost(DataSet: TDataSet);
     procedure tmrConsoleTimer(Sender: TObject);
@@ -316,7 +317,7 @@ type
 
     // Gerar Coletas
     function GetColetas(DataInicio, DataTermino: TDateTime; Sync:string; Comunitario: string = '9'; FlgAtualizaUltDataLeitura: Boolean = False; Layout: string = 'Magis'): String;
-    procedure PopulaAtoresColeta(DataInicio, DataTermino: TDateTime; Sync:string; Comunitario: string = '9');
+    procedure PopulaAtoresColeta(DataInicio, DataTermino: TDateTime; Sync:string; Comunitario: string = '9'; Resumo: string = '0');
     // Coletas
     function OrdenaCrescente(Par01, Par02: Pointer): Integer;
     function coletasToString(cds: TClientDataSet; separator: Char;colNames: Boolean): string;
@@ -337,9 +338,12 @@ type
     function DateMenos(dias: Integer): Boolean;
 
     // Apaga a luz ao sair
-    procedure Finish;
+    procedure Finish(Action : Integer = 0);
 
-    procedure LiberaMemoria;
+    procedure LiberaMemoria(action :Integer = 0);
+
+    // Gerar arquivos CSV da viagens
+    function buildCsvFiles(DataInicio, DataTermino: TDateTime; Sync:string; Comunitario: string = '9'): String;
 
   end;
 
@@ -350,23 +354,25 @@ var
   Fresultado: Variant;
 
   // Variaveis de operacao
-
   DadosRetornoColeta: TDadosRetorno;
   DadosRetornoRota, DadosRetornoLinha, DadosRetornoColetor, DadoRetornoVeiculo,
   DadosRetornoProdutor, DadosRetornoFazenda, DadosRetornoVeiculo, DadosRetornoVisita,
-  DadosRetornoViagem: TDadosRetorno;
+  DadosRetornoViagem, DadosRetornoResumo: TDadosRetorno;
 
   IdDescarga: Integer;
   arqTexto, ArqRename,arqTmp, ArqSigaColetor, ArqSigaProdutor: string;
   _VerMagis : string;
   _MapasCarga : TMapasCarga;
   _FileMapName: string;
+  FolderLogMaster, NomeArqLogMaster : string;
+  FArqlogMaster : TStringList;
+  count, regPos : Integer;
 
   i, j: Integer;
   _ArqSaida, _ArqCadSiga : TStringList;
   ColecaoDescarga, ColecaoViagem, ColecaoRota, ColecaoLinha, ColecaoColetor, ColecaoVeiculo,
-  ColecaoProdutor, ColecaoFazenda, ColecaoColeta, ColecaoVisita : TJSONArray;
-  Descarga, Viagem, Rota, Linha, Coleta, Coletor, Veiculo, Produtor, Fazenda, Visita: TJSONObject;
+  ColecaoProdutor, ColecaoFazenda, ColecaoColeta, ColecaoVisita, ColecaoResumoViagens : TJSONArray;
+  Descarga, Viagem, ResumoViagem, Rota, Linha, Coleta, Coletor, Veiculo, Produtor, Fazenda, Visita: TJSONObject;
   DifQtdeColeta: Double;
   FlgGerarArq: Boolean;
   FlgGeraCabec: Boolean;
@@ -386,6 +392,7 @@ var
   objVisita, AuxVisita: TVisita;
   objTranspSiga : TSigaTransportador;
   objProutorSiga : TSigaProdutor;
+  objResumoViagem : TResumoViagem;
   ListaColeta: TListaColeta;
   ListaRota: TListaRota;
   ListaLinha: TListaLinha;
@@ -400,9 +407,6 @@ var
 
 
 implementation
-
-uses
-  uGlobal, uVSSCLRCnExport;
 
 
 {$R *.dfm}
@@ -431,6 +435,132 @@ begin
   qrySQL.ExecSQL;
 
 end;
+function TMlkPrincipalDTM.buildCsvFiles(DataInicio, DataTermino: TDateTime;
+  Sync, Comunitario: string): String;
+var
+  FResumoViagem: TResumoViagem;
+  FArqSaida : TStringList;
+  FArqName : string;
+  ResumeOnly : string;
+  i : Integer;
+begin
+  try
+    // Indica que a consulta da base de dados sera apenas no metodo resumo de viagens
+    ResumeOnly := '1';
+    // Arquivo de saida das viagens
+    FArqSaida := TStringList.Create;
+     // Diretorio de log principal
+    FolderLogMaster := ExtractFilePath(Application.ExeName) + '\Log\';
+    // Nome do arquivo de log Master
+    FArqlogMaster := TStringList.Create;
+    NomeArqLogMaster := FolderLogMaster + 'Mys_' + FormatDateTime('dd-MM-yyyy_hh.mm.ss', Now) + '.txt';
+    // Popula colecoes de cadastro
+    try
+       PopulaAtoresColeta(DataInicio,DataTermino, Sync, Comunitario, ResumeOnly);
+    except
+      on E: Exception do
+      begin
+        FArqlogMaster.Append('Conta: ' + DadosConta.IdConta);
+        FArqlogMaster.Append('Hora registro : ' + FormatDateTime('dd-MM-yyyy hh:mm:ss', Now));
+        FArqlogMaster.Append('<<<<< FALHA AO CARREGAR TABELAS >>>>' );
+        FArqlogMaster.Append(E.Message);
+        FArqlogMaster.Append('*******************************************');
+        if not DirectoryExists(FolderLogMaster) then
+        begin
+          ForceDirectories(FolderLogMaster);
+          FArqlogMaster.SaveToFile(NomeArqLogMaster);
+        end
+        else
+        begin
+          FArqlogMaster.SaveToFile(NomeArqLogMaster);
+        end;
+      end;
+    end;
+
+    try
+      // Cria objeto resumo de viagem
+       FResumoViagem := TResumoViagem.Create;
+
+      for i := 0 to ColecaoResumoViagens.length -1 do
+      begin
+        // pega um registro da colecao de resumo de viagens
+        ResumoViagem := ColecaoResumoViagens.getJSONObject(i);
+        // popula resumo da viagem
+        FResumoViagem.id := ResumoViagem.getInt('id');
+        FResumoViagem.dataInicio := GetDataHora(ResumoViagem.getString('dt_abertura'));
+        FResumoViagem.dataFim := GetDataHora(ResumoViagem.getString('dt_fechamento'));
+        FResumoViagem.kmInicio := ValidaInt( ResumoViagem.getString('km_Inicial'));
+        FResumoViagem.kmFinal := ValidaInt(ResumoViagem.getString('km_Final'));
+        FResumoViagem.distancia := ValidaInt(ResumoViagem.getString('km_distancia'));
+        FResumoViagem.veiculoCodigo := ResumoViagem.getString('veiculo_Codigo');
+        FResumoViagem.veiculoPlaca := ResumoViagem.getString('veiculo_Placa');
+        FResumoViagem.coletorCodigo := ResumoViagem.getString('coletor_codigo');
+        FResumoViagem.coletorNome := ResumoViagem.getString('coletor_nome');
+        FResumoViagem.rotaCodigo := ResumoViagem.getString('rota_codigo');
+        FResumoViagem.rotaNome := ResumoViagem.getString('rota_nome');
+        FResumoViagem.linhaCodigo := ResumoViagem.getString('linha_codigo');
+        FResumoViagem.linhaNome := ResumoViagem.getString('linha_nome');
+        FResumoViagem.tecnicoCodigo := ResumoViagem.getString('tecnico_codigo');
+        FResumoViagem.tecnicoNome :=  ResumoViagem.getString('tecnico_nome');
+        FResumoViagem.volumeInformado  := ValidaInt(ResumoViagem.getString('volume_coletado'));
+        FResumoViagem.volumeAferido  := ValidaInt(ResumoViagem.getString('volume_aferido'));
+        FResumoViagem.volumeDescartado  := ValidaInt(ResumoViagem.getString('volume_descartado'));
+        FResumoViagem.atesto  := ValidaInt( ResumoViagem.getString('atesto'));
+        FResumoViagem.tipoDescarga  := ResumoViagem.getString('tipo_descarga');
+        FResumoViagem.qtdeVisitas  := ValidaInt(ResumoViagem.getString('coletas_realizadas'));
+        FResumoViagem.qtdeCancelados  := ValidaInt(ResumoViagem.getString('coletas_canceladas'));
+        FResumoViagem.qtdeNaoRealizados  := ValidaInt(ResumoViagem.getString('coletas_pendentes'));
+        FResumoViagem.descarregada  := ResumoViagem.getString('descarregada');
+
+        // Grava arquivo de saida
+        if (i = 0 )then    // Cabecalho
+           FArqSaida.Append(FResumoViagem.buildColunsName(';'));
+        // Grava Linha de dados
+        FArqSaida.Append(FResumoViagem.toString(';'));
+
+      end;
+    except on e: Exception do
+      begin
+        FArqlogMaster.Append('--------------------------------------');
+        FArqlogMaster.Append('Falha na geracao do arquivo de viagem:' + IntToStr(FResumoViagem.id));
+        FArqlogMaster.Append('------Mensagem de erro reportada------');
+        FArqlogMaster.Append(e.Message);
+        FArqlogMaster.Append('--------------------------------------');
+        if not DirectoryExists(FolderLogMaster) then
+        begin
+          ForceDirectories(FolderLogMaster);
+          FArqlogMaster.SaveToFile(NomeArqLogMaster);
+        end
+        else
+        begin
+          FArqlogMaster.SaveToFile(NomeArqLogMaster);
+        end;
+      end;
+    end;
+  finally
+    if FArqSaida.Count > 0 then
+    begin
+      // Nome do arquivo no disco
+      FArqName := DadosConta.PathArqDescarga + '\CSV\' + DadosConta.IdConta + '\'  ;
+      if DirectoryExists(FArqName) then
+      begin
+        FArqName := FArqName + 'RC_' + FormatDateTime('dd_MM_yyyy', DataInicio) + '_' +  FormatDateTime('dd_MM_yyyy', DataTermino) + '.csv';
+      end
+      else
+      begin
+        ForceDirectories(FArqName);
+        FArqName := FArqName + 'RC_' + FormatDateTime('dd_MM_yyyy', DataInicio) + '_' +  FormatDateTime('dd_MM_yyyy', DataTermino) + '.csv';
+      end;
+      FArqSaida.SaveToFile(FArqName);
+      FArqSaida.Clear;
+      FArqName := EmptyStr;
+    end;
+    FArqlogMaster.Destroy;
+    FResumoViagem.Destroy;
+    FArqSaida.Destroy;
+  end;
+end;
+
 // Valida digitacao dados da conta
 procedure TMlkPrincipalDTM.cdsContasBeforePost(DataSet: TDataSet);
 begin
@@ -826,6 +956,7 @@ procedure TMlkPrincipalDTM.DataModuleDestroy(Sender: TObject);
 begin
   if Assigned(FConexaoBD) then
     FConexaoBD.Destroy;
+   fwMaster.Active := False;
 end;
 // Retorna a data de pesquisa inicial das contas no banco para gerar viagens liberadas de datas anteriores
 function TMlkPrincipalDTM.DateMenos(dias: Integer): Boolean;
@@ -910,7 +1041,7 @@ begin
 
 end;
 // Libera conecxoes para sair.
-procedure TMlkPrincipalDTM.Finish;
+procedure TMlkPrincipalDTM.Finish(Action : Integer);
 begin
   if tmrConsole.Enabled then
   begin
@@ -926,7 +1057,7 @@ begin
   cnnMaster.Connected := False;
   cnnDbMaster.Connected := False;
   // Libera memoria
-  LiberaMemoria;
+  LiberaMemoria(Action);
 end;
 // Monitora o diretorio de notificacao de viagens
 procedure TMlkPrincipalDTM.fwMasterChange(Sender: TObject);
@@ -1014,13 +1145,11 @@ function TMlkPrincipalDTM.GetColetas(DataInicio, DataTermino: TDateTime; Sync,
 var
   i: Integer;
   DataTerminoAux: TDateTime;
-  count, regPos : Integer;
   FolderSaida : string;
   FCargaRural : TCargaRural;
   FProdutorCarga : TProdutorCarga;
-  FArqLog, FArqlogMaster : TStringList;
+  FArqLog: TStringList;
   FArqSaveLog: string;
-  FolderLogMaster, NomeArqLogMaster : string;
   _RegistroMovimento : TMovimentoRM;
   _ItemRegistro : TItensMovimentoRM;
   _DocProdutor, _LinhaDados, _Separador, _Sincronizou : string;
@@ -1086,42 +1215,43 @@ var
 
     Result := not qrySQL.IsEmpty;
   end;
-  function ViagemJahRegistrada(idViagem: Integer): TViagem;
+  function ViagemJahRegistrada(idViagem: Integer; var viagem: TViagem): Boolean;
   begin
-    Result := TViagem.Create;
+    Result := false;
     qrySQL.Close;
     qrySQL.SQL.Text := 'Select * from LogViagem WHERE LovViagemId = :Id';
     qrySQL.Parameters.ParamByName('Id').Value := idViagem;
     qrySQL.Open;
     if not qrySQL.IsEmpty then
     begin
-      Result.Id := qrySQL.FieldByName('LovId').AsInteger;
-      Result.Index := qrySQL.FieldByName('LovIndex').AsInteger;
-      Result.RotaId := qrySQL.FieldByName('LovRotaId').AsInteger;
-      Result.RotaCodigo := qrySQL.FieldByName('LovRotaCod').AsString;
-      Result.DatAbertura := qrySQL.FieldByName('LovDataViagem').AsDateTime;
-      Result.Liberada := True;
-      Result.GerouDatasul := qrySQL.FieldByName('LovGerDatasul').AsString;
-      Result.GerouRm := qrySQL.FieldByName('LovGerRm').AsString;
-      Result.GerouMagis := qrySQL.FieldByName('LovGerMagis').AsString;
-      Result.GerouMeta := qrySQL.FieldByName('LovGerMeta').AsString;
-      Result.GerouSiga := qrySQL.FieldByName('LovGerSiga').AsString;
-      Result.GerouScl := qrySQL.FieldByName('LovGerScl').AsString;
+      viagem.Id := qrySQL.FieldByName('LovId').AsInteger;
+      viagem.Index := qrySQL.FieldByName('LovIndex').AsInteger;
+      viagem.RotaId := qrySQL.FieldByName('LovRotaId').AsInteger;
+      viagem.RotaCodigo := qrySQL.FieldByName('LovRotaCod').AsString;
+      viagem.DatAbertura := qrySQL.FieldByName('LovDataViagem').AsDateTime;
+      viagem.Liberada := True;
+      viagem.GerouDatasul := qrySQL.FieldByName('LovGerDatasul').AsString;
+      viagem.GerouRm := qrySQL.FieldByName('LovGerRm').AsString;
+      viagem.GerouMagis := qrySQL.FieldByName('LovGerMagis').AsString;
+      viagem.GerouMeta := qrySQL.FieldByName('LovGerMeta').AsString;
+      viagem.GerouSiga := qrySQL.FieldByName('LovGerSiga').AsString;
+      viagem.GerouScl := qrySQL.FieldByName('LovGerScl').AsString;
 
-      Result.Registrada := True;
+      viagem.Registrada := True;
     end
     else
     begin
-      Result.Index := 1;
-      Result.GerouDatasul := FlagNao;
-      Result.GerouRm := FlagNao;
-      Result.GerouMagis := FlagNao;
-      Result.GerouMeta := FlagNao;
-      Result.GerouSiga := FlagNao;
-      Result.GerouScl := FlagNao;
-      Result.Liberada := False;
-      Result.Registrada := False;
+      viagem.Index := 1;
+      viagem.GerouDatasul := FlagNao;
+      viagem.GerouRm := FlagNao;
+      viagem.GerouMagis := FlagNao;
+      viagem.GerouMeta := FlagNao;
+      viagem.GerouSiga := FlagNao;
+      viagem.GerouScl := FlagNao;
+      viagem.Liberada := False;
+      viagem.Registrada := False;
     end;
+    Result := True;
   end;
   procedure clearTables;
   begin
@@ -1276,14 +1406,14 @@ begin
         // Verifica se a viagem já foi processada
         if ViagemJahProcessada(cdsViagensid.Value, Layout) then
         begin
-
           FArqLog.Append('Viagem já processada: ' + IntToStr(cdsViagensid.Value));
           cdsViagens.Next;
           Continue;
         end;
 
         // Cria objeto viagem para persistencia no log
-        ObjViagem := ViagemJahRegistrada(cdsViagensid.Value);
+        ObjViagem := TViagem.Create;
+        ViagemJahRegistrada(cdsViagensid.Value, ObjViagem);
         ObjViagem.Id := cdsViagensid.Value;
         ObjViagem.ContaId := StrToInt(DadosConta.IdConta);
         ObjViagem.RotaId := cdsViagensrota_id.Value;
@@ -1831,10 +1961,12 @@ begin
                  begin
                    CplNome := FormatDateTime('dd',Now) + RetZero(IntToStr(cdsViagensid.Value),6) ;
                     //arqTexto :=  's:\leite\mobile\'+  CplNome + '.txt';
-                    arqTexto := FolderSaida + '\' +  CplNome + '.txt' ;
+                    arqTexto := FolderSaida + '\' + IntToStr(MonthOfTheYear(Date())) +
+                       IntToStr(YearOf(Date()))+ '\'+  CplNome + '.txt' ;
                     // Renomear
                    //ArqRename :=  's:\leite\mobile\'+  CplNome +'.tx_';
-                   ArqRename := FolderSaida +  CplNome + '.txt';
+                   ArqRename := FolderSaida + '\' + IntToStr(MonthOfTheYear(Date())) +
+                       IntToStr(YearOf(Date()))+ '\' +  CplNome + '.tx_';
                  end;
                end
 
@@ -1987,39 +2119,40 @@ function TMlkPrincipalDTM.GetDadosSiga(DataInicio, DataTermino: TDateTime; Sync,
     Result := not qrySQL.IsEmpty;
   end;
 
-  function ViagemJahRegistrada(idViagem: Integer): TViagem;
+  function ViagemJahRegistrada(idViagem: Integer; var viagem: TViagem ): Boolean ;
   begin
-    Result := TViagem.Create;
+    Result := False;
     qrySQL.Close;
     qrySQL.SQL.Text := 'Select * from LogViagem WHERE LovViagemId = :Id';
     qrySQL.Parameters.ParamByName('Id').Value := idViagem;
     qrySQL.Open;
     if not qrySQL.IsEmpty then
     begin
-      Result.Id := qrySQL.FieldByName('LovId').AsInteger;
-      Result.RotaId := qrySQL.FieldByName('LovRotaId').AsInteger;
-      Result.RotaCodigo := qrySQL.FieldByName('LovRotaCod').AsString;
-      Result.DatAbertura := qrySQL.FieldByName('LovDataViagem').AsDateTime;
-      Result.Liberada := True;
-      Result.GerouDatasul := qrySQL.FieldByName('LovGerDatasul').AsString;
-      Result.GerouRm := qrySQL.FieldByName('LovGerRm').AsString;
-      Result.GerouMagis := qrySQL.FieldByName('LovGerMagis').AsString;
-      Result.GerouMeta := qrySQL.FieldByName('LovGerMeta').AsString;
-      Result.GerouSiga := qrySQL.FieldByName('LovGerSiga').AsString;
-      Result.GerouScl := qrySQL.FieldByName('LovGerScl').AsString;
-      Result.Registrada := True;
+      viagem.Id := qrySQL.FieldByName('LovId').AsInteger;
+      viagem.RotaId := qrySQL.FieldByName('LovRotaId').AsInteger;
+      viagem.RotaCodigo := qrySQL.FieldByName('LovRotaCod').AsString;
+      viagem.DatAbertura := qrySQL.FieldByName('LovDataViagem').AsDateTime;
+      viagem.Liberada := True;
+      viagem.GerouDatasul := qrySQL.FieldByName('LovGerDatasul').AsString;
+      viagem.GerouRm := qrySQL.FieldByName('LovGerRm').AsString;
+      viagem.GerouMagis := qrySQL.FieldByName('LovGerMagis').AsString;
+      viagem.GerouMeta := qrySQL.FieldByName('LovGerMeta').AsString;
+      viagem.GerouSiga := qrySQL.FieldByName('LovGerSiga').AsString;
+      viagem.GerouScl := qrySQL.FieldByName('LovGerScl').AsString;
+      viagem.Registrada := True;
     end
     else
     begin
-      Result.GerouDatasul := FlagNao;
-      Result.GerouRm := FlagNao;
-      Result.GerouMagis := FlagNao;
-      Result.GerouMeta := FlagNao;
-      Result.GerouSiga := FlagNao;
-      Result.GerouScl := FlagNao;
-      Result.Liberada := False;
-      Result.Registrada := False;
+      viagem.GerouDatasul := FlagNao;
+      viagem.GerouRm := FlagNao;
+      viagem.GerouMagis := FlagNao;
+      viagem.GerouMeta := FlagNao;
+      viagem.GerouSiga := FlagNao;
+      viagem.GerouScl := FlagNao;
+      viagem.Liberada := False;
+      viagem.Registrada := False;
     end;
+    Result := True;
   end;
 
 begin
@@ -2088,7 +2221,9 @@ begin
           end;
 
           // Cria objeto viagem para persistencia no log
-          ObjViagem := ViagemJahRegistrada(cdsViagensid.Value);
+          ObjViagem := TViagem.Create;
+          ViagemJahRegistrada(cdsViagensid.Value, ObjViagem);
+
           ObjViagem.Id := cdsViagensid.Value;
           ObjViagem.RotaId := cdsViagensrota_id.Value;
           ObjViagem.RotaCodigo := cdsViagensrota.Value;
@@ -2579,41 +2714,41 @@ var
     Result := not qrySQL.IsEmpty;
   end;
 
-  function ViagemJahRegistrada(idViagem: Integer): TViagem;
+  function ViagemJahRegistrada(idViagem: Integer; var viagem: TViagem ): Boolean;
   begin
-    Result := TViagem.Create;
+    Result := false;
     qrySQL.Close;
     qrySQL.SQL.Text := 'Select * from LogViagem WHERE LovViagemId = :Id';
     qrySQL.Parameters.ParamByName('Id').Value := idViagem;
     qrySQL.Open;
     if not qrySQL.IsEmpty then
     begin
-      Result.Id := qrySQL.FieldByName('LovViagemId').AsInteger;
-      Result.RotaId := qrySQL.FieldByName('LovRotaId').AsInteger;
-      Result.RotaCodigo := qrySQL.FieldByName('LovRotaCod').AsString;
-      Result.DatAbertura := qrySQL.FieldByName('LovDataViagem').AsDateTime;
-      Result.Liberada := True; // qrySQL.FieldByName('Liberada').AsBoolean;
-      Result.GerouDatasul := qrySQL.FieldByName('LovGerDatasul').AsString;
-      Result.GerouRm := qrySQL.FieldByName('LovGerRm').AsString;
-      Result.GerouMagis := qrySQL.FieldByName('LovGerMagis').AsString;
-      Result.GerouMeta := qrySQL.FieldByName('LovGerMeta').AsString;
-      Result.GerouSiga := qrySQL.FieldByName('LovGerSiga').AsString;
-      Result.GerouScl := qrySQL.FieldByName('LovGerScl').AsString;
-      Result.Registrada := True;
+      viagem.Id := qrySQL.FieldByName('LovViagemId').AsInteger;
+      viagem.RotaId := qrySQL.FieldByName('LovRotaId').AsInteger;
+      viagem.RotaCodigo := qrySQL.FieldByName('LovRotaCod').AsString;
+      viagem.DatAbertura := qrySQL.FieldByName('LovDataViagem').AsDateTime;
+      viagem.Liberada := True; // qrySQL.FieldByName('Liberada').AsBoolean;
+      viagem.GerouDatasul := qrySQL.FieldByName('LovGerDatasul').AsString;
+      viagem.GerouRm := qrySQL.FieldByName('LovGerRm').AsString;
+      viagem.GerouMagis := qrySQL.FieldByName('LovGerMagis').AsString;
+      viagem.GerouMeta := qrySQL.FieldByName('LovGerMeta').AsString;
+      viagem.GerouSiga := qrySQL.FieldByName('LovGerSiga').AsString;
+      viagem.GerouScl := qrySQL.FieldByName('LovGerScl').AsString;
+      viagem.Registrada := True;
     end
     else
     begin
-      Result.GerouDatasul := FlagNao;
-      Result.GerouRm := FlagNao;
-      Result.GerouMagis := FlagNao;
-      Result.GerouMeta := FlagNao;
-      Result.GerouSiga := FlagNao;
-      Result.GerouScl := FlagNao;
-      Result.Liberada := False;
-      Result.Registrada := False;
+      viagem.GerouDatasul := FlagNao;
+      viagem.GerouRm := FlagNao;
+      viagem.GerouMagis := FlagNao;
+      viagem.GerouMeta := FlagNao;
+      viagem.GerouSiga := FlagNao;
+      viagem.GerouScl := FlagNao;
+      viagem.Liberada := False;
+      viagem.Registrada := False;
     end;
+    Result := True;
   end;
-
 
 begin
   try
@@ -2638,9 +2773,8 @@ begin
             Continue;
           end;
           // Nova Instância
-          // ObjViagem := TViagem.Create;
-          ObjViagem := ViagemJahRegistrada(Viagem.getInt('id'));
-
+           ObjViagem := TViagem.Create;
+           ViagemJahRegistrada(Viagem.getInt('id'), ObjViagem);
           try
             ObjViagem.Id := Viagem.getInt('id');
             ObjViagem.ContaId := ContaId;
@@ -2730,6 +2864,7 @@ function TMlkPrincipalDTM.getServerData(pConta_id : Integer): TSatusSync;
       DadosConta.VerScl := EmptyStr;
       DadosConta.VerSiga := EmptyStr;
       dadosconta.VerMeta := EmptyStr;
+      DadosConta.GerarCsv := EmptyStr;
 
       Result := True;
     except
@@ -2800,6 +2935,7 @@ begin
         DadosConta.VerScl := cdsContasVerScl.Value;
         DadosConta.VerSiga := cdsContasVerSiga.Value;
         dadosconta.VerMeta := cdsContasVerMeta.Value;
+        DadosConta.GerarCsv := cdsContasGerarCsv.Value;
       end
       else
       begin
@@ -2829,6 +2965,11 @@ begin
       begin
        // ExportarDescargas(cdsContasContaId.Value,dtInicio, dtFim);
         ExportarColetas('SCL',dtInicio,dtFim);
+      end;
+      // Gera arquivos CSV para contas solicitantes
+      if (DadosConta.GerarCsv = FlagSim) then
+      begin
+         buildCsvFiles(dtInicio,dtFim,'9', EmptyStr);
       end;
 
       cdsContas.Next;
@@ -2883,7 +3024,7 @@ begin
   FResultado := FConexaoBD.ExecutarValor(FSQL, [Codigo]);
   Result := not VarIsNull(FResultado);
 end;
-procedure TMlkPrincipalDTM.LiberaMemoria;
+procedure TMlkPrincipalDTM.LiberaMemoria(action :Integer);
 var
 MainHandle : THandle;
 begin
@@ -2893,7 +3034,13 @@ begin
     CloseHandle(MainHandle) ;
   except
   end;
-  Application.ProcessMessages;
+  if action = 0 then
+    Application.ProcessMessages
+  else
+  begin
+    Application.Terminate;
+    KillTask('MilkSync.exe');
+  end;
 end;
 
 
@@ -2969,7 +3116,7 @@ begin
 
   Result.Mapas[14] := cdsContasPatMapExtrato.Value;
   Result.Metodos[14] := 'writeExtrato';
-  Result.MetodosRead[14] := 'readExtrato';
+  Result.MetodosRead[14] := '';
   Result.NomeArqSaida[14] := 'SclExt.txt';
 
   Result.Mapas[15] := cdsContasPatMapMotivo.Value;
@@ -3128,7 +3275,8 @@ begin
 end;
 
 procedure TMlkPrincipalDTM.PopulaAtoresColeta(DataInicio,
-  DataTermino: TDateTime; Sync, Comunitario: string);
+  DataTermino: TDateTime; Sync, Comunitario: string ; Resumo: string);
+
  function getRotas(): Boolean; //  TListaRota;
   var
     i: Integer;
@@ -3722,15 +3870,43 @@ procedure TMlkPrincipalDTM.PopulaAtoresColeta(DataInicio,
       Result := False;
     end;
   end;
+
+  // recebe o resumo das viagens em um periodo
+  function getResumoViagen(): Boolean;
+  var
+    i: Integer;
+  begin
+    Result := False;
+
+    DataInicioStr := FormatDateTime('YYYY-MM-dd', DataInicio);
+    DataTerminoStr := FormatDateTime('YYYY-MM-dd', DataTermino);
+    try
+      DadosRetornoResumo :=  MakeParConsulta(DadosConta.IdConta,DataInicio,DataTermino,'0','readResumoViagem');
+      if DadosRetornoResumo.Sucesso then
+      begin
+        ColecaoResumoViagens := TJSONArray.create(DadosRetornoResumo.Dados);
+        Result := True;
+      end;
+    except
+      Result := False;
+    end;
+  end;
+
 begin
-    getRotas;
-    getLinhas;
-    getProdutores;
-    getFazendas;
-    getColetores;
-    getVeiculos;
-    getViagens;
-    getColetas;
+  // Verifica se foi solicitado apenas o resumo das viagens (Resumo = 1) - padrao e 0
+  if Resumo = '1' then
+  begin
+    getResumoViagen();
+    Exit;
+  end;
+  getRotas;
+  getLinhas;
+  getProdutores;
+  getFazendas;
+  getColetores;
+  getVeiculos;
+  getViagens;
+  getColetas;
 
 end;
 
@@ -3836,26 +4012,53 @@ procedure TMlkPrincipalDTM.sheConsoleEvents1Execute(
   Sender: TJvEventCollectionItem; const IsSnoozeEvent: Boolean);
 begin
  // Faz Exportação Extra 3 Últimos Dias ::  De 3 em 3 horas
-  InserirMsgLog('Início Get Registros :: EXTRA');
-  try
+ if (Sender.Name = 'evtArquivos') then
+ begin
+    InserirMsgLog('Início Get Registros :: EXTRA');
     try
-       // Verifica e gera arquivos de viagens de at'e 3 dias anteriores
-      if (FStatusTmrConsole <> TmrAtivo)  then
-      begin
-        if DateMenos(3) then
+      try
+        FStatusTmrConsole := TmrAtivo;
+         // Verifica e gera arquivos de viagens de at'e 3 dias anteriores
+        if ((FStatusTmrConsole <> TmrAtivo) and (FStatusTmrSync <> TmrAtivo))  then
+        begin
+          if DateMenos(3) then
+          begin
+            getServerData;
+          end;
+        end;
+      except
+        on E: Exception do
+        InserirMsgLog('Erro: ' + E.message);
+      end;
+    finally
+      FStatusTmrConsole := TmrInativo;
+      InserirMsgLog('Término Get Registros :: EXTRA');
+      // Limpa Memória e Reinicia a aplicação
+       TrimAppMemorySize(True,Application.ExeName);
+    end;
+ end;
+ if (Sender.Name = 'evtRunOneHour') then
+ begin
+    InserirMsgLog('Início Geracao Arquivos');
+    try
+      FStatusTmrConsole := TmrAtivo;
+      try
+         // Verifica e gera arquivos de viagens de at'e 3 dias anteriores
+        if ((FStatusTmrConsole <> TmrAtivo) and (FStatusTmrSync <> TmrAtivo))  then
         begin
           getServerData;
         end;
+      except
+        on E: Exception do
+        InserirMsgLog('Erro: ' + E.message);
       end;
-    except
-      on E: Exception do
-      InserirMsgLog('Erro: ' + E.message);
+    finally
+      FStatusTmrConsole := TmrInativo;
+      InserirMsgLog('Término Geracao arquivos');
+      // Limpa Memória e Reinicia a aplicação
+       TrimAppMemorySize(True,Application.ExeName);
     end;
-  finally
-    InserirMsgLog('Término Get Registros :: EXTRA');
-    // Limpa Memória e Reinicia a aplicação
-     TrimAppMemorySize(True,Application.ExeName);
-  end;
+ end;
 
 end;
 
@@ -3865,12 +4068,12 @@ var
   dtInicio, dtFim : TDateTime;
   Success: Boolean;
 begin
-  FStatusTmrConsole := TmrAtivo;
-  FStatusTmrSync := TmrInabilitado;
   Success := False;
   try
     if not tmrSync.Enabled then
     begin
+      FStatusTmrConsole := TmrAtivo;
+      FStatusTmrSync := TmrInabilitado;
       tmrSync.OnTimer := nil;
       tmrSync.Enabled := False;
       Success := True;
@@ -3971,6 +4174,7 @@ begin
            DadosConta.VerScl := cdsContasVerScl.Value;
            DadosConta.VerSiga := cdsContasVerSiga.Value;
            dadosconta.VerMeta := cdsContasVerMeta.Value;
+           DadosConta.GerarCsv := cdsContasGerarCsv.Value;
 
            // Gerencia envio de dados com arquivos gerados para multiplas empresas ou filiais
            if (DadosConta.CargaMultiEmpresa = FlagSim) then
@@ -3998,7 +4202,7 @@ begin
 
            // Envia arquivos para servidor Milk's Rota
            try
-             // AtualizaTabelasWs(_MapasCarga);
+            // AtualizaTabelasWs(_MapasCarga);
             // Registra log de atividades.
             FLogAtu.Append('-------------------<>------------------------');
             FLogAtu.Append('Log de Atividades de Atualizacao-------------');
@@ -4248,7 +4452,7 @@ begin
     end;
     if (cdsContasPatMapVeiculo.Value <> EmptyStr) then
     begin
-      if not ValidarArquivoMapa(_Conta,cdsContasPatMapVeiculo.Value, 'Veiculo') then
+      if not ValidarArquivoMapa(_Conta,cdsContasPatMapVeiculo.AsString, 'Veiculo') then
       begin
         Result := False;
         Abort;

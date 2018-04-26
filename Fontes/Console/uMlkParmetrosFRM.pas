@@ -219,6 +219,11 @@ type
     acDesableAll1: TMenuItem;
     Inativa1: TMenuItem;
     acEnableAll: TAction;
+    chkGeraXls: TcxDBCheckBox;
+    grdMasterViewDatUltSync: TcxGridDBColumn;
+    grdMasterViewDatUltCarga: TcxGridDBColumn;
+    grdMasterViewCarga: TcxGridDBColumn;
+    grdMasterViewGerarCsv: TcxGridDBColumn;
     procedure FormCreate(Sender: TObject);
     procedure acInsertExecute(Sender: TObject);
     procedure acFindFileExecute(Sender: TObject);

@@ -21,7 +21,6 @@ type
     acTools: TAction;
     Abrir1: TMenuItem;
     Parametros1: TMenuItem;
-    AppEvenMaster: TApplicationEvents;
     acClose: TAction;
     Sair1: TMenuItem;
     IdAntiFreeMaster: TIdAntiFreeze;
@@ -62,10 +61,10 @@ type
     stbMaster: TStatusBar;
     grbLastIte: TGroupBox;
     edtLastIte: TcxDBDateEdit;
-    tryMaster: TTrayIcon;
     grdContasViewDatUltSync: TcxGridDBColumn;
     grdContasViewCarga: TcxGridDBColumn;
     grdContasViewDatUltCarga: TcxGridDBColumn;
+    tryMaster: TTrayIcon;
     procedure acOpenExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -77,7 +76,6 @@ type
     procedure acSalvarExecute(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure pgcMasterChange(Sender: TObject);
-    procedure AppEvenMasterMinimize(Sender: TObject);
 
   private
     procedure MostraStatusTmr;
@@ -97,13 +95,14 @@ uses
 {$R *.dfm}
 // Abre a aplicacao
 procedure TMksPrincipalFRM.acCloseExecute(Sender: TObject);
+var
+ pHandle : THandle;
 begin
  tryMaster.BalloonHint := 'Bye Bye .. !';
  tryMaster.ShowBalloonHint;
- MlkPrincipalDTM.Finish;
- Halt(0);
- Application.Terminate;
-
+ tryMaster.Destroy;
+ MlkPrincipalDTM.Finish(1); // Libera memoria e finaliza app
+  // Application.Terminate;
 end;
 
 procedure TMksPrincipalFRM.AcConfigExecute(Sender: TObject);
@@ -188,24 +187,27 @@ begin
   MostraStatusTmr;
 end;
 
-procedure TMksPrincipalFRM.AppEvenMasterMinimize(Sender: TObject);
-begin
-  acHide.Execute;
-end;
-
 procedure TMksPrincipalFRM.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  Action := caNone;
-  Self.Hide;
+  try
+    Action := caFree;
+    acClose.Execute;
+  except on e : Exception do
+    begin
+      ShowMessage(e.Message);
+    end;
+  end;
 end;
 
 procedure TMksPrincipalFRM.FormCreate(Sender: TObject);
 begin
+  // Cria Datamodule
+  MlkPrincipalDTM := TMlkPrincipalDTM.Create(self);
   tryMaster.Visible := True;
   tryMaster.Animate := False;
   tryMaster.ShowBalloonHint;
   MlkPrincipalDTM.ShowStatusTmr := MostraStatusTmr;
- // ReportMemoryLeaksOnShutdown := True;
+ // ReportMemoryLeaksOnShutdown := DebugHook <> 0;
 end;
 
 procedure TMksPrincipalFRM.FormShow(Sender: TObject);

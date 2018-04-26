@@ -3,7 +3,6 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
   ClientHeight = 622
   ClientWidth = 669
   Visible = False
-  ExplicitTop = -203
   ExplicitWidth = 675
   ExplicitHeight = 651
   PixelsPerInch = 96
@@ -137,7 +136,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
   inherited pgcManutencao: TPageControl
     Width = 669
     Height = 538
-    ActivePage = tabsCadastro
+    ActivePage = tabsArquivos
     ExplicitWidth = 669
     ExplicitHeight = 538
     inherited tabsPesquisa: TTabSheet
@@ -154,7 +153,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           DataController.KeyFieldNames = 'Id'
           object grdMasterViewNomeEmpresa: TcxGridDBColumn
             DataBinding.FieldName = 'NomeEmpresa'
-            Width = 254
+            Width = 244
           end
           object grdMasterViewContaId: TcxGridDBColumn
             DataBinding.FieldName = 'ContaId'
@@ -352,6 +351,18 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           end
           object grdMasterViewPatMapVeiculo: TcxGridDBColumn
             DataBinding.FieldName = 'PatMapVeiculo'
+          end
+          object grdMasterViewDatUltSync: TcxGridDBColumn
+            DataBinding.FieldName = 'DatUltSync'
+          end
+          object grdMasterViewDatUltCarga: TcxGridDBColumn
+            DataBinding.FieldName = 'DatUltCarga'
+          end
+          object grdMasterViewCarga: TcxGridDBColumn
+            DataBinding.FieldName = 'Carga'
+          end
+          object grdMasterViewGerarCsv: TcxGridDBColumn
+            DataBinding.FieldName = 'GerarCsv'
           end
         end
       end
@@ -567,6 +578,21 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
             DataBinding.DataSource = dsMaster
             TabOrder = 9
             Width = 529
+          end
+          object chkGeraXls: TcxDBCheckBox
+            Left = 349
+            Top = 144
+            Caption = 'Gerar CSV'
+            DataBinding.DataField = 'GerarCsv'
+            DataBinding.DataSource = dsMaster
+            Properties.DisplayChecked = 'S'
+            Properties.DisplayUnchecked = 'N'
+            Properties.NullStyle = nssUnchecked
+            Properties.ValueChecked = 'S'
+            Properties.ValueUnchecked = 'N'
+            TabOrder = 10
+            Transparent = True
+            Width = 82
           end
         end
         object GroupBox2: TGroupBox
@@ -1713,7 +1739,6 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
-          OnClick = btnMapTagClick
         end
         object btnMapTecnico: TSpeedButton
           Left = 553
@@ -1742,7 +1767,6 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Name = 'Tahoma'
           Font.Style = [fsBold]
           ParentFont = False
-          OnClick = btnMapAnaliseClick
         end
         object edtMapColetor: TcxDBTextEdit
           Left = 7
@@ -1958,7 +1982,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
     Left = 488
     Top = 65530
     Bitmap = {
-      494C0101100078005C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101100078006C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
