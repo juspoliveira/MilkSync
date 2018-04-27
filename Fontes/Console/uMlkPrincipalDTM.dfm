@@ -224,6 +224,10 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
       ProviderFlags = [pfInUpdate]
       Size = 255
     end
+    object cdsContasPathArqLinkViagem: TStringField
+      FieldName = 'PathArqLinkViagem'
+      Size = 255
+    end
     object cdsContasIntervaloCarga: TFloatField
       FieldName = 'IntervaloCarga'
       ProviderFlags = [pfInUpdate]

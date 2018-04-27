@@ -264,6 +264,7 @@ type
     cdsViagenstanques: TStringField;
     fwMaster: TRxFolderMonitor;
     cdsContasGerarCsv: TStringField;
+    cdsContasPathArqLinkViagem: TStringField;
     procedure DataModuleCreate(Sender: TObject);
     procedure cdsContasBeforePost(DataSet: TDataSet);
     procedure tmrConsoleTimer(Sender: TObject);
@@ -367,6 +368,7 @@ var
   FolderLogMaster, NomeArqLogMaster : string;
   FArqlogMaster : TStringList;
   count, regPos : Integer;
+  ArqLinkViagem : string;
 
   i, j: Integer;
   _ArqSaida, _ArqCadSiga : TStringList;
@@ -947,8 +949,12 @@ begin
     end;
     *)
   except
-    ShowMessage('Falha so se conectar ao banco de dados, verifique !');
-    Application.Terminate;
+     on e: Exception do
+     begin
+      ShowMessage(e.Message);
+      ShowMessage('Falha so se conectar ao banco de dados, verifique !');
+      Application.Terminate;
+     end;
   end;
 
 end;
@@ -1348,6 +1354,9 @@ begin
     // Arquivo com dados coleta formatado
     _ArqSaida := TStringList.Create;
 
+    // Arquivo para o link do painel da vaigem Milk's Rota
+    ArqLinkViagem := DadosConta.PathArqLinkViagem + '\' ;
+
     // Pasta para gravação dos arquivos
     if Layout = 'Datasul' then
     begin
@@ -1632,8 +1641,10 @@ begin
                arqTexto := FolderSaida + '\' + IntToStr(MonthOfTheYear(Date())) +
                          IntToStr(YearOf(Date()))+ '\';
 
-               // Nome do arquivo para backup de o arquivo existir
+               // Nome do arquivo para backup se o arquivo existir
                ArqRename := arqTexto;
+
+
 
                // Somente nome do arquivo de saida que sera gravado temporariamente em outro diretorio, repois renomeado para o local padrao
                arqTmp :=  cdsViagenslinha.Value + '_' +
@@ -1666,7 +1677,7 @@ begin
                FlgGeraArqDB := False;
             end;
           end;
-          
+
           FlgGeraCabec := True;
           cdsColetas.First;
 
@@ -1899,6 +1910,8 @@ begin
 
                 // Move o arquivo temporario para a pasta da conta
                  CopyFile(PChar(arqTmp),PChar(arqTexto),false);
+
+
                  if CloseDb(arqTmp) then
                     DeleteFile(Pchar(arqTmp));
 
@@ -1930,6 +1943,12 @@ begin
              // Nome do arquivo para backup de o arquivo existir
              ArqRename := arqTexto;
 
+             // Nome do arquivo para link no painel de viagem Milk's
+             if ((Layout = 'RM') or (Layout = 'SCL'))  then
+               ArqLinkViagem := DadosConta.PathArqLinkViagem + '\' + IntToStr(cdsViagensid.Value)+  '.txt'
+             else
+                ArqLinkViagem := DadosConta.PathArqLinkViagem + '\' + IntToStr(cdsViagensid.Value)+  '.csv';
+
              if ((Layout = 'RM') or (Layout = 'SCL')) then
              begin
                if Layout = 'RM' then
@@ -1941,12 +1960,14 @@ begin
                     // Renomear
                    ArqRename := ArqRename + IntToStr(cdsViagensid.Value)+ '_' + cdsViagenslinha.Value + '_'+
                              FormatDateTime('ddMMyyyy',cdsViagensdt_abertura.Value)+ '.tx_';
+
                  end
                  else if DadosConta.VerRm = 'U' then // Gera um único arquivo com todas as viagens
                  begin
                    arqTexto := arqTexto + 'RM'+ FormatDateTime('ddMMyyyy', DataInicio)+'.txt';
 
-                    ArqRename := ArqRename + 'RM'+ FormatDateTime('ddMMyyyy', DataInicio)+'.tx_';
+                   ArqRename := ArqRename + 'RM'+ FormatDateTime('ddMMyyyy', DataInicio)+'.tx_';
+
                  end;
                end;
                if ( (Layout = 'SCL') and (DadosConta.VerScl = '2') ) then
@@ -1967,6 +1988,7 @@ begin
                    //ArqRename :=  's:\leite\mobile\'+  CplNome +'.tx_';
                    ArqRename := FolderSaida + '\' + IntToStr(MonthOfTheYear(Date())) +
                        IntToStr(YearOf(Date()))+ '\' +  CplNome + '.tx_';
+
                  end;
                end
 
@@ -1992,12 +2014,37 @@ begin
              if ((Layout <> 'RM') OR (DadosConta.VerRm <> 'U')) then
              begin
                 _ArqSaida.SaveToFile(arqTexto);
+
+                // Salva arquivo para link no painel de viagens
+                try
+                  _ArqSaida.SaveToFile(ArqLinkViagem);
+                except
+                  on E: Exception do
+                  begin
+                    FArqlogMaster.Append('Conta: ' + DadosConta.IdConta);
+                    FArqlogMaster.Append('Hora registro : ' + FormatDateTime('dd-MM-yyyy hh:mm:ss', Now));
+                    FArqlogMaster.Append('<<<<< FALHA AO GERAR ARQUIVOS DE LINK DE VIAGEM >>>>' );
+                    FArqlogMaster.Append('ARQUIVO: ' + ArqLinkViagem  );
+                    FArqlogMaster.Append(E.Message);
+                    FArqlogMaster.Append(E.ClassName);
+                    FArqlogMaster.Append(E.UnitName);
+                    FArqlogMaster.Append('___________________________________________');
+
+                    if not DirectoryExists(FolderLogMaster) then
+                    begin
+                      ForceDirectories(FolderLogMaster);
+                      FArqlogMaster.SaveToFile(NomeArqLogMaster);
+                    end
+                    else
+                    begin
+                      FArqlogMaster.SaveToFile(NomeArqLogMaster);
+                    end;
+                  end;
+                end;
+
+               // Registra a geração do arquivo no log de atividades
+               FArqLog.Append('Arquivo de saida gerado:  |<><>| Viagem ' + IntToStr(cdsViagensid.Value) + ' |<><>| ' + arqTexto + ' |<><>| data: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now) );
              end;
-
-             // Registra a geração do arquivo no log de atividades
-             FArqLog.Append('Arquivo de saida gerado:  |<><>| Viagem ' + IntToStr(cdsViagensid.Value) + ' |<><>| ' + arqTexto + ' |<><>| data: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now) );
-
-
            end;
            if Layout = 'Datasul' then
            begin
@@ -2009,7 +2056,6 @@ begin
              _RegistroMovimento.Destroy;
              _ItemRegistro.Destroy;
            end;
-
         end;
 
          // Persistir log viagem
@@ -2850,6 +2896,7 @@ function TMlkPrincipalDTM.getServerData(pConta_id : Integer): TSatusSync;
       DadosConta.HostURL := EmptyStr;
       DadosConta.IdConta := EmptyStr;
       DadosConta.Log := False;
+      Dadosconta.PathArqLinkViagem := EmptyStr;
       DadosConta.PathArqDatasul := EmptyStr;
       DadosConta.PathArqCarga := EmptyStr;
       DadosConta.PathArqDescarga := EmptyStr;
@@ -2924,6 +2971,7 @@ begin
         DadosConta.PathArqDatasul := cdsContasPathArqDatasul.Value;
         DadosConta.PathArqCarga := cdsContasPathArqCarga.Value;
         DadosConta.PathArqDescarga := cdsContasPathArqDescarga.Value;
+        DadosConta.PathArqLinkViagem := cdsContasPathArqLinkViagem.Value;
         DadosConta.PathArqMagis := cdsContasPathArqMagis.Value;
         DadosConta.PathArqRm := cdsContasPathArqRm.Value;
         DadosConta.PathArqMeta := cdsContasPathArqMeta.Value;
@@ -4159,6 +4207,7 @@ begin
            DadosConta.IdConta := IntToStr(cdsContasContaId.Value);
            DadosConta.Log := (cdsContasLog.Value = FlagSim);
            DadosConta.CargaMultiEmpresa := cdsContasCargaMultiEmpresa.Value;
+           DadosConta.PathArqLinkViagem := cdsContasPathArqLinkViagem.Value;
            DadosConta.PathArqDatasul := cdsContasPathArqDatasul.Value;
            DadosConta.PathArqCarga := cdsContasPathArqCarga.Value;
            DadosConta.PathArqDescarga := cdsContasPathArqDescarga.Value;
@@ -4175,6 +4224,7 @@ begin
            DadosConta.VerSiga := cdsContasVerSiga.Value;
            dadosconta.VerMeta := cdsContasVerMeta.Value;
            DadosConta.GerarCsv := cdsContasGerarCsv.Value;
+
 
            // Gerencia envio de dados com arquivos gerados para multiplas empresas ou filiais
            if (DadosConta.CargaMultiEmpresa = FlagSim) then

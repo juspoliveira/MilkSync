@@ -283,6 +283,7 @@ type
     PathArqDatasul: string;
     PathArqCarga: string;
     PathArqCargaApi: string; // Local da carga de conferencia  vinda da API
+    PathArqLinkViagem : string; // Local de geracao dos arquivos que ser~ao baixados pelo painel de viagem do Milk's Rota
     PathArqRm: string;
     PathArqMagis: string;
     PathArqMeta: string;

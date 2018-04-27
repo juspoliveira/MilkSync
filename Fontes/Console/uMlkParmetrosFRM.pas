@@ -224,6 +224,8 @@ type
     grdMasterViewDatUltCarga: TcxGridDBColumn;
     grdMasterViewCarga: TcxGridDBColumn;
     grdMasterViewGerarCsv: TcxGridDBColumn;
+    Label1: TLabel;
+    ckbPathLinkPainle: TcxDBShellComboBox;
     procedure FormCreate(Sender: TObject);
     procedure acInsertExecute(Sender: TObject);
     procedure acFindFileExecute(Sender: TObject);

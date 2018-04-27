@@ -3,6 +3,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
   ClientHeight = 622
   ClientWidth = 669
   Visible = False
+  ExplicitTop = -227
   ExplicitWidth = 675
   ExplicitHeight = 651
   PixelsPerInch = 96
@@ -1330,6 +1331,19 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Font.Style = [fsBold]
           ParentFont = False
         end
+        object Label1: TLabel
+          Left = 10
+          Top = 99
+          Width = 305
+          Height = 13
+          Caption = 'Local de Gera'#231#227'o de Arquivos  - Link Painel Milk'#39's Rota'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
         object ckbPathCarga: TcxDBShellComboBox
           Left = 16
           Top = 39
@@ -1348,6 +1362,16 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
           Properties.Root.BrowseFolder = bfCustomPath
           Properties.ShowFullPath = sfpAlways
           TabOrder = 1
+          Width = 489
+        end
+        object ckbPathLinkPainle: TcxDBShellComboBox
+          Left = 14
+          Top = 118
+          DataBinding.DataField = 'PathArqLinkViagem'
+          DataBinding.DataSource = dsMaster
+          Properties.Root.BrowseFolder = bfCustomPath
+          Properties.ShowFullPath = sfpAlways
+          TabOrder = 2
           Width = 489
         end
       end
@@ -1982,7 +2006,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
     Left = 488
     Top = 65530
     Bitmap = {
-      494C0101100078006C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010110007800700010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
