@@ -1070,7 +1070,7 @@ procedure TMlkPrincipalDTM.fwMasterChange(Sender: TObject);
 var
   dtInicio, dtFim : TDateTime;
   Success: Boolean;
-  ListaContas, Arqconf : TStringList;
+  ListaContas, Arqconf, LogErro : TStringList;
   FileConta: string;
   i, conta: Integer;
 begin
@@ -1078,6 +1078,8 @@ begin
   try
     Arqconf := TStringList.Create;
     ListaContas := TStringList.Create;
+    LogErro := TStringList.Create;
+
     // Carrega configuracoes
     if FileExists('config.ini') then
     begin
@@ -1118,17 +1120,20 @@ begin
         end;
         // apaga o arquivo apos processamento
         deletefile(PChar(FileConta));
-      except
-        ;
+      except on e: Exception do
+        begin
+          LogErro.Append('Erro ao Gerar Arquivo Individual : ' + e.Message);
+          LogErro.SaveToFile( fwMaster.FolderName +'\LogErroIndividual.txt');
+        end;
       end;
       // libera a memoria
      // LiberaMemoria;
-
     end;
   finally
     // Destroy as listas
     ListaContas.Destroy;
     Arqconf.Destroy;
+    LogErro.Destroy;
     // reabilita evento timer de console
     if Success then
     begin
@@ -4251,48 +4256,42 @@ begin
            FLogAtu.Append('Atualizando dados da conta na API Milk´s Rota ... |<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss',Now));
 
            // Envia arquivos para servidor Milk's Rota
-           try
-            // AtualizaTabelasWs(_MapasCarga);
-            // Registra log de atividades.
+           // Registra log de atividades.
             FLogAtu.Append('-------------------<>------------------------');
             FLogAtu.Append('Log de Atividades de Atualizacao-------------');
             FLogAtu.Append('-------------------<>------------------------');
             // Executa o envio dos dados e retorna o log
-             AtualizaTabelasWs(_Saida_Proc,_MapasCarga);
+           _Saida_Proc.Clear;
+           if ( AtualizaTabelasWs(_Saida_Proc,_MapasCarga)) then
+           begin
             FLogAtu.Append(_Saida_Proc.Text);
-           except
-             on e: Exception do
-             begin
+           end
+           else
+           begin
               FLogAtu.Append('-------------------<>------------------------');
               FLogAtu.Append('FALHA AO ATUALIZAR BASE DE DADOS NO SERVIDOR ');
               FLogAtu.Append('-------------------<>------------------------');
-              FLogAtu.Append('-----Mensagem de Erro Reportada--------------');
-              FLogAtu.Append(e.Message);
-              FLogAtu.Append('-------------------<>------------------------');
-             end;
            end;
            FLogAtu.Append('Fim Atualização dados da conta na API Milk´s Rota ...|<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
            // Gera arquivos para conferencia com dados baixados do servidor e grava no local espeficico
            FLogAtu.Append('Inicio Consulta de arquivos para conferência ...|<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
-           try
-             // Registra log de atividades.
+
+           // Registra log de atividades.
+           FLogAtu.Append('-------------------<>------------------------');
+           FLogAtu.Append('Log de Atividades de Consulta Registros -----');
+           FLogAtu.Append('-------------------<>------------------------');
+          // Executa a consulta dos dados e retorna o log
+           _Saida_Proc.Clear;
+           if ExportDataWs(_Saida_Proc,_MapasCarga) then
+           begin
+            FLogAtu.Append(_Saida_Proc.Text);
+           end
+           else
+           begin
              FLogAtu.Append('-------------------<>------------------------');
-             FLogAtu.Append('Log de Atividades de Consulta Registros -----');
+             FLogAtu.Append('FALHA AO CONSULTAR BASE DE DADOS NO SERVIDOR ');
              FLogAtu.Append('-------------------<>------------------------');
-            // Executa a consulta dos dados e retorna o log
-             _Saida_Proc.Clear;
-             ExportDataWs(_Saida_Proc,_MapasCarga);
-             FLogAtu.Append(_Saida_Proc.Text);
-           except
-             on e: Exception do
-             begin
-               FLogAtu.Append('-------------------<>------------------------');
-               FLogAtu.Append('FALHA AO CONSULTAR BASE DE DADOS NO SERVIDOR ');
-               FLogAtu.Append('-------------------<>------------------------');
-               FLogAtu.Append('-----Mensagem de Erro Reportada--------------');
-               FLogAtu.Append(e.Message);
-               FLogAtu.Append('-------------------<>------------------------');
-             end;
+             FLogAtu.Append('-----Mensagem de Erro Reportada--------------');
            end;
            FLogAtu.Append('Fim Consulta de arquivos para conferência ...|<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
 

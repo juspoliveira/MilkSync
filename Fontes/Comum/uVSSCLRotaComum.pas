@@ -1510,7 +1510,14 @@ begin
       // Log do metodo invocado
       pDataOut.Append('#' + xMapasCarga.Metodos[x] + '#');
       _wsParametros.Clear;
-      _CdsImportado := ImportaArquivoMapeado(DadosConta.PathArqCarga,xMapasCarga.Mapas[x],CargaMultiEmpresa);
+      try
+        _CdsImportado := ImportaArquivoMapeado(DadosConta.PathArqCarga,xMapasCarga.Mapas[x],CargaMultiEmpresa);
+      except on e: Exception do
+        begin
+          pDataOut.Append('Falha ao importar arquivo : ' + xMapasCarga.Mapas[x] );
+          pDataOut.Append('Erro reportado: ' + e.Message);
+        end;
+      end;
       if _CdsImportado.Sucesso then
       begin
         // Pega token da conta
