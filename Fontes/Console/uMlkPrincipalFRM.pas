@@ -11,7 +11,7 @@ uses
   cxDBData, cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   cxGridLevel, cxClasses, cxGridCustomView, cxGrid, ComCtrls, ImgList, StdCtrls,
   Buttons, cxImageComboBox, cxContainer, cxTextEdit, cxMaskEdit, cxSpinEdit,
-  cxDBEdit, cxDropDownEdit, cxCalendar, JvComponentBase, JvDebugHandler;
+  cxDBEdit, cxDropDownEdit, cxCalendar, JvComponentBase, JvDebugHandler, uMlkThread;
 
 type
   TMksPrincipalFRM = class(TForm)
@@ -90,7 +90,7 @@ var
 implementation
 
 uses
-  uMlkPrincipalDTM, uMlkParmetrosFRM, uGlobal, uConstantesComuns;
+  uMlkPrincipalDTM, uMlkParmetrosFRM, uGlobal, uConstantesComuns, uVSSCLRotaComum;
 
 {$R *.dfm}
 // Abre a aplicacao
@@ -157,6 +157,7 @@ end;
 procedure TMksPrincipalFRM.acStartExecute(Sender: TObject);
 begin
   memLog.Lines.Append('Servico Iniciado ...' + '[' +  FormatDateTime('dd-MM-yyyy hh:mm:ss', Now) + ']');
+
   MlkPrincipalDTM.tmrConsole.Enabled := True;
   MlkPrincipalDTM.tmrSync.Enabled := False;
   MlkPrincipalDTM.sheConsole.StartAll;
@@ -165,7 +166,7 @@ begin
   MostraStatusTmr;
   MlkPrincipalDTM.SetLastIteration;
 
-  MlkPrincipalDTM.getServerData;
+  // MlkPrincipalDTM.getServerData();
 
   try
     MlkPrincipalDTM.tmrConsole.Enabled := False;
@@ -179,6 +180,7 @@ end;
 procedure TMksPrincipalFRM.acStopExecute(Sender: TObject);
 begin
   memLog.Lines.Append('Servico em Pausa ...' + '[' +  FormatDateTime('dd-MM-yyyy hh:mm:ss', Now) + ']');
+
   MlkPrincipalDTM.sheConsole.StopAll;
   MlkPrincipalDTM.tmrConsole.Enabled := False;
   MlkPrincipalDTM.tmrSync.Enabled := False;
@@ -190,6 +192,15 @@ end;
 procedure TMksPrincipalFRM.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   try
+    if Assigned(MyThread) then
+    begin
+      if not( MyThread.Finished )then
+      begin
+        MostraMsgInfo('Processo de sincronizacao em andamento, Aguarde o termino !');
+        Action := caNone;
+        Exit;
+      end;
+    end;
     Action := caFree;
     acClose.Execute;
   except on e : Exception do

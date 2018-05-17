@@ -1,11 +1,12 @@
-unit uVSSCLRotaComum;
+Ôªøunit uVSSCLRotaComum;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Classes, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP,uJSON,
   JvStrings, JvScheduledEvents, IdMultiPartFormData, IdSNTP, DBClient, variants, DB, IniFiles, Dialogs,
-  JvComponentBase, JvCSVBaseControls, JvCsvData, Controls, ShellAPI, Forms, WebAdapt, uGlobal ;
+  JvComponentBase, JvCSVBaseControls, JvCsvData, Controls, ShellAPI, Forms, WebAdapt, uGlobal,
+  uMlkThread ;
 
 type
   TViagem = class
@@ -273,10 +274,10 @@ type
     IdConta: string;
     ChaveContas: array [1..6] of string;
     ChaveERP : array [1..6] of string;
-    KeyId  : string;   // AssociaÁ„o das chaves do getMilk com o ID do ERP cliente
+    KeyId  : string;   // Associa√ß√£o das chaves do getMilk com o ID do ERP cliente
     Ativa : string[1];
     Sync: string[1];
-    DropTable: string[1]; // Zera tabelas antes da sincronizaÁ„o ??
+    DropTable: string[1]; // Zera tabelas antes da sincroniza√ß√£o ??
     CargaMultiEmpresa: string[1];
     DatIniLeituraDescargaWS: TDateTime;
     DatUltLeituraDescargaWS: TDateTime;
@@ -400,6 +401,7 @@ function MakeParConsulta(aContaId: string;aDataInicio, aDataFinal:TDateTime; aSy
 function xPostMetodoJSON(URL: string; Parametros: TStringList): TDadosRetorno;
 function VRetornoMetodoWSPOST(URL: string; Parametros: TStringList): string;
 function readMetodoApi(Conta, Metodo: string): TDadosRetorno;
+function MontaParametros(Conta: string; var Parametros:TStringList ): Boolean ;
 
 
 // Auxiliares
@@ -416,28 +418,28 @@ procedure MostraMsgErro(Msg :string);
 procedure MostraMsgInfo(Msg :string);
 function MostraMsgConf(msg :string) :Boolean;
 
-// ManipulaÁ„o de aruivos INI
+// Manipula√ß√£o de aruivos INI
 procedure GravaIni(aArquivo,aChave, aTexto: string);
 procedure LeIni(var aTexto: string; aArquivo, aSecao, aChave: string);
 procedure LeSecaoIni(var aTexto: TStringList; aArquivo, aSecao: string);
 
-// GeraÁ„o de arquivos JOSN
+// Gera√ß√£o de arquivos JOSN
 function DataSetToJsonTxt(pDataSet:TDataSet; conta_id:Integer = 0; Token:string = ''; StartPoint:Integer = 0; Limit:Integer = 0):WideString;
 //function JsontToDatat(LinhaDados: WideString): TClientDataSet;
 
 // Consulta dados de cadastro na API e gera arquivos formatados
 function ExportDataWs(pDataOut: TStringList; xMapasCarga: TMapasCarga): Boolean;
 
-// Atualiza dados no servidor (API) IntegraÁ„o
+// Atualiza dados no servidor (API) Integra√ß√£o
 function LoadFromMapIni(owner: Char; conta_id : Integer; MasterMap: string): TMapasCarga;
-function AtualizaTabelasWs (var pDataOut: TStringList; xMapasCarga: TMapasCarga) : Boolean;
-function ExibeAmostraDados(aNomeArqivo, aSeparador: string): TJvCsvDataSet;
-function ImportaArquivoMapeado(aPathBase, aFileMapa: string;MultiEmpresa:TMultiEmpresa ): TCdsImportado;
+function AtualizaTabelasWs (var pDataOut: TStringList; xMapasCarga: TMapasCarga; var Dataset: TJvCsvDataSet) : Boolean;
+function ExibeAmostraDados(aNomeArqivo, aSeparador: string; var BaseRet:TJvCsvDataSet ): Boolean ;
+function ImportaArquivoMapeado(aPathBase, aFileMapa: string;MultiEmpresa:TMultiEmpresa; var BaseCarga: TJvCsvDataSet ): TCdsImportado;
 // Retorno o token e o doc da conta para limpeza de dados
 function getToken(contaId: integer): TTokenConta;
 
 // Comuns
-// Retorna Vers„o Aplicativo
+// Retorna Vers√£o Aplicativo
 function VersaoAplicativo(Executavel: string): string;
 // Liberar memoria
 procedure TrimAppMemorySize(pReinicia: Boolean; Programa:string);
@@ -458,6 +460,7 @@ var
   FSQL : string;
   FResultado: Variant;
   FListaAux : TStringList;
+  MyThread :  ThredMaster;
 
 const
   IdInfoRegProxyEscrever = 1;
@@ -520,6 +523,13 @@ begin
   IdHTTP := TIdHTTP.Create(nil);
 
   try
+     // Configuracao HTTP
+     IdHTTP.Request.Clear;
+     IdHTTP.Request.UserAgent := 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; Acoo Browser; GTB5; Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1) ; Maxthon; InfoPath.1; .NET CLR 3.5.30729; .NET CLR 3.0.30618)';
+     IdHTTP.Request.ContentType := 'application/json';
+     IdHTTP.Request.CharSet := 'utf-8';
+     IdHTTP.Request.Method := 'POST';
+
     // Proxy
     if DadosConta.UsarProxy then
     begin
@@ -562,7 +572,7 @@ begin
   DadosConta.IdConta5 := cdsPar.FieldByName('ParContaId5').AsString;
   DadosConta.IdConta6 := cdsPar.FieldByName('ParContaId6').AsString;
 
-  // AssociaÁ„o das chaves do getMilk com o ERP Cliente
+  // Associa√ß√£o das chaves do getMilk com o ERP Cliente
   DadosConta.KeyId1 := cdsPar.FieldByName('ParKeyId1').AsString;
   DadosConta.KeyId2 := cdsPar.FieldByName('ParKeyId2').AsString;
   DadosConta.KeyId3 := cdsPar.FieldByName('ParKeyId3').AsString;
@@ -614,7 +624,7 @@ begin
   DadosConta.VerMeta := cdsPar.FieldByName('ParVerMeta').AsString;
   DadosConta.VerSiga := cdsPar.FieldByName('ParVerSiga').AsString;
   DadosConta.VerScl := cdsPar.FieldByName('ParVerScl').AsString;
-  // Local de arquivos de saÌda
+  // Local de arquivos de sa√≠da
   DadosConta.PathArqDatasul := cdsPar.FieldByName('ParPathArqDatasul').AsString;
   DadosConta.PathArqRm := cdsPar.FieldByName('ParPathArqRm').AsString;
   DadosConta.PathArqMagis := cdsPar.FieldByName('ParPathArqMagis').AsString;
@@ -628,11 +638,11 @@ begin
   // Limpa tabela antes da carga no servidor
   DadosConta.DropTable := cdsPar.FieldByName('ParDropTable').AsString;
 
-  // Local da base de dados de carga integraÁ„o ERP
+  // Local da base de dados de carga integra√ß√£o ERP
   DadosConta.PathArqCarga := cdsPar.FieldByName('ParPathArqCarga').AsString;
-  // Local para retorno de arquivos de conferÍncia vindos da API
+  // Local para retorno de arquivos de confer√™ncia vindos da API
   DadosConta.PathArqCargaApi := cdsPar.FieldByName('ParPathCargaApi').AsString;
-  // Controle de geraÁ„o de arquivos do dia
+  // Controle de gera√ß√£o de arquivos do dia
   DadosConta.ColetasHoje := cdsPar.FieldByName('ParColetasHoje').AsString;
 
 
@@ -850,25 +860,27 @@ function readMetodoApi(Conta, Metodo: string): TDadosRetorno;
 var
   memREST: TStringList;
   _token : TTokenConta;
+  _Char : string;
 begin
   Result.Metodo := Metodo;
   Result.Excecao := False;
+  _Char := '"';
 
   memREST := TStringList.Create;
-  // Pega token de autorizaÁao da conta
+  // Pega token de autoriza√ßao da conta
   _token := getToken(StrToInt(Conta));
 
   try
-    memREST.Add('conta_id=' + Conta);
-    memREST.Add('dt_inicio=' + FormatDateTime('yyyy-MM-dd', Date));
-    memREST.Add('dt_fim=' + FormatDateTime('yyyy-MM-dd', Date));
-    memREST.Add('sync=0');
-    memREST.Add('token=' + _token.Token);
+    memREST.Add('{'+ ansiQuotedStr('conta_id','"')+':' + AnsiQuotedStr(Conta,'"')+ ',') ;
+    memREST.Add(AnsiQuotedStr('dt_inicio', '"') + ':' + AnsiQuotedStr(FormatDateTime('yyyy-MM-dd', Date),'"')+ ',') ;
+    memREST.Add(AnsiQuotedStr('dt_fim','"') + ':' + AnsiQuotedStr(FormatDateTime('yyyy-MM-dd', Date),'"')+ ',');
+    memREST.Add(AnsiQuotedStr('sync','"') + ':' + AnsiQuotedStr('0','"')+ ',') ;
+    memREST.Add( AnsiQuotedStr('token','"') + ':' + AnsiQuotedStr(_token.Token,'"')+ '}');
 
     Result.Parametros := memREST.Text;
 
     try
-      Result := PostMetodoJSON(DadosConta.HostURL + Metodo, memREST);
+      Result := xPostMetodoJSON(DadosConta.HostURL + Metodo, memREST);
     except on E:Exception do
       begin
         Result.Excecao := True;
@@ -1005,7 +1017,7 @@ begin
 end;
 function RemoveAcento(Str: string): string;
 const
-  ComAcento = '‡‚ÍÙ˚„ı·ÈÌÛ˙Á¸¿¬ ‘€√’¡…Õ”⁄«‹';
+  ComAcento = '√†√¢√™√¥√ª√£√µ√°√©√≠√≥√∫√ß√º√Ä√Ç√ä√î√õ√É√ï√Å√â√ç√ì√ö√á√ú';
   SemAcento = 'aaeouaoaeioucuAAEOUAOAEIOUCU';
 var
    x: Integer;
@@ -1059,7 +1071,7 @@ begin
     xRegistro := AnsiQuotedStr('conta_id',_aspas) + ':' + IntToStr(conta_id)+ ',';
     ArrayData.Append(xRegistro);
 
-    // Envia o token de autorizaÁao
+    // Envia o token de autoriza√ßao
     if Token <> EmptyStr then
     begin
       xRegistro := AnsiQuotedStr('token',_aspas) + ':' + AnsiQuotedStr(Token,_aspas) + ',';
@@ -1119,7 +1131,7 @@ begin
                  AnsiQuotedStr(xData,_aspas);
                end
 
-            else //casos gerais s„o tratados como string
+            else //casos gerais s√£o tratados como string
               begin
                 xRegistro := xRegistro + AnsiQuotedStr(pField.FieldName,_aspas) + ':' +
                 AnsiQuotedStr(pField.AsString,_aspas);
@@ -1146,7 +1158,7 @@ begin
          ArrayData.Append(xRegistro);
         end;
         LimitCount := LimitCount +1;
-        // Finaliza a geraÁ„o do arquivo quanto atingir o limite de registro solicitado
+        // Finaliza a gera√ß√£o do arquivo quanto atingir o limite de registro solicitado
         if (Limit <> 0) and (LimitCount = Limit) then
           Break;
       end;
@@ -1216,7 +1228,7 @@ begin
     FreeAndNil(DataToSend);
   end;
 end;
-// Atualiza tabelas no Serdor (API) IntegraÁ„o
+// Atualiza tabelas no Serdor (API) Integra√ß√£o
 
 function LoadFromMapIni(owner: Char; conta_id : Integer; MasterMap: string ): TMapasCarga;
 var
@@ -1226,9 +1238,9 @@ begin
   if not FileExists(MasterMap) then
   begin
     if owner = '1' then
-      ShowMessage('Arquivo [ ' + MasterMap + ' ] n„o localizado, ser· necess·rio associar os arquivos de importaÁ„o !')
+      ShowMessage('Arquivo [ ' + MasterMap + ' ] n√£o localizado, ser√° necess√°rio associar os arquivos de importa√ß√£o !')
     else
-      Result.Notificacao := ('Arquivo [ ' + MasterMap + ' ] n„o localizado, ser· necess·rio associar os arquivos de importaÁ„o !');
+      Result.Notificacao := ('Arquivo [ ' + MasterMap + ' ] n√£o localizado, ser√° necess√°rio associar os arquivos de importa√ß√£o !');
     Exit;
   end;
 
@@ -1236,16 +1248,16 @@ begin
   if (_ChaveConta <> IntToStr(conta_id) ) then
   begin
     if owner = '1' then
-      ShowMessage('Arquivo de localizaÁ„o de mapas [ ' + MasterMap + ' ] n„o pertence a conta ativa !')
+      ShowMessage('Arquivo de localiza√ß√£o de mapas [ ' + MasterMap + ' ] n√£o pertence a conta ativa !')
     else
-      Result.Notificacao := ('Arquivo de localizaÁ„o de mapas [ ' + MasterMap + ' ] n„o pertence a conta ativa !');
+      Result.Notificacao := ('Arquivo de localiza√ß√£o de mapas [ ' + MasterMap + ' ] n√£o pertence a conta ativa !');
     Exit;
   end;
 
   // Pega chave da conta Ativa
   Result.ContaId := StrToInt(_ChaveConta);
 
-  // Pega localizaÁ„o dos arquivos de dados
+  // Pega localiza√ß√£o dos arquivos de dados
   LeIni(_ArquivoMapa,MasterMap,'Dados','GRUPO_ROTA');
   Result.Mapas[1] := _ArquivoMapa;
   Result.Metodos[1]     := 'writeGrupoRota';
@@ -1338,7 +1350,7 @@ begin
 end;
 
 
-function AtualizaTabelasWs (var pDataOut: TStringList; xMapasCarga: TMapasCarga) : Boolean;
+function AtualizaTabelasWs (var pDataOut: TStringList; xMapasCarga: TMapasCarga; var Dataset: TJvCsvDataSet) : Boolean;
 var
   _wsParametros, _Saida_Proc : TStringList;
   _CdsImportado : TCdsImportado;
@@ -1359,7 +1371,7 @@ var
     begin
       try
        Result := False;
-       // Result := TStringList.CreateÁ
+       // Result := TStringList.Create√ß
         _Separador := ',' ;
         _Aspas := '"';
 
@@ -1478,8 +1490,8 @@ begin
   try
     _CdsImportado.Dados := TClientDataSet.Create(nil);
     // Inicializa log de envio
-    Result := False; // TStringList.Create;
-    pDataOut.Append('# InÌcio de AtualizaÁ„o Tabelas Servidor :: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss',Now));
+    Result := False;
+    pDataOut.Append('# In√≠cio de Atualiza√ß√£o Tabelas Servidor :: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss',Now));
     pDataOut.Append('Conta : ' + IntToStr(xMapasCarga.ContaId));
 
     // Cria array de parametro para envio
@@ -1503,7 +1515,7 @@ begin
     {* Importa dados dos aruqivos e envia para a respectiva conta no Servidor *}
     for x := 1 to 15 do
     begin
-      // n„o processa posiÁ„o vazia do array com nomes dos mapas
+      // n√£o processa posi√ß√£o vazia do array com nomes dos mapas
       if (xMapasCarga.Mapas[x] = EmptyStr) then
         Continue;
 
@@ -1511,7 +1523,8 @@ begin
       pDataOut.Append('#' + xMapasCarga.Metodos[x] + '#');
       _wsParametros.Clear;
       try
-        _CdsImportado := ImportaArquivoMapeado(DadosConta.PathArqCarga,xMapasCarga.Mapas[x],CargaMultiEmpresa);
+        _CdsImportado := ImportaArquivoMapeado(DadosConta.PathArqCarga,xMapasCarga.Mapas[x],CargaMultiEmpresa, Dataset);
+        pDataOut.Append('Arquivo Importado com sucesso :: ' + xMapasCarga.Mapas[x] );
       except on e: Exception do
         begin
           pDataOut.Append('Falha ao importar arquivo : ' + xMapasCarga.Mapas[x] );
@@ -1526,44 +1539,44 @@ begin
         _wsParametros.Add( DataSetToJsonTxt(_CdsImportado.Dados, xMapasCarga.ContaId, _Token.Token)) ;
         if xSalvaJson then
         begin
-          // Cria pasta se n„o existir
+          // Cria pasta se n√£o existir
           if not DirectoryExists(DadosConta.PathArqCargaApi + '\Api\'+ IntToStr(xMapasCarga.ContaId)) then
             ForceDirectories(DadosConta.PathArqCargaApi + '\Api\' + IntToStr(xMapasCarga.ContaId));
           // Salva Json do arquivo
           _wsParametros.SaveToFile(DadosConta.PathArqCargaApi + '\Api\'+ IntToStr(xMapasCarga.ContaId) + '\' + StringReplace(xMapasCarga.NomeArqSaida[x],'.txt','.json',[]));
+          pDataOut.Append('Arquivo preparada para envio ao Servidor :: ' + DadosConta.PathArqCargaApi + '\Api\'+ IntToStr(xMapasCarga.ContaId) + '\' + StringReplace(xMapasCarga.NomeArqSaida[x],'.txt','.json',[]) );
         end;
         if (_CdsImportado.Dados.RecordCount > 0) then
         // if _wsParametros.Count > 0 then
         begin
          // Eniva dados ao servidor SclRota
-          _wsDadosRetorno :=  xPostMetodoJSON(DadosConta.HostURL + xMapasCarga.Metodos[x], _wsParametros);
-          if _wsDadosRetorno.Sucesso then
-          begin
-             pDataOut.Append('Dados enviados com sucesso !')
-          end
-          else
-          begin
-            pDataOut.Append('?? Falha ao enviar :' + xMapasCarga.Metodos[x]);
-            pDataOut.Append(_wsDadosRetorno.MsgWS);
-          end;
+           try
+              _wsDadosRetorno :=  xPostMetodoJSON(DadosConta.HostURL + xMapasCarga.Metodos[x], _wsParametros);
+              pDataOut.Append('Dados enviados com sucesso ::' + _wsDadosRetorno.Mensagem);
+           except on e:Exception do
+             begin
+                pDataOut.Append('Falha ao enviar o arquivo :' + xMapasCarga.Metodos[x]);
+                pDataOut.Append('Mensagem de ErrOutput retornada ::' +  e.Message);
+             end;
+           end;
         end;
         Result := True;
       end
-      else // N„o conseguiu abrir o arquivo
+      else // N√£o conseguiu abrir o arquivo
       begin
         pDataOut.Append('Falha ao abrir o arquivo: ' + _CdsImportado.Notificacao);
         Result := False;
       end;
     end;
   finally
-     pDataOut.Append('# Final de AtualizaÁ„o Tabelas Servidor :: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss',Now));
+     pDataOut.Append('# Final de Atualiza√ß√£o Tabelas Servidor :: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss',Now));
     _wsParametros.Destroy;
     _Saida_Proc.Destroy;
     _CdsImportado.Dados.Destroy;
   end;
 end;
 // carrega dados do arquivo txt para dataset
-function ExibeAmostraDados(aNomeArqivo, aSeparador: string): TJvCsvDataSet;
+function ExibeAmostraDados(aNomeArqivo, aSeparador: string; var BaseRet:TJvCsvDataSet ): Boolean;
 var
  xColunas, xNomeColuna : TStringList;
  I: Integer;
@@ -1574,13 +1587,13 @@ var
 begin
   if aNomeArqivo <> EmptyStr then
   begin
-
+     Result := False;
     try
-      csvDataset := TJvCsvDataSet.Create(nil);
+      //csvDataset := TJvCsvDataSet.Create(nil);
       csvFileBase := TJvCSVBase.Create(nil);
 
-      csvDataset.SavesChanges := False;
-      csvDataset.LoadsFromFile := True;
+     // csvDataset.SavesChanges := False;
+     // csvDataset.LoadsFromFile := True;
 
       Separador := aSeparador[1];
       xColunas := TStringList.Create;
@@ -1590,31 +1603,34 @@ begin
       csvFileBase.CSVFileName := EmptyStr;
       csvFileBase.CSVFileName := aNomeArqivo;
       xColunas := arraystring(LimpaMascaras(RemoveAcento(Trim(csvFileBase.CSVFieldNames.Text))), aSeparador[1]);
-      csvDataSet.FieldDefs.Clear;
+      BaseRet.FieldDefs.Clear;
 
-      csvDataSet.Separator := Separador;
-      csvDataSet.Close;
+      BaseRet.Separator := Separador;
+
+      BaseRet.Close;
 
       for I := 0 to xColunas.Count -1  do
       begin
-        csvDataSet.FieldDefs.Add(xColunas[i],ftString,80);
+        BaseRet.FieldDefs.Add(xColunas[i],ftString,80);
       end;
-      csvDataSet.FileName := aNomeArqivo;
-      csvDataSet.CsvFieldDef := Trim(csvFileBase.CSVFieldNames.Text);
+      BaseRet.FileName := aNomeArqivo;
+      BaseRet.CsvFieldDef := Trim(csvFileBase.CSVFieldNames.Text);
 
-      csvDataSet.Open;
-      Result := csvDataset;
+     // retorna o resultado por referencia
+      BaseRet.Open;
+
+      Result := True;
     finally
       xColunas.Destroy;
       xNomeColuna.Destroy;
-      csvDataset.Destroy;
+     // csvDataset.Destroy;
       csvFileBase.Destroy;
     end;
   end;
 
 end;
 // Importa arquivo mapeado
-function ImportaArquivoMapeado(aPathBase,aFileMapa: string; MultiEmpresa:TMultiEmpresa): TCdsImportado;
+function ImportaArquivoMapeado(aPathBase,aFileMapa: string; MultiEmpresa:TMultiEmpresa; var BaseCarga: TJvCsvDataSet ): TCdsImportado;
 var
   _lista,_Linha: TStringList;
   _Aux, _Conta, _ArqOrgem, _TabelaDestino, _Separador, _TipoArquivo, _CDS, _TipoCampo, _ChaveObrigatoria : string;
@@ -1623,7 +1639,7 @@ var
   _CdsTabelaSclRota : TClientDataSet;
   _ArrayParametro: array of Variant;
   _RequerIdContrato, _Cancela : Boolean;
-  BaseCarga : TJvCsvDataSet;
+  //BaseCarga : TJvCsvDataSet;
   _aspas : Char;
 begin
   if FileExists(aFileMapa) then
@@ -1660,7 +1676,7 @@ begin
     if not FileExists(_ArqOrgem) then
     begin
       Result.Sucesso := False;
-      Result.Notificacao := 'Arquivo N„o Encontrado ' + _ArqOrgem;
+      Result.Notificacao := 'Arquivo N√£o Encontrado ' + _ArqOrgem;
       Exit;
     end;
 
@@ -1726,12 +1742,15 @@ begin
    _CdsTabelaSclRota.CreateDataSet;
     try
        // Carrega dataset com dados do arquivo origem
-       BaseCarga := TJvCsvDataSet.Create(nil);
-       BaseCarga := ExibeAmostraDados(_ArqOrgem,_Separador);
+      // BaseCarga := TJvCsvDataSet.Create(nil);
+
+       // Abre o arquivo e retorna a base de informacoes.
+       ExibeAmostraDados(_ArqOrgem,_Separador,BaseCarga);
+
        if BaseCarga.RecordCount = 0   then
        begin
          Result.Sucesso := False;
-         Result.Notificacao := ('N„o foi possÌvel abrir arquivo origem de dados: ' + _ArqOrgem );
+         Result.Notificacao := ('N√£o foi poss√≠vel abrir arquivo origem de dados: ' + _ArqOrgem );
          Exit;
        end;
 
@@ -1773,7 +1792,7 @@ begin
               _CdsTabelaSclRota.FieldByName(_CamposSclRota[i]).AsDateTime := BaseCarga.FieldByName(_CamposArquivo.Strings[i]).AsDateTime;
             if _TipoCampo = 'DateTime' then
               _CdsTabelaSclRota.FieldByName(_CamposSclRota[i]).AsDateTime := BaseCarga.FieldByName(_CamposArquivo.Strings[i]).AsDateTime;
-           // Se o id da conta È requerido, popula atributo
+           // Se o id da conta √© requerido, popula atributo
           // if _RequerIdContrato then
           //    _CdsTabelaSclRota.FieldByName('Conta_id').AsInteger := StrToInt(DadosConta.IdConta);
          end;
@@ -1802,14 +1821,14 @@ begin
       _ChavesFk.Free;
       _TabelasFk.Free;
       _Atributos.Free;
-      BaseCarga.Free;
+     // BaseCarga.Free;
 
     end;
   end
-  else // N„o Localizou o arquivo mapeado
+  else // N√£o Localizou o arquivo mapeado
   begin
     Result.Sucesso := False;
-    Result.Notificacao := 'Arquivo ' + aFileMapa + ' N„o Encontrado na pasta origem!';
+    Result.Notificacao := 'Arquivo ' + aFileMapa + ' N√£o Encontrado na pasta origem!';
   end;
 end;
 function TrocaVirgPPto(Valor: string): String;
@@ -1859,24 +1878,27 @@ var
   i, j, k, l: Integer;
   xData : TJSONArray;
   Registro: TJSONObject;
-  keys, ArqSaida : TStringList;
+  keys, ArqSaida, Parametros : TStringList;
   LinhaDados, NomeArquivo: string;
 
 begin
   try
-    // se a posiÁ„o n„o estiver preenchida, avalia a proxima
+    // se a posi√ß√£o n√£o estiver preenchida, avalia a proxima
     if (DadosConta.IdConta = EmptyStr) then
-    Exit;
-    Result := False; //TStringList.Create;
+      Exit;
+    Result := False;
     try
       pDataOut.Append('--------------------------------------------------');
       pDataOut.Append('Inicio da consulda dos dados no servidor: - ' + FormatDateTime('dd-MM-yyyy hh:mm:ss', Now()));
       pDataOut.Append('--------------------------------------------------');
       // Exporta os arquivos da conta, metodo a metodo
       ArqSaida := TStringList.Create;
+      // Cria estrutura de parametros
+      Parametros := TStringList.Create;
+
       for k := 1 to 15 do
       begin
-        // Nome do arquivo de saÌda
+        // Nome do arquivo de sa√≠da
         NomeArquivo := xMapasCarga.NomeArqSaida[k];
 
         if NomeArquivo = EmptyStr then
@@ -1885,11 +1907,24 @@ begin
         if xMapasCarga.MetodosRead[k] = EmptyStr then
           Continue;
 
+        // Monta os parametros para envio ao serrvidor
+        Parametros.Clear;
+        MontaParametros(DadosConta.IdConta, Parametros);
 
         // Le dados na API do WS
         xDataRetorno.Dados := EmptyStr;
         xDataRetorno.Sucesso := False;
-        xDataRetorno := readMetodoApi(DadosConta.IdConta,xMapasCarga.MetodosRead[k]);
+        try
+           xDataRetorno :=   xPostMetodoJSON(DadosConta.HostURL + xMapasCarga.MetodosRead[k], Parametros);
+          //xDataRetorno := readMetodoApi(DadosConta.IdConta,xMapasCarga.MetodosRead[k]);
+          pDataOut.Append('Metodo consultado :: ' + xMapasCarga.MetodosRead[k]);
+        except on e: Exception do
+          begin
+            pDataOut.Append('Falha ao consultar metodo ::' + xMapasCarga.MetodosRead[k]);
+            pDataOut.Append('mensagem de erro reportada :: ' + e.Message);
+          end;
+        end;
+
         if xDataRetorno.Sucesso then
         begin
           // Formata dados e gera o arquivo na pasta da conta ativa
@@ -1911,16 +1946,16 @@ begin
              end;
              ArqSaida.Add(LinhaDados);
           end;
-          // Gera o arquivo no diretÛrio especÌfico
-          if DirectoryExists(DadosConta.PathArqCargaApi + '\Dump\' + DadosConta.IdConta) then
+          // Gera o arquivo no diret√≥rio espec√≠fico
+          if DirectoryExists(DadosConta.PathArqCargaApi + '\'  + DadosConta.IdConta) then
           begin
-            NomeArquivo := DadosConta.PathArqCargaApi + '\Dump\' + DadosConta.IdConta + '\' +  NomeArquivo;
+            NomeArquivo := DadosConta.PathArqCargaApi + '\' + DadosConta.IdConta + '\' +  NomeArquivo;
             ArqSaida.SaveToFile(NomeArquivo);
           end
           else
           begin
-            ForceDirectories(DadosConta.PathArqCargaApi + '\Dump\' + DadosConta.IdConta);
-            NomeArquivo := DadosConta.PathArqCargaApi + '\Dump\'+ DadosConta.IdConta + '\' + NomeArquivo;
+            ForceDirectories(DadosConta.PathArqCargaApi + '\' + DadosConta.IdConta);
+            NomeArquivo := DadosConta.PathArqCargaApi + '\' +  DadosConta.IdConta + '\' + NomeArquivo;
             ArqSaida.SaveToFile(NomeArquivo);
           end;
           pDataOut.Append('Arquivo gerado: '+ NomeArquivo);
@@ -1928,6 +1963,7 @@ begin
           ArqSaida.Clear;
         end;
       end;
+      Result := True;
     except
       on e: Exception do
       begin
@@ -1939,10 +1975,11 @@ begin
     xData.destroy;
     ArqSaida.Destroy;
     keys.Destroy;
+    Parametros.Destroy;
   end;
 
 end;
-// Extrai vers„o do execut·vel
+// Extrai vers√£o do execut√°vel
 function VersaoAplicativo(Executavel: string): string;
 var
   S: string;
@@ -2469,7 +2506,7 @@ begin
   end;
 end;
 { TSigaProdutor }
-// Gera linha de dados com informaÁıes do cadastro de produtores SIGA
+// Gera linha de dados com informa√ß√µes do cadastro de produtores SIGA
 function TSigaProdutor.toString(separador: Char): string;
 begin
   Result :=
@@ -2500,7 +2537,7 @@ begin
     Self.tipo ;
 end;
 { TSigaColetaIndividual }
-// Gera linha de dados com informaÁıes da coleta para o sistema SIGA
+// Gera linha de dados com informa√ß√µes da coleta para o sistema SIGA
 function TSigaColetaIndividual.toString(separador: Char): string;
 begin
   Result :=
@@ -2550,7 +2587,7 @@ begin
   try
     ArquivoDados.Add(GerarLinhaArquivo(Viagem, 1));
     ArquivoDados.Add(GerarLinhaArquivo(Viagem, 2));
-    //79120 = n∫ identificador da viagem 211015 = data do dia do arquivo 145559 = hr/min/seg
+    //79120 = n¬∫ identificador da viagem 211015 = data do dia do arquivo 145559 = hr/min/seg
     NomePasta := IncludeTrailingBackslash(DadosConta.PathArqDescarga) + DadosConta.IdConta + '\' + 'atesto\'+
     FormatDateTime('yyyyMM',Date()) + '\' ;
     NomeArqViagem :=  NomePasta + IntToStr(Viagem.id) + '_' + FormatDateTime('ddMMyy_hhmmss', Viagem.DatAbertura) + '.txt';
@@ -2643,7 +2680,7 @@ var
 begin
   DadosRetorno := sendNotificacaoRota(Viagem.RotaCodigo, Mensagem);
   if not DadosRetorno.Sucesso then
-    raise Exception.Create('Erro Enviar NotificaÁ„o Rota:' + DadosRetorno.Mensagem);
+    raise Exception.Create('Erro Enviar Notifica√ß√£o Rota:' + DadosRetorno.Mensagem);
 end;
 
 function GetData(Data: string): TDateTime; //2015-09-29
@@ -2687,4 +2724,20 @@ begin
     Result := 0;
 end;
 
+  // Monta parametros para consulta ao ws
+  function MontaParametros(Conta: string; var Parametros:TStringList): Boolean;
+  var
+    _token : TTokenConta;
+    _Registro: string;
+  begin
+    // Pega token de autoriza√ßao da conta
+    _token := getToken(StrToInt(Conta));
+
+    _Registro := '{'+ ansiQuotedStr('conta_id','"')+':' + AnsiQuotedStr(Conta,'"')+ ',' +
+                 AnsiQuotedStr('dt_inicio', '"') + ':' + AnsiQuotedStr(FormatDateTime('yyyy-MM-dd', Date),'"')+ ',' +
+                 AnsiQuotedStr('dt_fim','"') + ':' + AnsiQuotedStr(FormatDateTime('yyyy-MM-dd', Date),'"')+ ','     +
+                 AnsiQuotedStr('sync','"') + ':' + AnsiQuotedStr('0','"')+ ',' +
+                 AnsiQuotedStr('token','"') + ':' + AnsiQuotedStr(_token.Token,'"')+ '}' ;
+    Parametros.Add(_Registro);
+  end;
 end.

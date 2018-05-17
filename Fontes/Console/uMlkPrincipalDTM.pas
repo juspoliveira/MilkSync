@@ -8,7 +8,8 @@ uses
   ExtCtrls, JvAppInst, uVSSCLRotaComum, uJSON, uSCLRCnExport, FMTBcd, SqlExpr,
   DateUtils, ImgList, Controls, ZAbstractConnection, ZConnection,
   ZAbstractRODataset, ZAbstractDataset, ZDataset, FileCtrl, Windows, JvTFManager,
-  RxTimerLst, RxNotify, uGlobal, uVSSCLRCnExport;
+  RxTimerLst, RxNotify, uGlobal, uVSSCLRCnExport, JvComponentBase, JvThread,
+  JvCsvData;
 
 
 type
@@ -265,16 +266,19 @@ type
     fwMaster: TRxFolderMonitor;
     cdsContasGerarCsv: TStringField;
     cdsContasPathArqLinkViagem: TStringField;
+    csvMaster: TJvCsvDataSet;
     procedure DataModuleCreate(Sender: TObject);
     procedure cdsContasBeforePost(DataSet: TDataSet);
     procedure tmrConsoleTimer(Sender: TObject);
     procedure tmrSyncTimer(Sender: TObject);
 
-    function getServerData(pConta_id : Integer = 0): TSatusSync;
+
     procedure DataModuleDestroy(Sender: TObject);
     procedure sheConsoleEvents1Execute(Sender: TJvEventCollectionItem;
       const IsSnoozeEvent: Boolean);
     procedure fwMasterChange(Sender: TObject);
+    function getServerData(pConta_id : Integer = 0): TSatusSync;
+    procedure SyncOne;
 
   private
     FStrConexao: string;
@@ -284,13 +288,18 @@ type
     function IsContaInserted(Codigo: Integer): Boolean;
     function ResetSync(Tipo:String; pConta_id : Integer = 0): Boolean;
 
+
   public
+
     ShowStatusTmr:  procedure of object;
     property StatusTmrSync: string read FStatusTmrSync write FStatusTmrSync ;
     property StatusTmrConsole: string read FStatusTmrConsole write FStatusTmrConsole ;
     procedure PesquisarConta(Filtro: string);
     procedure SalvarConta;
     procedure InserirVlrDefaultConta;
+
+
+
 
     // Associacao dos mapas de carga
     function ValidarArquivoMapa(aContaId:Integer;aFile,aTabela: string): Boolean;
@@ -409,6 +418,9 @@ var
 
 
 implementation
+
+uses
+  uMlkThread;
 
 
 {$R *.dfm}
@@ -1074,6 +1086,7 @@ var
   FileConta: string;
   i, conta: Integer;
 begin
+
   Success := False;
   try
     Arqconf := TStringList.Create;
@@ -1147,6 +1160,7 @@ begin
         ShowStatusTmr;
     end;
   end;
+
 end;
 
 // Gera arquivos de descarga
@@ -2146,7 +2160,8 @@ begin
         Result := 'Erro: ' + E.message;
      end;
   end;
-  FListaAux.SaveToFile('RegViagem.txt');
+  if (FListaAux.Count > 0) then
+     FListaAux.SaveToFile('RegViagem.txt');
   FListaAux.Destroy;
   FArqLog.Destroy;
   FArqlogMaster.Destroy;
@@ -2925,6 +2940,7 @@ function TMlkPrincipalDTM.getServerData(pConta_id : Integer): TSatusSync;
   end;
 var
   dtInicio, dtFim : TDateTime;
+  registro : Integer;
 begin
   try
     // Seta status
@@ -2938,6 +2954,7 @@ begin
     // Seleciona todas as contas cadastradas
     SelectAllRecordsConta;
     cdsContas.First;
+    registro := cdsContas.RecNo;
 
     // gera os arquivos de cada conta
     while not (cdsContas.Eof) do
@@ -2946,8 +2963,10 @@ begin
       if (cdsContasAtiva.AsString = FlagNao) then
       begin
         cdsContas.Next;
+        registro := cdsContas.RecNo;
         Continue;
       end;
+
 
       // se for executar para uma unica conta, localiza o registro da conta
       if (pConta_id <> 0) then
@@ -2959,6 +2978,8 @@ begin
           Break;
         end;
       end;
+
+      cdsContas.RecNo := registro;
 
       // Periodo de geracao dos arquivos
       dtInicio := (cdsContasDatIniLeituraDescargaWS.Value -1);
@@ -3026,7 +3047,8 @@ begin
       end;
 
       cdsContas.Next;
-      Application.ProcessMessages;
+      registro := cdsContas.RecNo;
+      // Application.ProcessMessages;
       // Execucao apenas para uma conta, abandona o laco de repeticao
       if (pConta_id <> 0) then
         Break;
@@ -4114,6 +4136,61 @@ begin
  end;
 
 end;
+// Sincroniza uma unica conta pela thread
+procedure TMlkPrincipalDTM.SyncOne;
+var
+  dtInicio, dtFim : TDateTime;
+  ListaContas, Arqconf, LogErro : TStringList;
+  FileConta: string;
+  i, conta: Integer;
+begin
+  try
+    Arqconf := TStringList.Create;
+    ListaContas := TStringList.Create;
+    LogErro := TStringList.Create;
+
+    // Carrega configuracoes
+    if FileExists('config.ini') then
+    begin
+      Arqconf.LoadFromFile('config.ini');
+    end
+    else
+      Abort;
+    // Caminho e nome do arquivo com a lista de contas a sincronizar
+    FileConta := fwMaster.FolderName + '\' + 'sync.txt';
+
+    if ( FileExists(FileConta))  then
+    begin
+      ListaContas.LoadFromFile(FileConta);
+      if (ListaContas.Count = 0) then
+         Abort;
+    end
+    else
+      Abort;
+
+    try
+      conta := 1;
+      // sincroniza cada conta da lista de contas
+      for i := 0 to ListaContas.Count -1 do
+      begin
+        if TryStrToInt(ListaContas.Strings[i],conta) then;
+          getServerData(conta);
+      end;
+      // apaga o arquivo apos processamento
+      deletefile(PChar(FileConta));
+    except on e: Exception do
+      begin
+        LogErro.Append('Erro ao Gerar Arquivo Individual : ' + e.Message);
+        LogErro.SaveToFile( fwMaster.FolderName +'\LogErroIndividual.txt');
+      end;
+    end;
+  finally
+    // Destroy as listas
+    ListaContas.Destroy;
+    Arqconf.Destroy;
+    LogErro.Destroy;
+  end;
+end;
 
 // Gera Arquivos
 procedure TMlkPrincipalDTM.tmrConsoleTimer(Sender: TObject);
@@ -4123,6 +4200,7 @@ var
 begin
   Success := False;
   try
+   {
     if not tmrSync.Enabled then
     begin
       FStatusTmrConsole := TmrAtivo;
@@ -4136,7 +4214,10 @@ begin
       // libera a memoria
       LiberaMemoria;
     end;
+    }
+
   finally
+    {
     // reabilita evento timer de console
     if Success then
     begin
@@ -4147,6 +4228,7 @@ begin
       if Assigned(ShowStatusTmr) then
         ShowStatusTmr;
     end;
+    }
   end;
 end;
 // Timer para sincronizacao da carga nas tabelas de cadastro
@@ -4262,7 +4344,7 @@ begin
             FLogAtu.Append('-------------------<>------------------------');
             // Executa o envio dos dados e retorna o log
            _Saida_Proc.Clear;
-           if ( AtualizaTabelasWs(_Saida_Proc,_MapasCarga)) then
+           if ( AtualizaTabelasWs(_Saida_Proc,_MapasCarga, csvMaster)) then
            begin
             FLogAtu.Append(_Saida_Proc.Text);
            end
@@ -4271,6 +4353,7 @@ begin
               FLogAtu.Append('-------------------<>------------------------');
               FLogAtu.Append('FALHA AO ATUALIZAR BASE DE DADOS NO SERVIDOR ');
               FLogAtu.Append('-------------------<>------------------------');
+              FLogAtu.Append(_Saida_Proc.Text);
            end;
            FLogAtu.Append('Fim Atualização dados da conta na API Milk´s Rota ...|<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
            // Gera arquivos para conferencia com dados baixados do servidor e grava no local espeficico
@@ -4292,6 +4375,7 @@ begin
              FLogAtu.Append('FALHA AO CONSULTAR BASE DE DADOS NO SERVIDOR ');
              FLogAtu.Append('-------------------<>------------------------');
              FLogAtu.Append('-----Mensagem de Erro Reportada--------------');
+             FLogAtu.Append(_Saida_Proc.Text);
            end;
            FLogAtu.Append('Fim Consulta de arquivos para conferência ...|<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
 
@@ -4509,5 +4593,6 @@ begin
     end;
   end;
 end;
+
 
 end.

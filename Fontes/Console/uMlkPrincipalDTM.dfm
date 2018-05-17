@@ -1186,4 +1186,12 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     Left = 352
     Top = 32
   end
+  object csvMaster: TJvCsvDataSet
+    FileName = 'C:\Users\jusce\Dropbox\Totvs\GrupoRota.txt'
+    HasHeaderRow = False
+    Separator = '|'
+    AutoBackupCount = 0
+    Left = 336
+    Top = 352
+  end
 end

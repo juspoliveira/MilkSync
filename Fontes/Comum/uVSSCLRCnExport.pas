@@ -2,7 +2,7 @@ unit uVSSCLRCnExport;
 
 interface
 uses
-  SysUtils, Classes;
+  SysUtils, Classes, uMlkThread;
 const
   CreateTableRetornoSCA =
   'CREATE TABLE [lancamentos] ( ' +
@@ -28,6 +28,8 @@ type
     success : Boolean;
     exists : Boolean;
   end;
+
+
 type
   TMovimentoRM = class   // // Movimento RM
     tipoLinha : string; // [01]
