@@ -2160,7 +2160,7 @@ begin
         Result := 'Erro: ' + E.message;
      end;
   end;
-  if (FListaAux.Count > 0) then
+  if (FListaAux.Count > 1) then
      FListaAux.SaveToFile('RegViagem.txt');
   FListaAux.Destroy;
   FArqLog.Destroy;
@@ -2954,7 +2954,8 @@ begin
     // Seleciona todas as contas cadastradas
     SelectAllRecordsConta;
     cdsContas.First;
-    registro := cdsContas.RecNo;
+
+   // registro := cdsContas.RecNo;
 
     // gera os arquivos de cada conta
     while not (cdsContas.Eof) do
@@ -2979,7 +2980,7 @@ begin
         end;
       end;
 
-      cdsContas.RecNo := registro;
+     // cdsContas.RecNo := registro;
 
       // Periodo de geracao dos arquivos
       dtInicio := (cdsContasDatIniLeituraDescargaWS.Value -1);
@@ -3047,7 +3048,7 @@ begin
       end;
 
       cdsContas.Next;
-      registro := cdsContas.RecNo;
+     //  registro := cdsContas.RecNo;
       // Application.ProcessMessages;
       // Execucao apenas para uma conta, abandona o laco de repeticao
       if (pConta_id <> 0) then
@@ -4381,6 +4382,11 @@ begin
 
            // Proxima Conta
            cdsContas.Next;
+
+           Carga_OK := '1';
+
+           // Atualiza dados da sincronizacao na tabela de contas
+           AtualizarDataCarga(StrToInt(DadosConta.IdConta),Now,Carga_OK);
         end;
       end;
       Carga_OK := '1';

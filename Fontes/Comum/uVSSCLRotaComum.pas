@@ -935,11 +935,23 @@ var
    memREST: TStringList;
    memJson : TJSONObject;
    _token : TTokenConta;
+   _Registro : string;
 begin
 
    // Pega token da conta
     _token := getToken(StrToInt(aContaId));
 
+   _Registro := '{' +
+                 AnsiQuotedStr('conta_id','"')+ ':' + AnsiQuotedStr(DadosConta.IdConta,'"') + ',' +
+                 AnsiQuotedStr('dt_inicio','"')+ ':' + AnsiQuotedStr(FormatDateTime('yyyy-MM-dd',aDataInicio),'"') + ',' +
+                 AnsiQuotedStr('dt_fim','"')+ ':' + AnsiQuotedStr(FormatDateTime('yyyy-MM-dd',aDataFinal),'"') + ',' +
+                 AnsiQuotedStr('token','"')+ ':' + AnsiQuotedStr(_token.Token,'"');
+   if aComunitario <> '9' then
+   begin
+     _Registro := _Registro + ',' + AnsiQuotedStr('token','"')+ ':' + AnsiQuotedStr(_token.Token,'"') + '}';
+   end
+   else
+     _Registro:= _Registro + '}';
 
   Result.Metodo := metodo;
   Result.Excecao := False;
@@ -947,6 +959,7 @@ begin
   memREST := TStringList.Create;
 
   try
+    (*
     memREST.Add('conta_id='+DadosConta.IdConta);
     memREST.Add('dt_inicio='+ (FormatDateTime('yyyy-MM-dd',aDataInicio)));
     memREST.Add('dt_fim='+ (FormatDateTime('yyyy-MM-dd',aDataFinal)));
@@ -955,8 +968,10 @@ begin
     if aComunitario <> '9' then
       memRest.Add('comunitario=' + aComunitario);
     memREST.Add('sync='+ aSync);
-
-    Result.Parametros := memREST.Text;
+     *)
+     memREST.Clear;
+     memREST.Add(_Registro);
+    Result.Parametros :=  memREST.Text;
 
     try
       Result := PostMetodoJSON(DadosConta.HostURL + metodo, memREST);
@@ -1635,7 +1650,7 @@ var
   _lista,_Linha: TStringList;
   _Aux, _Conta, _ArqOrgem, _TabelaDestino, _Separador, _TipoArquivo, _CDS, _TipoCampo, _ChaveObrigatoria : string;
   _Mapa, _FK,  _Atributos, _CamposSclRota, _CamposArquivo, _Datatypes, _ChavesFk, _TabelasFk, _TipoDadosSclRota : TStringList;
-  i, _indiceCampo : Integer;
+  i, _indiceCampo, Numret : Integer;
   _CdsTabelaSclRota : TClientDataSet;
   _ArrayParametro: array of Variant;
   _RequerIdContrato, _Cancela : Boolean;
@@ -1787,7 +1802,12 @@ begin
                 _CdsTabelaSclRota.FieldByName(_CamposSclRota[i]).AsFloat := BaseCarga.FieldByName(_CamposArquivo.Strings[i]).AsFloat;
               end;
             if _TipoCampo = 'Integer' then
-              _CdsTabelaSclRota.FieldByName(_CamposSclRota[i]).AsInteger := BaseCarga.FieldByName(_CamposArquivo.Strings[i]).AsInteger;
+            begin
+               // Verifica se e numero valido e insere o conteudd
+               Numret := 0;
+               if TryStrToInt(BaseCarga.FieldByName(_CamposArquivo.Strings[i]).AsString,Numret) then
+                _CdsTabelaSclRota.FieldByName(_CamposSclRota[i]).AsInteger := BaseCarga.FieldByName(_CamposArquivo.Strings[i]).AsInteger;
+            end;
             if _TipoCampo = 'Date' then
               _CdsTabelaSclRota.FieldByName(_CamposSclRota[i]).AsDateTime := BaseCarga.FieldByName(_CamposArquivo.Strings[i]).AsDateTime;
             if _TipoCampo = 'DateTime' then

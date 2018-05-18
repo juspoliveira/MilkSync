@@ -166,7 +166,7 @@ begin
   MostraStatusTmr;
   MlkPrincipalDTM.SetLastIteration;
 
-  // MlkPrincipalDTM.getServerData();
+  MlkPrincipalDTM.getServerData();
 
   try
     MlkPrincipalDTM.tmrConsole.Enabled := False;
