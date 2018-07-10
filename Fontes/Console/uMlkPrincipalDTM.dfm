@@ -359,11 +359,11 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     Top = 24
   end
   object sheConsole: TJvScheduledEvents
-    AutoSave = True
+    AutoSave = False
     Events = <
       item
         Name = 'evtArquivos'
-        OnExecute = sheConsoleEvents1Execute
+        OnExecute = sheConsoleEvents0Execute
         StartDate = '2018/03/15 14:33:42.000'
         RecurringType = srkDaily
         EndType = sekNone
@@ -373,21 +373,20 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
         Daily_EveryWeekDay = True
       end
       item
-        Name = 'evtRunOneHour'
+        Name = 'CargaDados'
         OnExecute = sheConsoleEvents1Execute
-        StartDate = '2018/04/20 15:44:38.000'
+        StartDate = '2018/05/26 14:17:55.000'
         RecurringType = srkDaily
         EndType = sekNone
-        Freq_StartTime = 0
+        Freq_StartTime = 25200000
         Freq_EndTime = 86399000
-        Freq_Interval = 3600000
+        Freq_Interval = 7200000
         Daily_EveryWeekDay = True
       end>
     Left = 233
     Top = 24
   end
   object tmrSync: TTimer
-    Enabled = False
     Interval = 60000
     OnTimer = tmrSyncTimer
     Left = 291
@@ -825,6 +824,9 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
       FieldName = 'cep'
       Size = 10
     end
+    object cdsProdutordeleted: TStringField
+      FieldName = 'deleted'
+    end
   end
   object cdsColetor: TClientDataSet
     Aggregates = <>
@@ -939,6 +941,9 @@ object MlkPrincipalDTM: TMlkPrincipalDTM
     object cdsFazendasprodutor: TStringField
       FieldName = 'produtor'
       Size = 15
+    end
+    object cdsFazendasdeleted: TStringField
+      FieldName = 'deleted'
     end
   end
   object cdsViagens: TClientDataSet

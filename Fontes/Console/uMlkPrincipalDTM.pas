@@ -9,7 +9,8 @@ uses
   DateUtils, ImgList, Controls, ZAbstractConnection, ZConnection,
   ZAbstractRODataset, ZAbstractDataset, ZDataset, FileCtrl, Windows, JvTFManager,
   RxTimerLst, RxNotify, uGlobal, uVSSCLRCnExport, JvComponentBase, JvThread,
-  JvCsvData;
+  JvCsvData, cxSchedulerStorage, AppEvnts, RxAppEvent, dxPSCore,
+  dxPSFileBasedXplorer, MConnect, ObjBrkr;
 
 
 type
@@ -267,6 +268,8 @@ type
     cdsContasGerarCsv: TStringField;
     cdsContasPathArqLinkViagem: TStringField;
     csvMaster: TJvCsvDataSet;
+    cdsProdutordeleted: TStringField;
+    cdsFazendasdeleted: TStringField;
     procedure DataModuleCreate(Sender: TObject);
     procedure cdsContasBeforePost(DataSet: TDataSet);
     procedure tmrConsoleTimer(Sender: TObject);
@@ -279,12 +282,19 @@ type
     procedure fwMasterChange(Sender: TObject);
     function getServerData(pConta_id : Integer = 0): TSatusSync;
     procedure SyncOne;
+    procedure sheConsoleEvents0Execute(Sender: TJvEventCollectionItem;
+      const IsSnoozeEvent: Boolean);
+    procedure JvScheduledEvents1Events0Execute(Sender: TJvEventCollectionItem;
+      const IsSnoozeEvent: Boolean);
+    procedure evtMasterStartEvent(Sender: TObject);
+
 
   private
     FStrConexao: string;
     FConexaoBD: TConexao;
     FStatusTmrSync: string;
     FStatusTmrConsole: string;
+    FStatusSchedule: string;
     function IsContaInserted(Codigo: Integer): Boolean;
     function ResetSync(Tipo:String; pConta_id : Integer = 0): Boolean;
 
@@ -294,6 +304,7 @@ type
     ShowStatusTmr:  procedure of object;
     property StatusTmrSync: string read FStatusTmrSync write FStatusTmrSync ;
     property StatusTmrConsole: string read FStatusTmrConsole write FStatusTmrConsole ;
+    property StatusSchedule: string read FStatusSchedule write FStatusSchedule ;
     procedure PesquisarConta(Filtro: string);
     procedure SalvarConta;
     procedure InserirVlrDefaultConta;
@@ -305,6 +316,7 @@ type
     function ValidarArquivoMapa(aContaId:Integer;aFile,aTabela: string): Boolean;
     function ValidarAssociacao:Boolean;
     function lodMapInformation(Contaid: Integer): TMapasCarga;
+    function SendDataToServer: Boolean ;
 
 
 
@@ -354,6 +366,9 @@ type
 
     // Gerar arquivos CSV da viagens
     function buildCsvFiles(DataInicio, DataTermino: TDateTime; Sync:string; Comunitario: string = '9'): String;
+
+    // limpa datasets
+    procedure EsvaziaDatasets;
 
   end;
 
@@ -890,10 +905,12 @@ begin
     // Seta timers de sincronizacao e geracao de arquivos
     tmrSync.Interval := (cdsControleIntervalocarga.AsInteger * 60000);
     tmrConsole.Interval := (cdsControleIntervalo.AsInteger * 60000);
-    tmrSync.Enabled := False;
+    tmrSync.Enabled := True;
     tmrConsole.Enabled := True;
-    FStatusTmrSync := TmrInativo;
+    FStatusTmrSync := TmrHabilitado;
     FStatusTmrConsole := TmrHabilitado;
+    FStatusSchedule := TmrInativo;
+
     sheConsole.StartAll;
 
     if Assigned(ShowStatusTmr) then
@@ -909,27 +926,27 @@ begin
     end;
 
     fwMaster.Active := True;
-
-   // FSQL := 'C:\Users\jusce\Dropbox\MylkSync\SCA\280465\12018\003_18_01_2017_9.7.27.0--2018-01-18_2018-01-18.db';
-   // OpenDb(FSQL);
     (*
+    FSQL := 'C:\Desenvolvimento\tools\SclRota\BD\Carmolac\captacaodbc1.db';
+    OpenDb(FSQL);
+
     // Testar carga dados sca
     cdsLinha.CreateDataSet;
     cdsProdutor.CreateDataSet;
     cdsFazendas.CreateDataSet;
     cdsItinerarios.CreateDataSet;
     cdsTanques.CreateDataSet;
-    GetDbData('captacaodbc1.db');
-    GetDbData('captacaodbc2.db');
-    GetDbData('captacaodbc3.db');
-    GetDbData('captacaodbc5.db');
-    GetDbData('captacaodbc6.db', True);
-
+    GetDbData(FSQL, True);
+   // GetDbData('captacaodbc2.db');
+   // GetDbData('captacaodbc3.db');
+   // GetDbData('captacaodbc5.db');
+   // GetDbData('captacaodbc6.db', True);
+      (*
     try
       parametros := TStringList.Create;
       valores := TStringList.Create;
       // Testa exportacao dados SCA
-      FSQL := '003_18_01_2017_9.7.27.0--2018-01-18_2018-01-18.db';
+      FSQL := 'C:\Desenvolvimento\tools\SclRota\BD\Carmolac\captacaodbc1.db';
       if OpenDb(FSQL) then
       begin
         ExecDbCommand(FSQL, TableLancamentos, parametros, valores);
@@ -959,7 +976,7 @@ begin
       parametros.Free;
       valores.Free;
     end;
-    *)
+     *)
   except
      on e: Exception do
      begin
@@ -1001,6 +1018,33 @@ begin
    qryAux.Parameters.ParamByName('ativa').Value := action;
    qryAux.ExecSQL;
    PesquisarConta(' and 1=1');
+end;
+// Limpa os clients datasets
+procedure TMlkPrincipalDTM.EsvaziaDatasets;
+begin
+  if cdsLinha.Active then
+    cdsLinha.EmptyDataSet;
+  if cdsContas.Active then
+    cdsColetas.EmptyDataSet;
+  if cdsViagem.Active then
+    cdsViagem.EmptyDataSet;
+  if cdsProdutor.Active then
+    cdsProdutor.EmptyDataSet;
+  if cdsFazendas.Active then
+    cdsFazendas.EmptyDataSet;
+  if cdsVeiculos.Active then
+    cdsVeiculos.EmptyDataSet;
+  if cdsColetor.Active then
+     cdsColetor.EmptyDataSet;
+  if cdsRota.Active then
+     cdsRota.EmptyDataSet;
+  if cdsTanques.Active then
+     cdsTanques.EmptyDataSet;
+end;
+
+procedure TMlkPrincipalDTM.evtMasterStartEvent(Sender: TObject);
+begin
+
 end;
 
 // Executa comando sql no banco de dados sqlite(DB)
@@ -2122,7 +2166,14 @@ begin
     finally
       clearTables;  // Empty dataset nas tabelas
       _ArqSaida.Free;
-     // FArqLog.Destroy;
+      // FArqLog.Destroy;
+
+      // Fecha todos os datasets
+      EsvaziaDatasets;
+
+      // libera a memoria
+      LiberaMemoria();
+
     end;
 
   except
@@ -2563,10 +2614,13 @@ begin
      begin
        if not (cdsProdutor.Locate('codigo',qryDbAux.FieldByName('codigo').AsString,[loPartialKey])) then
        begin
-         cdsProdutor.Append;
-         cdsProdutorCodigo.Value := qryDbAux.FieldByName('codigo').AsString;
-         cdsProdutorNome.Value := qryDbAux.FieldByName('nome').AsString;
-         cdsProdutor.Post;
+         if (qryDbAux.FieldByName('nome').AsString <> EmptyStr) then
+         begin
+           cdsProdutor.Append;
+           cdsProdutorCodigo.Value := qryDbAux.FieldByName('codigo').AsString;
+           cdsProdutorNome.Value := qryDbAux.FieldByName('nome').AsString;
+           cdsProdutor.Post;
+         end;
        end;
        qryDbAux.Next;
      end;
@@ -2627,33 +2681,47 @@ begin
 
        qryDbAux.Next;
      end;
-
-
-
      Result := True;
     finally
       if createFile then
       begin
+
+
          // Exporta Linhas
          ListaAux := TStringList.Create;
          ListaAux.Clear;
-         ListaAux.Add('codigo|nome|rota');
+         ListaAux.Add('codigo|nome|rota|distancia');
          cdsLinha.First;
          while not (cdsLinha.Eof) do
          begin
-           ListaAux.Add(cdsLinhaCodigo.Value+'|'+ cdsLinhaNome.Value + '|1|');
+           ListaAux.Add(cdsLinhaCodigo.Value+'|'+ cdsLinhaNome.Value + '|001|100');
            cdsLinha.Next;
          end;
          if ListaAux.Count > 0 then
            ListaAux.SaveToFile('Linhas.txt');
 
+         // Cria Arquivo de Rotas
+          ListaAux.Clear;
+          ListaAux.Add('codigo|nome|TipoDescarga|Grupo_Rota');
+          ListaAux.Add('001|Master|TP|01');
+          ListaAux.SaveToFile('Rotas.txt');
+
+          // criar grupo de rotas
+          ListaAux.Clear;
+          ListaAux.Add('codigo|nome');
+          ListaAux.Add('01|GprMaster|TP');
+          ListaAux.SaveToFile('GrupoRotas.txt');
+
          // Exporta Produtores
          ListaAux.Clear;
-         ListaAux.Add('codigo|nome');
+         ListaAux.Add('codigo|nome|deleted');
          cdsProdutor.First;
          while not (cdsProdutor.Eof) do
          begin
-           ListaAux.Add(cdsProdutorCodigo.Value+'|'+ cdsProdutorNome.Value + '|');
+           if (cdsProdutorNome.Value <> EmptyStr) then
+           begin
+             ListaAux.Add(cdsProdutorCodigo.Value+'|'+ cdsProdutorNome.Value + '|0');
+           end;
            cdsProdutor.Next;
          end;
          if ListaAux.Count > 0 then
@@ -2661,11 +2729,11 @@ begin
 
          // Exporta Fazendas
          ListaAux.Clear;
-         ListaAux.Add('codigo|nome|produtor');
+         ListaAux.Add('codigo|nome|produtor|deleted');
          cdsFazendas.First;
          while not (cdsFazendas.Eof) do
          begin
-           ListaAux.Add(cdsFazendascodigo.Value + '|' + cdsFazendasnome.Value + '|' + cdsFazendasprodutor.Value + '|');
+           ListaAux.Add(cdsFazendascodigo.Value + '|' + cdsFazendasnome.Value + '|' + cdsFazendasprodutor.Value + '|0');
            cdsFazendas.Next;
          end;
          if ListaAux.Count > 0 then
@@ -2982,12 +3050,13 @@ begin
 
      // cdsContas.RecNo := registro;
 
-      // Periodo de geracao dos arquivos
-      dtInicio := (cdsContasDatIniLeituraDescargaWS.Value -1);
+      // Periodo de geracao dos arquivos (ultima iteracao menos 3 dias)
+      dtInicio := (cdsContasDatIniLeituraDescargaWS.Value - 3);
       if (cdsContasParColetasHoje.Value = FlagSim) then
         dtFim := Date()
       else
         dtFim := (Date() -1);
+
       // Limpa estrutura da conta para receber os dados
       if clearDadosConta then
       begin
@@ -3015,6 +3084,12 @@ begin
       else
       begin
         Continue;
+      end;
+
+      // se for sistema SCA - Gera somente da Data
+      if (DadosConta.VerScl = 'A') then
+      begin
+        dtInicio := Date();
       end;
 
       // Totvs Datasul
@@ -3100,6 +3175,12 @@ begin
   FResultado := FConexaoBD.ExecutarValor(FSQL, [Codigo]);
   Result := not VarIsNull(FResultado);
 end;
+procedure TMlkPrincipalDTM.JvScheduledEvents1Events0Execute(
+  Sender: TJvEventCollectionItem; const IsSnoozeEvent: Boolean);
+begin
+  MostraMsgInfo('Rodou !');
+end;
+
 procedure TMlkPrincipalDTM.LiberaMemoria(action :Integer);
 var
 MainHandle : THandle;
@@ -4042,198 +4123,8 @@ begin
   qryContas.Open;
   cdsContas.Refresh;
 end;
-
-// Seta data e hora da ultima iteracao de sincronizacao
-procedure TMlkPrincipalDTM.SetLastIteration;
-begin
-  FSQL := 'UPDATE Controle SET UltimaIteracao = :p1';
-  try
-     FConexaoBD.ExecutarComando(FSQL,[Now]);
-     cdsControle.Refresh;
-     Application.ProcessMessages;
-  except on E: Exception do
-    MostraMsgInfo(e.Message);
-  end;
-end;
-// Ajusta log de viagens caso o data inicial de leitura seja alterada.
-procedure TMlkPrincipalDTM.SetStatusLog(contaId: Integer;
-  DataInicial: TDateTime);
-begin
-    // Atualizar o arquivo de contas
-  FSQL := 'Update contas set DatIniLeituraDescargaWS = :p1 where ContaId = :p2';
-  try
-    FConexaoBD.ExecutarComando(FSQL,[DataInicial,contaId]);
-  except
-   raise Exception.Create('Falha ao atualizar os dados da conta: ' + IntToStr(contaId));
-  end;
-  // Atualiza arquivo de log de viagens
-  FSQL := 'Update Logviagem set ' +
-          ' LovGerDatasul = :p1, ' +
-          ' LovGerRm = :p2, ' +
-          ' LovGerMagis = :p3, ' +
-          ' LovGerMeta = :p4, ' +
-          ' LovGerSiga = :p5, ' +
-          ' LovGerScl = :p6 ' +
-          ' WHERE LovDataProc >= :LovDataProc AND ContaId = :contaId';
-
-  try
-    FConexaoBD.ExecutarComando(FSQL,[FlagNao,FlagNao, FlagNao,
-                                     FlagNao,FlagNao,FlagNao,DataInicial,contaId]);
-  except
-   raise Exception.Create('Falha ao atualizar Log da conta: ' + IntToStr(contaId));
-  end;
-end;
-
-procedure TMlkPrincipalDTM.sheConsoleEvents1Execute(
-  Sender: TJvEventCollectionItem; const IsSnoozeEvent: Boolean);
-begin
- // Faz Exportação Extra 3 Últimos Dias ::  De 3 em 3 horas
- if (Sender.Name = 'evtArquivos') then
- begin
-    InserirMsgLog('Início Get Registros :: EXTRA');
-    try
-      try
-        FStatusTmrConsole := TmrAtivo;
-         // Verifica e gera arquivos de viagens de at'e 3 dias anteriores
-        if ((FStatusTmrConsole <> TmrAtivo) and (FStatusTmrSync <> TmrAtivo))  then
-        begin
-          if DateMenos(3) then
-          begin
-            getServerData;
-          end;
-        end;
-      except
-        on E: Exception do
-        InserirMsgLog('Erro: ' + E.message);
-      end;
-    finally
-      FStatusTmrConsole := TmrInativo;
-      InserirMsgLog('Término Get Registros :: EXTRA');
-      // Limpa Memória e Reinicia a aplicação
-       TrimAppMemorySize(True,Application.ExeName);
-    end;
- end;
- if (Sender.Name = 'evtRunOneHour') then
- begin
-    InserirMsgLog('Início Geracao Arquivos');
-    try
-      FStatusTmrConsole := TmrAtivo;
-      try
-         // Verifica e gera arquivos de viagens de at'e 3 dias anteriores
-        if ((FStatusTmrConsole <> TmrAtivo) and (FStatusTmrSync <> TmrAtivo))  then
-        begin
-          getServerData;
-        end;
-      except
-        on E: Exception do
-        InserirMsgLog('Erro: ' + E.message);
-      end;
-    finally
-      FStatusTmrConsole := TmrInativo;
-      InserirMsgLog('Término Geracao arquivos');
-      // Limpa Memória e Reinicia a aplicação
-       TrimAppMemorySize(True,Application.ExeName);
-    end;
- end;
-
-end;
-// Sincroniza uma unica conta pela thread
-procedure TMlkPrincipalDTM.SyncOne;
-var
-  dtInicio, dtFim : TDateTime;
-  ListaContas, Arqconf, LogErro : TStringList;
-  FileConta: string;
-  i, conta: Integer;
-begin
-  try
-    Arqconf := TStringList.Create;
-    ListaContas := TStringList.Create;
-    LogErro := TStringList.Create;
-
-    // Carrega configuracoes
-    if FileExists('config.ini') then
-    begin
-      Arqconf.LoadFromFile('config.ini');
-    end
-    else
-      Abort;
-    // Caminho e nome do arquivo com a lista de contas a sincronizar
-    FileConta := fwMaster.FolderName + '\' + 'sync.txt';
-
-    if ( FileExists(FileConta))  then
-    begin
-      ListaContas.LoadFromFile(FileConta);
-      if (ListaContas.Count = 0) then
-         Abort;
-    end
-    else
-      Abort;
-
-    try
-      conta := 1;
-      // sincroniza cada conta da lista de contas
-      for i := 0 to ListaContas.Count -1 do
-      begin
-        if TryStrToInt(ListaContas.Strings[i],conta) then;
-          getServerData(conta);
-      end;
-      // apaga o arquivo apos processamento
-      deletefile(PChar(FileConta));
-    except on e: Exception do
-      begin
-        LogErro.Append('Erro ao Gerar Arquivo Individual : ' + e.Message);
-        LogErro.SaveToFile( fwMaster.FolderName +'\LogErroIndividual.txt');
-      end;
-    end;
-  finally
-    // Destroy as listas
-    ListaContas.Destroy;
-    Arqconf.Destroy;
-    LogErro.Destroy;
-  end;
-end;
-
-// Gera Arquivos
-procedure TMlkPrincipalDTM.tmrConsoleTimer(Sender: TObject);
-var
-  dtInicio, dtFim : TDateTime;
-  Success: Boolean;
-begin
-  Success := False;
-  try
-   {
-    if not tmrSync.Enabled then
-    begin
-      FStatusTmrConsole := TmrAtivo;
-      FStatusTmrSync := TmrInabilitado;
-      tmrSync.OnTimer := nil;
-      tmrSync.Enabled := False;
-      Success := True;
-      if Assigned(ShowStatusTmr) then
-        ShowStatusTmr;
-      getServerData();
-      // libera a memoria
-      LiberaMemoria;
-    end;
-    }
-
-  finally
-    {
-    // reabilita evento timer de console
-    if Success then
-    begin
-      tmrSync.OnTimer := tmrSyncTimer;
-      tmrSync.Enabled := True;
-      FStatusTmrSync := TmrInativo;
-      FStatusTmrConsole := TmrInativo;
-      if Assigned(ShowStatusTmr) then
-        ShowStatusTmr;
-    end;
-    }
-  end;
-end;
-// Timer para sincronizacao da carga nas tabelas de cadastro
-procedure TMlkPrincipalDTM.tmrSyncTimer(Sender: TObject);
+// Envia a carga de dados para o servidor e baixa os arquivos de DUMP
+function TMlkPrincipalDTM.SendDataToServer: Boolean;
 var
   x: Integer;
   FLogAtu, _Saida_Proc : TStringList;
@@ -4244,27 +4135,15 @@ begin
   try
     // cria instancia do array de resultado de processamento
     _Saida_Proc := TStringList.Create;
+   // Inicia log de envio de dados ao servidor
+    FLogAtu := TStringList.Create;
 
     try
-
-      if not (tmrConsole.Enabled) then
+      if (True) then
       begin
-        // Desabilita envento do timer de geracao de arquivos
-        tmrConsole.OnTimer := nil;
 
-        tmrConsole.Enabled := False;
-        sheConsole.StopAll;
-
-        // Inicia log de envio de dados ao servidor
-        FLogAtu := TStringList.Create;
         FLogAtu.Append('Milk´s Rota :: Log Envio de Arquivos API Milk´s Rota - Início Operação: ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
         FLogAtu.Append('*******************************************');
-
-        // Seta status
-        FStatusTmrSync := TmrAtivo;
-        FStatusTmrConsole := TmrInabilitado;
-        if Assigned(ShowStatusTmr) then
-          ShowStatusTmr;
 
         // Reseta status de sincronizacaode todas as contas
         if not ResetSync('Carga') then
@@ -4345,6 +4224,7 @@ begin
             FLogAtu.Append('-------------------<>------------------------');
             // Executa o envio dos dados e retorna o log
            _Saida_Proc.Clear;
+
            if ( AtualizaTabelasWs(_Saida_Proc,_MapasCarga, csvMaster)) then
            begin
             FLogAtu.Append(_Saida_Proc.Text);
@@ -4356,6 +4236,7 @@ begin
               FLogAtu.Append('-------------------<>------------------------');
               FLogAtu.Append(_Saida_Proc.Text);
            end;
+
            FLogAtu.Append('Fim Atualização dados da conta na API Milk´s Rota ...|<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
            // Gera arquivos para conferencia com dados baixados do servidor e grava no local espeficico
            FLogAtu.Append('Inicio Consulta de arquivos para conferência ...|<><>| ' + FormatDateTime('dd/MM/yyyy hh:mm:ss', Now));
@@ -4417,24 +4298,235 @@ begin
 
     // Atualiza dados da sincronizacao na tabela de contas
     AtualizarDataCarga(StrToInt(DadosConta.IdConta),Now,Carga_OK);
+    FreeAndNil(FLogAtu);
+    //FLogAtu.Destroy;
 
-    FLogAtu.Destroy;
-    FStatusTmrConsole := TmrInativo;
-    FStatusTmrSync := TmrInativo;
 
     // Seleciona todas as contas cadastradas
     SelectAllRecordsConta;
     cdsContas.First;
-
-    if Assigned(ShowStatusTmr) then
-      ShowStatusTmr;
-    tmrConsole.OnTimer := tmrConsoleTimer;
-    tmrConsole.Enabled := True;
-    sheConsole.StartAll;
-
     // Destroy a instancia do resultado de processamento
-    _Saida_Proc.Destroy;
+    FreeAndNil(_Saida_Proc);
+    //_Saida_Proc.Destroy;
+
+    // libera memoria
+    LiberaMemoria();
+  end;
+
+end;
+
+// Seta data e hora da ultima iteracao de sincronizacao
+procedure TMlkPrincipalDTM.SetLastIteration;
+begin
+  FSQL := 'UPDATE Controle SET UltimaIteracao = :p1';
+  try
+     FConexaoBD.ExecutarComando(FSQL,[Now]);
+     cdsControle.Refresh;
+     Application.ProcessMessages;
+  except on E: Exception do
+    MostraMsgInfo(e.Message);
+  end;
+end;
+// Ajusta log de viagens caso o data inicial de leitura seja alterada.
+procedure TMlkPrincipalDTM.SetStatusLog(contaId: Integer;
+  DataInicial: TDateTime);
+begin
+    // Atualizar o arquivo de contas
+  FSQL := 'Update contas set DatIniLeituraDescargaWS = :p1 where ContaId = :p2';
+  try
+    FConexaoBD.ExecutarComando(FSQL,[DataInicial,contaId]);
+  except
+   raise Exception.Create('Falha ao atualizar os dados da conta: ' + IntToStr(contaId));
+  end;
+  // Atualiza arquivo de log de viagens
+  FSQL := 'Update Logviagem set ' +
+          ' LovGerDatasul = :p1, ' +
+          ' LovGerRm = :p2, ' +
+          ' LovGerMagis = :p3, ' +
+          ' LovGerMeta = :p4, ' +
+          ' LovGerSiga = :p5, ' +
+          ' LovGerScl = :p6 ' +
+          ' WHERE LovDataProc >= :LovDataProc AND ContaId = :contaId';
+
+  try
+    FConexaoBD.ExecutarComando(FSQL,[FlagNao,FlagNao, FlagNao,
+                                     FlagNao,FlagNao,FlagNao,DataInicial,contaId]);
+  except
+   raise Exception.Create('Falha ao atualizar Log da conta: ' + IntToStr(contaId));
+  end;
+end;
+// Faz Exportação Extra 3 Últimos Dias ::  De 3 em 3 horas
+procedure TMlkPrincipalDTM.sheConsoleEvents0Execute(
+  Sender: TJvEventCollectionItem; const IsSnoozeEvent: Boolean);
+ var
+   Success : Boolean;
+begin
+  InserirMsgLog('Início Get Registros :: EXTRA');
+    try
+      Success := False;
+      try
+         // Verifica e gera arquivos de viagens de at'e 3 dias anteriores
+        if ((FStatusTmrConsole <> TmrAtivo) and (FStatusTmrSync <> TmrAtivo))  then
+        begin
+          Success := True;
+          FStatusSchedule := TmrAtivo;
+          if DateMenos(3) then
+          begin
+            getServerData;
+          end;
+        end;
+      except
+        on E: Exception do
+        InserirMsgLog('Erro: ' + E.message);
+      end;
+    finally
+      if Success then
+      begin
+        FStatusSchedule := TmrInativo;
+      end;
+      InserirMsgLog('Término Get Registros :: EXTRA');
+      // Limpa Memória e Reinicia a aplicação
+      // TrimAppMemorySize(True,Application.ExeName);
+      LiberaMemoria;
+    end;
+end;
+// Dispara sincronizacao dos dados cadastrais
+procedure TMlkPrincipalDTM.sheConsoleEvents1Execute(
+  Sender: TJvEventCollectionItem; const IsSnoozeEvent: Boolean);
+var
+   Success : Boolean;
+begin
+  try
+   Success := False;
+   try
+     // Verifica e gera arquivos de viagens de at'e 3 dias anteriores
+     if ((FStatusTmrConsole <> TmrAtivo) and (FStatusTmrSync <> TmrAtivo))  then
+     begin
+       Success := True;
+       FStatusSchedule := TmrAtivo;
+       SendDataToServer();
+     end;
+   except on E: Exception do
+     begin
+       InserirMsgLog('Erro: ' + E.message);
+     end;
    end;
+  finally
+     if Success then
+     begin
+       FStatusSchedule := TmrInativo;
+     end;
+  end;
+end;
+
+// Sincroniza uma unica conta pela thread
+procedure TMlkPrincipalDTM.SyncOne;
+var
+  dtInicio, dtFim : TDateTime;
+  ListaContas, Arqconf, LogErro : TStringList;
+  FileConta: string;
+  i, conta: Integer;
+begin
+  try
+    Arqconf := TStringList.Create;
+    ListaContas := TStringList.Create;
+    LogErro := TStringList.Create;
+
+    // Carrega configuracoes
+    if FileExists('config.ini') then
+    begin
+      Arqconf.LoadFromFile('config.ini');
+    end
+    else
+      Abort;
+    // Caminho e nome do arquivo com a lista de contas a sincronizar
+    FileConta := fwMaster.FolderName + '\' + 'sync.txt';
+
+    if ( FileExists(FileConta))  then
+    begin
+      ListaContas.LoadFromFile(FileConta);
+      if (ListaContas.Count = 0) then
+         Abort;
+    end
+    else
+      Abort;
+
+    try
+      conta := 1;
+      // sincroniza cada conta da lista de contas
+      for i := 0 to ListaContas.Count -1 do
+      begin
+        if TryStrToInt(ListaContas.Strings[i],conta) then;
+          getServerData(conta);
+      end;
+      // apaga o arquivo apos processamento
+      deletefile(PChar(FileConta));
+    except on e: Exception do
+      begin
+        LogErro.Append('Erro ao Gerar Arquivo Individual : ' + e.Message);
+        LogErro.SaveToFile( fwMaster.FolderName +'\LogErroIndividual.txt');
+      end;
+    end;
+  finally
+    // Destroy as listas
+    ListaContas.Destroy;
+    Arqconf.Destroy;
+    LogErro.Destroy;
+  end;
+end;
+
+// Gera Arquivos
+procedure TMlkPrincipalDTM.tmrConsoleTimer(Sender: TObject);
+var
+  dtInicio, dtFim : TDateTime;
+  Success: Boolean;
+begin
+  Success := False;
+  try
+
+    if ((FStatusTmrSync <> TmrAtivo) and (FStatusSchedule <> TmrAtivo)) then
+    begin
+      FStatusTmrConsole := TmrAtivo;
+      Success := True;
+      if Assigned(ShowStatusTmr) then
+        ShowStatusTmr;
+      getServerData();
+      // libera a memoria sem fechar a aplicao
+      // TrimAppMemorySize(False,Application.ExeName);
+      LiberaMemoria;
+    end;
+  finally
+    // reabilita evento timer de console
+    if Success then
+    begin
+      FStatusTmrConsole := TmrInativo;
+      if Assigned(ShowStatusTmr) then
+        ShowStatusTmr;
+    end;
+  end;
+end;
+// Timer para sincronizacao da carga nas tabelas de cadastro
+procedure TMlkPrincipalDTM.tmrSyncTimer(Sender: TObject);
+var
+  Success : Boolean;
+begin
+  Success := False;
+  try
+    if ((FStatusTmrConsole <> TmrAtivo) and (FStatusSchedule <> TmrAtivo)) then
+    begin
+      Success := True;
+      FStatusTmrSync := TmrAtivo;
+      // Sincroniza os cadastros com o servidor
+      SendDataToServer();
+      // Libera memoria do aplicativo
+      LiberaMemoria;
+    end;
+  finally
+    if Success then
+    begin
+      FStatusTmrSync := TmrInativo;
+    end;
+  end;
 end;
 // Valida arquivos de mapa de carga
 function TMlkPrincipalDTM.ValidarArquivoMapa(aContaId: Integer; aFile,

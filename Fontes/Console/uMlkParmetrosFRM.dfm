@@ -3,7 +3,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
   ClientHeight = 622
   ClientWidth = 669
   Visible = False
-  ExplicitTop = -227
+  ExplicitTop = -203
   ExplicitWidth = 675
   ExplicitHeight = 651
   PixelsPerInch = 96
@@ -137,7 +137,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
   inherited pgcManutencao: TPageControl
     Width = 669
     Height = 538
-    ActivePage = tabsArquivos
+    ActivePage = tabsCadastro
     ExplicitWidth = 669
     ExplicitHeight = 538
     inherited tabsPesquisa: TTabSheet
@@ -2006,7 +2006,7 @@ inherited MlkParmetrosFRM: TMlkParmetrosFRM
     Left = 488
     Top = 65530
     Bitmap = {
-      494C010110007800700010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010110007800740010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

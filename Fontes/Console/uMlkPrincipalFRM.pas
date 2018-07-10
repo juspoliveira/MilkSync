@@ -165,16 +165,21 @@ begin
   MlkPrincipalDTM.StatusTmrSync := TmrInativo;
   MostraStatusTmr;
   MlkPrincipalDTM.SetLastIteration;
-
-  MlkPrincipalDTM.getServerData();
-
-  try
-    MlkPrincipalDTM.tmrConsole.Enabled := False;
-    MlkPrincipalDTM.tmrSyncTimer(nil);
-  finally
-     MlkPrincipalDTM.tmrConsole.Enabled := True;;
+  if MostraMsgConf('Baixar Arquivos ?') then
+  begin
+    MlkPrincipalDTM.getServerData();
+    MlkPrincipalDTM.LiberaMemoria;
   end;
-
+  if MostraMsgConf('Sincronizar Cadastros ?') then
+  begin
+    try
+      MlkPrincipalDTM.tmrConsole.Enabled := False;
+      MlkPrincipalDTM.SendDataToServer();
+      MlkPrincipalDTM.LiberaMemoria;
+    finally
+      MlkPrincipalDTM.tmrConsole.Enabled := True;
+    end;
+  end;
 end;
 // Para os timmers e servicos
 procedure TMksPrincipalFRM.acStopExecute(Sender: TObject);

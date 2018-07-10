@@ -1604,41 +1604,44 @@ begin
   begin
      Result := False;
     try
-      //csvDataset := TJvCsvDataSet.Create(nil);
-      csvFileBase := TJvCSVBase.Create(nil);
+      try
+        csvFileBase := TJvCSVBase.Create(nil);
 
-     // csvDataset.SavesChanges := False;
-     // csvDataset.LoadsFromFile := True;
+        Separador := aSeparador[1];
+        xColunas := TStringList.Create;
+        xNomeColuna := TStringList.Create;
+        csvFileBase.DataBaseClose;
+        csvFileBase.CSVFieldNames.Clear;
+        csvFileBase.CSVFileName := EmptyStr;
+        csvFileBase.CSVFileName := aNomeArqivo;
+        xColunas := arraystring(LimpaMascaras(RemoveAcento(Trim(csvFileBase.CSVFieldNames.Text))), aSeparador[1]);
+        BaseRet.FieldDefs.Clear;
 
-      Separador := aSeparador[1];
-      xColunas := TStringList.Create;
-      xNomeColuna := TStringList.Create;
-      csvFileBase.DataBaseClose;
-      csvFileBase.CSVFieldNames.Clear;
-      csvFileBase.CSVFileName := EmptyStr;
-      csvFileBase.CSVFileName := aNomeArqivo;
-      xColunas := arraystring(LimpaMascaras(RemoveAcento(Trim(csvFileBase.CSVFieldNames.Text))), aSeparador[1]);
-      BaseRet.FieldDefs.Clear;
+        BaseRet.Separator := Separador;
 
-      BaseRet.Separator := Separador;
+        BaseRet.Close;
 
-      BaseRet.Close;
+        for I := 0 to xColunas.Count -1  do
+        begin
+          BaseRet.FieldDefs.Add(xColunas[i],ftString,80);
+        end;
+        BaseRet.FileName := aNomeArqivo;
+        BaseRet.CsvFieldDef := Trim(csvFileBase.CSVFieldNames.Text);
 
-      for I := 0 to xColunas.Count -1  do
-      begin
-        BaseRet.FieldDefs.Add(xColunas[i],ftString,80);
+       // retorna o resultado por referencia
+        BaseRet.Open;
+
+        Result := True;
+
+      except on e:Exception do
+        begin
+          ;
+          //MostraMsgInfo('Falha ao carregar arquivo : ' + e.Message);
+        end;
       end;
-      BaseRet.FileName := aNomeArqivo;
-      BaseRet.CsvFieldDef := Trim(csvFileBase.CSVFieldNames.Text);
-
-     // retorna o resultado por referencia
-      BaseRet.Open;
-
-      Result := True;
     finally
       xColunas.Destroy;
       xNomeColuna.Destroy;
-     // csvDataset.Destroy;
       csvFileBase.Destroy;
     end;
   end;
@@ -2190,7 +2193,11 @@ begin
       Result.Token := 'ec41-6149-95e2-829f';
       Result.Doc := '03.548.401/0005-00 ';
     end;
-    
+    280465:
+    begin
+      Result.Token := '6d696e61736d696c6b';
+      Result.Doc := '04.072.760/0001-65';
+    end;
     11132:
     Result.Token := 's0167r';
     82009:

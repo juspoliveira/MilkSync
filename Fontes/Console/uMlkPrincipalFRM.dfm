@@ -939,7 +939,8 @@ object MksPrincipalFRM: TMksPrincipalFRM
         Left = 3
         Top = 151
         Width = 854
-        Height = 122
+        Height = 296
+        Align = alClient
         Lines.Strings = (
           '')
         ReadOnly = True
@@ -1046,6 +1047,10 @@ object MksPrincipalFRM: TMksPrincipalFRM
     object tabsContas: TTabSheet
       Caption = 'Contas'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object grdContas: TcxGrid
         Left = 0
         Top = 0
@@ -1258,7 +1263,7 @@ object MksPrincipalFRM: TMksPrincipalFRM
     Left = 656
     Top = 418
     Bitmap = {
-      494C010119007000500110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101190070007C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000007000000001002000000000000070
       0000000000000000000000000000000000000000000000000000000000000000
       0000703B06839F4A06C3B75400FFB85500FFB65300FF9F4804C36E3906830000

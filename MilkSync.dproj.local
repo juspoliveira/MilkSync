@@ -6,7 +6,7 @@
     <Transaction>2017/07/05 17:08:21.000.905,=C:\Users\jusce\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
     <Transaction>2017/07/05 17:29:35.000.418,=C:\Users\jusce\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
     <Transaction>2018/02/01 14:29:49.000.051,=C:\Users\jusce\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2018/02/01 14:31:25.000.760,C:\Users\jusce\Documents\RAD Studio\Projects\Project1.dproj=C:\Desenvolvimento\tools\MilkSync\MilkSync.dproj</Transaction>
+    <Transaction>2018/02/01 14:31:25.000.760,C:\Desenvolvimento\tools\MilkSync\MilkSync.dproj=C:\Users\jusce\Documents\RAD Studio\Projects\Project1.dproj</Transaction>
     <Transaction>2018/02/01 14:32:23.000.719,=C:\Desenvolvimento\tools\MilkSync\Fontes\Console\uMlkParmetrosFRM.pas</Transaction>
     <Transaction>2018/02/01 14:32:26.000.993,=C:\Desenvolvimento\tools\MilkSync\Fontes\Console\uMlkPrincipalFRM.pas</Transaction>
     <Transaction>2018/02/01 14:32:26.000.704,=C:\Desenvolvimento\tools\MilkSync\Fontes\Console\uMlkPrincipalDTM.pas</Transaction>
@@ -16,7 +16,7 @@
     <Transaction>2018/02/01 14:51:43.000.531,=C:\Desenvolvimento\tools\MilkSync\Fontes\Comum\uVSSCLRotaComum.pas</Transaction>
     <Transaction>2018/04/27 13:48:21.000.306,=C:\Desenvolvimento\tools\MilkSync\Unit1.pas</Transaction>
     <Transaction>2018/05/07 20:00:23.000.702,=C:\Desenvolvimento\tools\MilkSync\Unit1.pas</Transaction>
-    <Transaction>2018/05/07 20:01:16.000.312,C:\Desenvolvimento\tools\MilkSync\uMlkThread.pas=C:\Desenvolvimento\tools\MilkSync\Unit1.pas</Transaction>
+    <Transaction>2018/05/07 20:01:16.000.312,C:\Desenvolvimento\tools\MilkSync\Unit1.pas=C:\Desenvolvimento\tools\MilkSync\uMlkThread.pas</Transaction>
     <Transaction>2018/05/15 21:12:22.000.640,C:\Desenvolvimento\tools\MilkSync\uMlkThread.pas=</Transaction>
   </Transactions>
 </BorlandProject>
